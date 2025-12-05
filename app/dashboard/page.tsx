@@ -1,20 +1,48 @@
-import { AppSidebar } from "@/components/app-sidebar"
+'use client';
+
+import { useState, useEffect } from 'react';
+import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { Session } from '@/types';
 
-export default function Page() {
+export default function Dashboard() {
+  const router = useRouter();
+  const [sessions, setSessions] = useState<Session[]>([]);
+
+  useEffect(() => {
+    fetchSessions();
+    const interval = setInterval(fetchSessions, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('/api/sessions');
+      const data = await res.json();
+      setSessions(data);
+    } catch (err) {
+      console.error('세션 목록 로드 실패:', err);
+    }
+  };
+
+  const viewSession = (sessionId: string) => {
+    router.push(`/session/${sessionId}`);
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -25,28 +53,49 @@ export default function Page() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbPage>대시보드</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
+
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">활성 세션 목록</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sessions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  활성 세션이 없습니다. 앱에서 세션을 생성하세요.
+                </p>
+              ) : (
+                <div className="grid gap-4">
+                  {sessions.map((session) => (
+                    <Card key={session.session_id}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-mono text-sm font-semibold">{session.session_id}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              스캔 수: {session.scan_count} | 생성: {new Date(session.created_at).toLocaleString('ko-KR')}
+                            </p>
+                          </div>
+                          <Button onClick={() => viewSession(session.session_id)}>
+                            보기
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
