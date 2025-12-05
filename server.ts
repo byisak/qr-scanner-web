@@ -5,7 +5,9 @@ import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+// 0.0.0.0: 모든 네트워크 인터페이스에서 접속 허용 (원격 접속 가능)
+// localhost: 로컬 접속만 허용
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
 
 const app = next({ dev, hostname, port });
