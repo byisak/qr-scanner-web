@@ -5,7 +5,8 @@ export async function GET() {
     const activeSessions = (global as any).activeSessions || new Map();
     const scanDataStore = (global as any).scanDataStore || new Map();
 
-    const sessions = Array.from(activeSessions.entries()).map(([sessionId, data]: [string, any]) => {
+    const sessions = Array.from(activeSessions.entries()).map((entry) => {
+      const [sessionId, data] = entry as [string, any];
       const scans = scanDataStore.get(sessionId) || [];
       return {
         session_id: sessionId,
