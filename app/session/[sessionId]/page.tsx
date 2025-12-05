@@ -31,7 +31,7 @@ import { useParams } from 'next/navigation';
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
-  const { scans, isConnected } = useSocket(sessionId);
+  const { scans, isConnected, error } = useSocket(sessionId);
 
   return (
     <SidebarProvider>
@@ -64,6 +64,11 @@ export default function SessionPage() {
                   {isConnected ? '연결됨' : '연결 끊김'}
                 </Badge>
               </div>
+              {error && (
+                <div className="mt-2 text-sm text-destructive bg-destructive/10 p-2 rounded">
+                  ⚠️ {error}
+                </div>
+              )}
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
