@@ -71,9 +71,15 @@ app.prepare().then(() => {
     // 세션 참가
     socket.on('join-session', async (sessionId) => {
       try {
+        // 세션이 없으면 자동으로 생성
         if (!activeSessions.has(sessionId)) {
-          socket.emit('error', { message: '세션을 찾을 수 없습니다.' });
-          return;
+          console.log('새 세션 자동 생성:', sessionId);
+          activeSessions.set(sessionId, {
+            socketId: socket.id,
+            createdAt: new Date(),
+            lastActivity: new Date(),
+          });
+          scanDataStore.set(sessionId, []);
         }
 
         socket.join(sessionId);
@@ -85,7 +91,7 @@ app.prepare().then(() => {
           existingData: existingScans,
         });
 
-        console.log('클라이언트 세션 참가:', sessionId);
+        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)');
       } catch (err) {
         console.error('세션 참가 실패:', err);
         socket.emit('error', { message: '세션 참가 실패' });
