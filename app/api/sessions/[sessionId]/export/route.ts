@@ -73,7 +73,11 @@ export async function GET(
       const worksheet = XLSX.utils.json_to_sheet(scans);
       const csv = XLSX.utils.sheet_to_csv(worksheet);
 
-      return new NextResponse(csv, {
+      // UTF-8 BOM 추가 (Excel에서 한글이 깨지지 않도록)
+      const utf8BOM = '\uFEFF';
+      const csvWithBOM = utf8BOM + csv;
+
+      return new NextResponse(csvWithBOM, {
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
           'Content-Disposition': `attachment; filename="${filename}.csv"`,
