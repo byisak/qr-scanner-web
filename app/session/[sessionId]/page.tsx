@@ -17,18 +17,12 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { ScanDataTable } from '@/components/scan-data-table';
+import { columns } from '@/components/scan-table-columns';
 
 export default function SessionPage() {
   const params = useParams();
@@ -119,48 +113,7 @@ export default function SessionPage() {
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground">
-                  총 스캔 수: <span className="font-bold">{scans.length}</span>
-                </p>
-              </div>
-
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">번호</TableHead>
-                    <TableHead>바코드 값</TableHead>
-                    <TableHead>스캔 시간</TableHead>
-                    <TableHead className="text-right">저장 시간</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {scans.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        스캔된 데이터가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    scans.map((scan, index) => (
-                      <TableRow key={scan.id}>
-                        <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell className="font-mono">{scan.code}</TableCell>
-                        <TableCell>
-                          {new Date(scan.scan_timestamp).toLocaleString('ko-KR', {
-                            timeZone: 'Asia/Seoul',
-                          })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {new Date(scan.createdAt).toLocaleString('ko-KR', {
-                            timeZone: 'Asia/Seoul',
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+              <ScanDataTable columns={columns} data={scans} />
             </CardContent>
           </Card>
         </div>
