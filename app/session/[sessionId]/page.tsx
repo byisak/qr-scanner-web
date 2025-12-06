@@ -23,6 +23,7 @@ import { Download, FileSpreadsheet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { columns } from '@/components/scan-table-columns';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function SessionPage() {
   const params = useParams();
@@ -57,7 +58,7 @@ export default function SessionPage() {
       <AppSidebar currentSessionId={sessionId} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+          <div className="flex items-center gap-2 px-4 flex-1">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -71,6 +72,9 @@ export default function SessionPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+          </div>
+          <div className="px-4">
+            <ModeToggle />
           </div>
         </header>
 
