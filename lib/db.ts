@@ -19,7 +19,7 @@ interface OracleConfig {
 /**
  * Oracle Database 연결 풀 초기화
  */
-export async function initializePool(): Promise<oracledb.Pool> {
+export async function initializePool(): Promise<oracledb.Pool | null> {
   if (pool) {
     return pool;
   }
@@ -31,7 +31,10 @@ export async function initializePool(): Promise<oracledb.Pool> {
   };
 
   if (!config.password || !config.connectString) {
-    throw new Error('Oracle database credentials not configured. Check environment variables.');
+    console.warn('⚠️  Oracle database credentials not configured.');
+    console.warn('⚠️  Running in MEMORY MODE - data will be lost on restart!');
+    console.warn('⚠️  Please configure ORACLE_PASSWORD and ORACLE_CONNECTION_STRING in .env.local');
+    return null;
   }
 
   try {
