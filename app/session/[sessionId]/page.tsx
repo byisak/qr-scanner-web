@@ -26,12 +26,37 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Download, FileSpreadsheet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { scans, isConnected, error } = useSocket(sessionId);
+
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`);
+
+      if (!response.ok) {
+        throw new Error('내보내기 실패');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `session-${sessionId}-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('데이터 내보내기에 실패했습니다.');
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -60,15 +85,37 @@ export default function SessionPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl">세션: {sessionId}</CardTitle>
-                <Badge variant={isConnected ? 'default' : 'destructive'}>
-                  {isConnected ? '연결됨' : '연결 끊김'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={isConnected ? 'default' : 'destructive'}>
+                    {isConnected ? '연결됨' : '연결 끊김'}
+                  </Badge>
+                </div>
               </div>
               {error && (
                 <div className="mt-2 text-sm text-destructive bg-destructive/10 p-2 rounded">
                   ⚠️ {error}
                 </div>
               )}
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('csv')}
+                  disabled={scans.length === 0}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  CSV 내보내기
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('xlsx')}
+                  disabled={scans.length === 0}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Excel 내보내기
+                </Button>
+              </div>
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
