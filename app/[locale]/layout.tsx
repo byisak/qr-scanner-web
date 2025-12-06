@@ -32,7 +32,7 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({
+export default async function RootLayout({
   children,
   params,
 }: Readonly<{
