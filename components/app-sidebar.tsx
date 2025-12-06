@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { QrCode, Plus } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/routing"
 import { useTranslations, useLocale } from "next-intl"
 
 import {
@@ -32,7 +32,6 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
   const t = useTranslations('sidebar')
-  const locale = useLocale()
   const router = useRouter()
   const [sessionInput, setSessionInput] = React.useState('')
   const [sessions, setSessions] = React.useState<Session[]>([])
@@ -51,12 +50,12 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
       }
 
       setSessionInput('')
-      router.push(`/${locale}/session/${newSession.id}`)
+      router.push(`/session/${newSession.id}`)
     }
   }
 
   const handleSessionClick = (sessionId: string) => {
-    router.push(`/${locale}/session/${sessionId}`)
+    router.push(`/session/${sessionId}`)
   }
 
   return (
@@ -65,7 +64,7 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href={`/${locale}/dashboard`}>
+              <a href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <QrCode className="size-4" />
                 </div>
@@ -128,7 +127,7 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href={`/${locale}/dashboard`}>
+              <a href="/dashboard">
                 <span className="text-xs text-muted-foreground">{t('goToDashboard')}</span>
               </a>
             </SidebarMenuButton>

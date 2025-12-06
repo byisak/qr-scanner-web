@@ -1,8 +1,8 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
-import { locales } from "@/i18n";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import {
   Select,
   SelectContent,
@@ -19,11 +19,8 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const handleLanguageChange = (newLocale: string) => {
-    // Remove the current locale from the pathname
-    const pathnameWithoutLocale = pathname.replace(`/${locale}`, "");
-
-    // Redirect to the new locale
-    router.push(`/${newLocale}${pathnameWithoutLocale}`);
+    // Use next-intl's router which handles locale switching automatically
+    router.replace(pathname, { locale: newLocale });
   };
 
   return (
@@ -34,7 +31,7 @@ export function LanguageSwitcher() {
           <SelectValue placeholder={t("language")} />
         </SelectTrigger>
         <SelectContent>
-          {locales.map((loc) => (
+          {routing.locales.map((loc) => (
             <SelectItem key={loc} value={loc}>
               {loc === "ko" ? t("korean") : t("english")}
             </SelectItem>

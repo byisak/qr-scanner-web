@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { Session } from '@/types';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -45,7 +45,7 @@ export default function Dashboard() {
   };
 
   const viewSession = (sessionId: string) => {
-    router.push(`/${locale}/session/${sessionId}`);
+    router.push(`/session/${sessionId}`);
   };
 
   return (

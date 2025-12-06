@@ -70,7 +70,7 @@ export default function SessionPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href={`/${locale}/dashboard`}>{tDashboard('title')}</BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard">{tDashboard('title')}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
