@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
@@ -5,6 +6,9 @@ import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePool, getConnection } from './lib/db';
 import oracledb from 'oracledb';
+
+// .env.local 파일 로드
+dotenv.config({ path: '.env.local' });
 
 const dev = process.env.NODE_ENV !== 'production';
 // 0.0.0.0: 모든 네트워크 인터페이스에서 접속 허용 (원격 접속 가능)
