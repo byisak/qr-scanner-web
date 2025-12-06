@@ -1,6 +1,7 @@
 'use client';
 
 import { useSocket } from '@/hooks/use-socket';
+import { useTranslations, useLocale } from 'next-intl';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
@@ -22,20 +23,25 @@ import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
-import { columns } from '@/components/scan-table-columns';
+import { useColumns } from '@/components/scan-table-columns';
 import { ModeToggle } from '@/components/mode-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 export default function SessionPage() {
+  const t = useTranslations('session');
+  const tDashboard = useTranslations('dashboard');
+  const locale = useLocale();
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { scans, isConnected, error } = useSocket(sessionId);
+  const columns = useColumns();
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
     try {
       const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`);
 
       if (!response.ok) {
-        throw new Error('내보내기 실패');
+        throw new Error(t('exportFailed'));
       }
 
       const blob = await response.blob();
@@ -49,7 +55,7 @@ export default function SessionPage() {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Export error:', err);
-      alert('데이터 내보내기에 실패했습니다.');
+      alert(t('exportError'));
     }
   };
 
@@ -64,16 +70,17 @@ export default function SessionPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">대시보드</BreadcrumbLink>
+                  <BreadcrumbLink href={`/${locale}/dashboard`}>{tDashboard('title')}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>세션: {sessionId}</BreadcrumbPage>
+                  <BreadcrumbPage>{t('title')}: {sessionId}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4">
+          <div className="px-4 flex items-center gap-2">
+            <LanguageSwitcher />
             <ModeToggle />
           </div>
         </header>
@@ -82,10 +89,10 @@ export default function SessionPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">세션: {sessionId}</CardTitle>
+                <CardTitle className="text-2xl">{t('title')}: {sessionId}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant={isConnected ? 'default' : 'destructive'}>
-                    {isConnected ? '연결됨' : '연결 끊김'}
+                    {isConnected ? t('connected') : t('disconnected')}
                   </Badge>
                 </div>
               </div>
@@ -102,7 +109,7 @@ export default function SessionPage() {
                   disabled={scans.length === 0}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  CSV 내보내기
+                  {t('exportCsv')}
                 </Button>
                 <Button
                   variant="outline"
@@ -111,7 +118,7 @@ export default function SessionPage() {
                   disabled={scans.length === 0}
                 >
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel 내보내기
+                  {t('exportExcel')}
                 </Button>
               </div>
             </CardHeader>

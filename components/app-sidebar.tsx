@@ -3,6 +3,7 @@
 import * as React from "react"
 import { QrCode, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl"
 
 import {
   Sidebar,
@@ -30,6 +31,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
+  const t = useTranslations('sidebar')
+  const locale = useLocale()
   const router = useRouter()
   const [sessionInput, setSessionInput] = React.useState('')
   const [sessions, setSessions] = React.useState<Session[]>([])
@@ -48,12 +51,12 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
       }
 
       setSessionInput('')
-      router.push(`/session/${newSession.id}`)
+      router.push(`/${locale}/session/${newSession.id}`)
     }
   }
 
   const handleSessionClick = (sessionId: string) => {
-    router.push(`/session/${sessionId}`)
+    router.push(`/${locale}/session/${sessionId}`)
   }
 
   return (
@@ -62,13 +65,13 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/dashboard">
+              <a href={`/${locale}/dashboard`}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <QrCode className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">QR Scanner</span>
-                  <span className="truncate text-xs">실시간 스캔 모니터</span>
+                  <span className="truncate font-semibold">{t('appTitle')}</span>
+                  <span className="truncate text-xs">{t('appSubtitle')}</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -78,11 +81,11 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>세션 추가</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('addSession')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <form onSubmit={handleAddSession} className="flex gap-2 px-2 py-2">
               <Input
-                placeholder="세션 ID..."
+                placeholder={t('sessionIdPlaceholder')}
                 value={sessionInput}
                 onChange={(e) => setSessionInput(e.target.value)}
                 className="h-8"
@@ -95,12 +98,12 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>세션 목록</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sessionList')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {sessions.length === 0 ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  세션을 추가하세요
+                  {t('noSessions')}
                 </div>
               ) : (
                 sessions.map((session) => (
@@ -125,8 +128,8 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/dashboard">
-                <span className="text-xs text-muted-foreground">대시보드로 이동</span>
+              <a href={`/${locale}/dashboard`}>
+                <span className="text-xs text-muted-foreground">{t('goToDashboard')}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
