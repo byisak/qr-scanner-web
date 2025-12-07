@@ -12,6 +12,7 @@ export default getRequestConfig(async ({ locale }) => {
   if (!locales.includes(locale as Locale)) notFound();
 
   return {
+    locale,
     messages: (await import(`./messages/${locale}.json`)).default,
     timeZone: locale === 'ko' ? 'Asia/Seoul' : 'UTC',
     now: new Date()
