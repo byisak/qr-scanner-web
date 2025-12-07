@@ -1,10 +1,10 @@
 import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function Home() {
-  const t = useTranslations('home');
+export default async function Home() {
+  const t = await getTranslations('home');
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
