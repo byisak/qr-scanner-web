@@ -1,20 +1,24 @@
+// i18n.ts
 import { notFound } from 'next/navigation';
 import { getRequestConfig } from 'next-intl/server';
+import { routing } from './i18n/routing';
 
-// Can be imported from a shared config
-export const locales = ['en', 'ko'] as const;
-export type Locale = (typeof locales)[number];
+export default getRequestConfig(async ({ requestLocale }) => {
+  let locale = await requestLocale;
 
-export const defaultLocale: Locale = 'ko';
+  console.log('=== i18n.ts ===');
+  console.log('requestLocale:', locale);
 
-export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as Locale)) notFound();
+  // locale이 유효한지 확인
+  if (!locale || !routing.locales.includes(locale as any)) {
+    console.log('유효하지 않은 locale, 기본값 사용');
+    locale = routing.defaultLocale;
+  }
+
+  console.log('최종 locale:', locale);
 
   return {
     locale,
     messages: (await import(`./messages/${locale}.json`)).default,
-    timeZone: locale === 'ko' ? 'Asia/Seoul' : 'UTC',
-    now: new Date()
   };
 });
