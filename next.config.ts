@@ -1,14 +1,11 @@
-import type { NextConfig } from "next";
+// next.config.ts
+import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const nextConfig: NextConfig = {
-  // 개발 모드에서 원격 접속 허용
-  experimental: {
-    // @ts-ignore - allowedDevOrigins는 Next.js 16에서 사용 가능
-    allowedDevOrigins: ['*'],
-  },
+  // allowedDevOrigins 제거 (경고 해결)
 };
 
 export default withNextIntl(nextConfig);
