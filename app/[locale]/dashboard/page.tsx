@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
@@ -16,11 +17,14 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { Session } from '@/types';
 import { ModeToggle } from '@/components/mode-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 export default function Dashboard() {
+  const t = useTranslations('dashboard');
+  const locale = useLocale();
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -36,7 +40,7 @@ export default function Dashboard() {
       const data = await res.json();
       setSessions(data);
     } catch (err) {
-      console.error('세션 목록 로드 실패:', err);
+      console.error('Failed to load sessions:', err);
     }
   };
 
@@ -55,12 +59,13 @@ export default function Dashboard() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>대시보드</BreadcrumbPage>
+                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4">
+          <div className="px-4 flex items-center gap-2">
+            <LanguageSwitcher />
             <ModeToggle />
           </div>
         </header>
@@ -68,12 +73,12 @@ export default function Dashboard() {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">활성 세션 목록</CardTitle>
+              <CardTitle className="text-2xl">{t('activeSessions')}</CardTitle>
             </CardHeader>
             <CardContent>
               {sessions.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  활성 세션이 없습니다. 앱에서 세션을 생성하세요.
+                  {t('noSessions')}
                 </p>
               ) : (
                 <div className="grid gap-4">
@@ -84,11 +89,11 @@ export default function Dashboard() {
                           <div>
                             <p className="font-mono text-sm font-semibold">{session.session_id}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              스캔 수: {session.scan_count} | 생성: {new Date(session.created_at).toLocaleString('ko-KR')}
+                              {t('scanCount')}: {session.scan_count} | {t('created')}: {new Date(session.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                             </p>
                           </div>
                           <Button onClick={() => viewSession(session.session_id)}>
-                            보기
+                            {t('view')}
                           </Button>
                         </div>
                       </CardContent>

@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "QR Scanner Web",
+    "language": "언어",
+    "korean": "한국어",
+    "english": "English"
+  },
+  "home": {
+    "title": "QR Scanner Web",
+    "subtitle": "실시간 바코드 스캔 데이터 모니터링",
+    "description": "모바일 앱에서 스캔한 바코드 데이터를 실시간으로 확인하세요.",
+    "goToDashboard": "대시보드로 이동",
+    "howToUse": "사용 방법",
+    "step1": "모바일 앱에서 세션을 생성합니다",
+    "step2": "웹 대시보드에서 생성된 세션을 확인합니다",
+    "step3": "세션을 클릭하여 실시간 스캔 데이터를 모니터링합니다"
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "activeSessions": "활성 세션 목록",
+    "noSessions": "활성 세션이 없습니다. 앱에서 세션을 생성하세요.",
+    "scanCount": "스캔 수",
+    "created": "생성",
+    "view": "보기"
+  },
+  "session": {
+    "title": "세션",
+    "connected": "연결됨",
+    "disconnected": "연결 끊김",
+    "exportCsv": "CSV 내보내기",
+    "exportExcel": "Excel 내보내기",
+    "exportFailed": "내보내기 실패",
+    "exportError": "데이터 내보내기에 실패했습니다."
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "실시간 스캔 모니터",
+    "addSession": "세션 추가",
+    "sessionIdPlaceholder": "세션 ID...",
+    "sessionList": "세션 목록",
+    "noSessions": "세션을 추가하세요",
+    "goToDashboard": "대시보드로 이동"
+  },
+  "table": {
+    "number": "번호",
+    "qrCode": "QR 코드",
+    "scanTime": "스캔 시간",
+    "saveTime": "저장 시간"
+  }
+}

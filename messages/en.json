@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "QR Scanner Web",
+    "language": "Language",
+    "korean": "한국어",
+    "english": "English"
+  },
+  "home": {
+    "title": "QR Scanner Web",
+    "subtitle": "Real-time Barcode Scan Data Monitoring",
+    "description": "View barcode data scanned from mobile apps in real-time.",
+    "goToDashboard": "Go to Dashboard",
+    "howToUse": "How to Use",
+    "step1": "Create a session in the mobile app",
+    "step2": "Check the created session in the web dashboard",
+    "step3": "Click on a session to monitor real-time scan data"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "activeSessions": "Active Sessions",
+    "noSessions": "No active sessions. Please create a session in the app.",
+    "scanCount": "Scans",
+    "created": "Created",
+    "view": "View"
+  },
+  "session": {
+    "title": "Session",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "exportFailed": "Export failed",
+    "exportError": "Failed to export data."
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "Real-time Scan Monitor",
+    "addSession": "Add Session",
+    "sessionIdPlaceholder": "Session ID...",
+    "sessionList": "Session List",
+    "noSessions": "Add a session",
+    "goToDashboard": "Go to Dashboard"
+  },
+  "table": {
+    "number": "No.",
+    "qrCode": "QR Code",
+    "scanTime": "Scan Time",
+    "saveTime": "Save Time"
+  }
+}
