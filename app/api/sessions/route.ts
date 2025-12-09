@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
        LEFT JOIN scan_data sd ON s.session_id = sd.session_id
        ${whereClause}
        GROUP BY s.session_id, s.created_at, s.last_activity, s.status, s.deleted_at
-       ORDER BY s.last_activity DESC`,
+       ORDER BY s.created_at DESC`,
       {},
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
