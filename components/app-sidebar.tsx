@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
 
 import {
   Sidebar,
@@ -32,10 +32,12 @@ interface Session {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   currentSessionId?: string;
+  onSessionChange?: () => void;
 }
 
-export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
+export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppSidebarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [sessionInput, setSessionInput] = React.useState('')
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
@@ -67,6 +69,15 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
 
   React.useEffect(() => {
     fetchSessions()
+  }, [fetchSessions])
+
+  // 외부에서 새로고침 트리거를 위한 커스텀 이벤트 리스너
+  React.useEffect(() => {
+    const handleRefresh = () => {
+      fetchSessions()
+    }
+    window.addEventListener('sidebar-refresh', handleRefresh)
+    return () => window.removeEventListener('sidebar-refresh', handleRefresh)
   }, [fetchSessions])
 
   const handleAddSession = async (e: React.FormEvent) => {
@@ -109,6 +120,9 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
 
       if (res.ok) {
         fetchSessions()
+        onSessionChange?.()
+        // 커스텀 이벤트 발생
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'))
         // 현재 보고 있는 세션이 삭제되면 대시보드로 이동
         if (currentSessionId === sessionId) {
           router.push('/dashboard')
@@ -134,6 +148,8 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
 
       if (res.ok) {
         fetchSessions()
+        onSessionChange?.()
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       } else {
         const data = await res.json()
         alert(data.error || '복구 실패')
@@ -157,6 +173,8 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
 
       if (res.ok) {
         fetchSessions()
+        onSessionChange?.()
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       } else {
         const data = await res.json()
         alert(data.error || '영구 삭제 실패')
@@ -166,6 +184,8 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
       alert('세션 영구 삭제 중 오류가 발생했습니다.')
     }
   }
+
+  const isTrashPage = pathname === '/dashboard/trash'
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -206,7 +226,15 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>세션 목록</SidebarGroupLabel>
+          <SidebarGroupLabel asChild>
+            <a
+              href="/dashboard"
+              className="flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer"
+            >
+              <List className="size-4" />
+              세션 목록 ({sessions.length})
+            </a>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {isLoading ? (
@@ -242,16 +270,25 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {deletedSessions.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>삭제대기</SidebarGroupLabel>
+        <SidebarGroup>
+          <SidebarGroupLabel asChild>
+            <a
+              href="/dashboard/trash"
+              className={`flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer ${isTrashPage ? 'text-foreground font-medium' : ''}`}
+            >
+              <Clock className="size-4" />
+              삭제대기 ({deletedSessions.length})
+            </a>
+          </SidebarGroupLabel>
+          {deletedSessions.length > 0 && (
             <SidebarGroupContent>
               <SidebarMenu>
-                {deletedSessions.map((session) => (
+                {deletedSessions.slice(0, 5).map((session) => (
                   <SidebarMenuItem key={session.session_id}>
                     <SidebarMenuButton
                       className="opacity-60"
                       tooltip={`${session.session_id} (삭제됨)`}
+                      onClick={() => router.push('/dashboard/trash')}
                     >
                       <QrCode className="size-4" />
                       <span className="truncate line-through">{session.session_id}</span>
@@ -273,10 +310,20 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
                     </SidebarMenuAction>
                   </SidebarMenuItem>
                 ))}
+                {deletedSessions.length > 5 && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className="text-muted-foreground"
+                      onClick={() => router.push('/dashboard/trash')}
+                    >
+                      <span className="text-xs">+{deletedSessions.length - 5}개 더보기...</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+          )}
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

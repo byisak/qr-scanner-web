@@ -12,6 +12,7 @@ export interface Session {
   last_activity: string;
   status: string;
   scan_count: number;
+  deleted_at: string | null;
 }
 
 export interface SocketEvents {
