@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const result = await connection.execute(
       `SELECT
         s.session_id,
+        s.session_name,
         s.created_at,
         s.last_activity,
         s.status,
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
        FROM sessions s
        LEFT JOIN scan_data sd ON s.session_id = sd.session_id
        ${whereClause}
-       GROUP BY s.session_id, s.created_at, s.last_activity, s.status, s.deleted_at
+       GROUP BY s.session_id, s.session_name, s.created_at, s.last_activity, s.status, s.deleted_at
        ORDER BY s.created_at DESC`,
       {},
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
 
     const sessions = (result.rows || []).map((row: any) => ({
       session_id: row.SESSION_ID,
+      session_name: row.SESSION_NAME || null,
       created_at: row.CREATED_AT ? row.CREATED_AT.toISOString() : new Date().toISOString(),
       last_activity: row.LAST_ACTIVITY ? row.LAST_ACTIVITY.toISOString() : new Date().toISOString(),
       status: row.STATUS,
