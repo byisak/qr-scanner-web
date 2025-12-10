@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 
 interface Session {
   session_id: string;
+  session_name: string | null;
   created_at: string;
   last_activity: string;
   status: string;
@@ -251,10 +252,10 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                     <SidebarMenuButton
                       onClick={() => handleSessionClick(session.session_id)}
                       isActive={currentSessionId === session.session_id}
-                      tooltip={session.session_id}
+                      tooltip={session.session_name || session.session_id}
                     >
                       <QrCode className="size-4" />
-                      <span className="truncate">{session.session_id}</span>
+                      <span className="truncate">{session.session_name || session.session_id}</span>
                     </SidebarMenuButton>
                     <SidebarMenuAction
                       onClick={(e) => handleDeleteSession(session.session_id, e)}
@@ -287,11 +288,11 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                   <SidebarMenuItem key={session.session_id}>
                     <SidebarMenuButton
                       className="opacity-60"
-                      tooltip={`${session.session_id} (삭제됨)`}
+                      tooltip={`${session.session_name || session.session_id} (삭제됨)`}
                       onClick={() => router.push('/dashboard/trash')}
                     >
                       <QrCode className="size-4" />
-                      <span className="truncate line-through">{session.session_id}</span>
+                      <span className="truncate line-through">{session.session_name || session.session_id}</span>
                     </SidebarMenuButton>
                     <SidebarMenuAction
                       onClick={(e) => handleRestoreSession(session.session_id, e)}
