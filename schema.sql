@@ -4,6 +4,7 @@
 CREATE TABLE sessions (
     session_id VARCHAR2(255) PRIMARY KEY,
     socket_id VARCHAR2(255),
+    session_name VARCHAR2(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR2(50) DEFAULT 'ACTIVE',
@@ -12,6 +13,9 @@ CREATE TABLE sessions (
 
 -- 기존 테이블에 deleted_at 컬럼 추가 (마이그레이션용)
 -- ALTER TABLE sessions ADD deleted_at TIMESTAMP DEFAULT NULL;
+
+-- 기존 테이블에 session_name 컬럼 추가 (마이그레이션용)
+-- ALTER TABLE sessions ADD session_name VARCHAR2(255) DEFAULT NULL;
 
 -- 스캔 데이터 테이블
 CREATE TABLE scan_data (

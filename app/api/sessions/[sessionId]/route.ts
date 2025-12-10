@@ -13,7 +13,7 @@ export async function GET(
     connection = await getConnection();
 
     const result = await connection.execute(
-      `SELECT session_id, socket_id, created_at, last_activity, status, deleted_at
+      `SELECT session_id, socket_id, session_name, created_at, last_activity, status, deleted_at
        FROM sessions
        WHERE session_id = :sessionId`,
       { sessionId },
@@ -28,6 +28,7 @@ export async function GET(
     const session = {
       session_id: row.SESSION_ID,
       socket_id: row.SOCKET_ID,
+      session_name: row.SESSION_NAME || null,
       created_at: row.CREATED_AT ? row.CREATED_AT.toISOString() : null,
       last_activity: row.LAST_ACTIVITY ? row.LAST_ACTIVITY.toISOString() : null,
       status: row.STATUS,
