@@ -29,7 +29,7 @@ import { ModeToggle } from '@/components/mode-toggle';
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
-  const { scans, isConnected, error, removeScan } = useSocket(sessionId);
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
@@ -48,6 +48,28 @@ export default function SessionPage() {
       alert('스캔 데이터 삭제 중 오류가 발생했습니다.');
     }
   }, [removeScan]);
+
+  const handleDeleteSelected = useCallback(async (ids: number[]) => {
+    try {
+      const res = await fetch('/api/scans/bulk-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (res.ok) {
+        removeScans(ids);
+      } else {
+        const data = await res.json();
+        alert(data.error || '삭제 실패');
+      }
+    } catch (error) {
+      console.error('다중 스캔 데이터 삭제 실패:', error);
+      alert('스캔 데이터 삭제 중 오류가 발생했습니다.');
+    }
+  }, [removeScans]);
 
   const columns = useMemo(() => createColumns(handleDeleteScan), [handleDeleteScan]);
 
@@ -138,7 +160,7 @@ export default function SessionPage() {
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
-              <ScanDataTable columns={columns} data={scans} />
+              <ScanDataTable columns={columns} data={scans} onDeleteSelected={handleDeleteSelected} />
             </CardContent>
           </Card>
         </div>

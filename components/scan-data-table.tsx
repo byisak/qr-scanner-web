@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  RowSelectionState,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -12,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { Trash2 } from "lucide-react"
 
 import {
   Table,
@@ -23,26 +25,42 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  onDeleteSelected?: (ids: number[]) => void
 }
 
-export function ScanDataTable<TData, TValue>({
+export function ScanDataTable<TData extends { id: number }, TValue>({
   columns,
   data,
+  onDeleteSelected,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -50,6 +68,7 @@ export function ScanDataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
     initialState: {
       pagination: {
@@ -58,17 +77,59 @@ export function ScanDataTable<TData, TValue>({
     },
   })
 
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
+  const handleDeleteSelected = () => {
+    const ids = selectedRows.map((row) => row.original.id)
+    onDeleteSelected?.(ids)
+    setRowSelection({})
+    setDeleteDialogOpen(false)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Input
-          placeholder="QR 코드 검색..."
-          value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("code")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="QR 코드 검색..."
+            value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("code")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          {selectedCount > 0 && (
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  선택 삭제 ({selectedCount})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>선택한 데이터 삭제</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    선택한 {selectedCount}개의 스캔 데이터를 삭제하시겠습니까?
+                    <br />
+                    <br />
+                    이 작업은 되돌릴 수 없습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteSelected}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
         <div className="text-sm text-muted-foreground">
           총 스캔 수: <span className="font-bold">{data.length}</span>
         </div>
@@ -127,6 +188,11 @@ export function ScanDataTable<TData, TValue>({
 
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
+          {selectedCount > 0 && (
+            <span className="mr-4 font-medium text-foreground">
+              {selectedCount}개 선택됨
+            </span>
+          )}
           {table.getFilteredRowModel().rows.length}개 중{" "}
           {table.getRowModel().rows.length}개 표시
         </div>

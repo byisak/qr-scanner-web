@@ -81,5 +81,9 @@ export function useSocket(sessionId: string | null) {
     setScans((prev) => prev.filter((scan) => scan.id !== scanId));
   }, []);
 
-  return { socket, scans, isConnected, error, clearScans, removeScan };
+  const removeScans = useCallback((scanIds: number[]) => {
+    setScans((prev) => prev.filter((scan) => !scanIds.includes(scan.id)));
+  }, []);
+
+  return { socket, scans, isConnected, error, clearScans, removeScan, removeScans };
 }
