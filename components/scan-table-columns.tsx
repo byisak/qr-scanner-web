@@ -1,8 +1,20 @@
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export type ScanData = {
   id: number
@@ -10,6 +22,60 @@ export type ScanData = {
   code: string
   scan_timestamp: number
   createdAt: string
+}
+
+// 삭제 버튼 셀 컴포넌트
+function DeleteActionCell({
+  scanId,
+  code,
+  onDelete
+}: {
+  scanId: number
+  code: string
+  onDelete?: (id: number) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  const handleDelete = () => {
+    onDelete?.(scanId)
+    setOpen(false)
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+        >
+          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>스캔 데이터 삭제</AlertDialogTitle>
+          <AlertDialogDescription>
+            이 스캔 데이터를 삭제하시겠습니까?
+            <br />
+            <span className="font-mono font-medium text-foreground">{code}</span>
+            <br />
+            <br />
+            이 작업은 되돌릴 수 없습니다.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>취소</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            삭제
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 }
 
 export const createColumns = (onDelete?: (id: number) => void): ColumnDef<ScanData>[] => [
@@ -90,16 +156,10 @@ export const createColumns = (onDelete?: (id: number) => void): ColumnDef<ScanDa
     header: "",
     cell: ({ row }) => {
       const scanId = row.original.id
+      const code = row.original.code
       return (
         <div className="text-right">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => onDelete?.(scanId)}
-          >
-            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-          </Button>
+          <DeleteActionCell scanId={scanId} code={code} onDelete={onDelete} />
         </div>
       )
     },

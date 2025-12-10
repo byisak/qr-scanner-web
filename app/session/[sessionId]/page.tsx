@@ -32,8 +32,6 @@ export default function SessionPage() {
   const { scans, isConnected, error, removeScan } = useSocket(sessionId);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
-    if (!confirm('이 스캔 데이터를 삭제하시겠습니까?')) return;
-
     try {
       const res = await fetch(`/api/scans/${scanId}`, {
         method: 'DELETE'
