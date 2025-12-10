@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useCallback } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
@@ -22,13 +23,35 @@ import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
-import { columns } from '@/components/scan-table-columns';
+import { createColumns } from '@/components/scan-table-columns';
 import { ModeToggle } from '@/components/mode-toggle';
 
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
-  const { scans, isConnected, error } = useSocket(sessionId);
+  const { scans, isConnected, error, removeScan } = useSocket(sessionId);
+
+  const handleDeleteScan = useCallback(async (scanId: number) => {
+    if (!confirm('이 스캔 데이터를 삭제하시겠습니까?')) return;
+
+    try {
+      const res = await fetch(`/api/scans/${scanId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        removeScan(scanId);
+      } else {
+        const data = await res.json();
+        alert(data.error || '삭제 실패');
+      }
+    } catch (error) {
+      console.error('스캔 데이터 삭제 실패:', error);
+      alert('스캔 데이터 삭제 중 오류가 발생했습니다.');
+    }
+  }, [removeScan]);
+
+  const columns = useMemo(() => createColumns(handleDeleteScan), [handleDeleteScan]);
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
     try {

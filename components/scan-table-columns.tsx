@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export type ScanData = {
@@ -12,7 +12,7 @@ export type ScanData = {
   createdAt: string
 }
 
-export const columns: ColumnDef<ScanData>[] = [
+export const createColumns = (onDelete?: (id: number) => void): ColumnDef<ScanData>[] => [
   {
     id: "index",
     header: "번호",
@@ -85,4 +85,26 @@ export const columns: ColumnDef<ScanData>[] = [
       )
     },
   },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row }) => {
+      const scanId = row.original.id
+      return (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onDelete?.(scanId)}
+          >
+            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+          </Button>
+        </div>
+      )
+    },
+  },
 ]
+
+// 기존 columns 유지 (하위 호환성)
+export const columns = createColumns()
