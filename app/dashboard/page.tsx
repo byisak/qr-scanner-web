@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
@@ -19,18 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Session } from '@/types';
 import { ModeToggle } from '@/components/mode-toggle';
+import { Trash2 } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
 
-  useEffect(() => {
-    fetchSessions();
-    const interval = setInterval(fetchSessions, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       const res = await fetch('/api/sessions');
       const data = await res.json();
@@ -38,15 +33,52 @@ export default function Dashboard() {
     } catch (err) {
       console.error('세션 목록 로드 실패:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+    const interval = setInterval(fetchSessions, 5000);
+
+    // 사이드바 새로고침 이벤트 리스너
+    const handleRefresh = () => {
+      fetchSessions();
+    };
+    window.addEventListener('sidebar-refresh', handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('sidebar-refresh', handleRefresh);
+    };
+  }, [fetchSessions]);
 
   const viewSession = (sessionId: string) => {
     router.push(`/session/${sessionId}`);
   };
 
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('세션을 삭제하시겠습니까?')) return;
+
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        fetchSessions();
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+      } else {
+        const data = await res.json();
+        alert(data.error || '삭제 실패');
+      }
+    } catch (error) {
+      console.error('세션 삭제 실패:', error);
+      alert('세션 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar onSessionChange={fetchSessions} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4 flex-1">
@@ -87,9 +119,18 @@ export default function Dashboard() {
                               스캔 수: {session.scan_count} | 생성: {new Date(session.created_at).toLocaleString('ko-KR')}
                             </p>
                           </div>
-                          <Button onClick={() => viewSession(session.session_id)}>
-                            보기
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button onClick={() => viewSession(session.session_id)}>
+                              보기
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeleteSession(session.session_id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

@@ -114,3 +114,127 @@
   }
 }
 
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.95;
+  }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutToRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutToLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Dialog/AlertDialog overlay animation */
+[data-state="open"][data-slot="dialog-overlay"],
+[data-state="open"][data-slot="alert-dialog-overlay"] {
+  animation: fadeIn 150ms ease-out;
+}
+
+[data-state="closed"][data-slot="dialog-overlay"],
+[data-state="closed"][data-slot="alert-dialog-overlay"] {
+  animation: fadeOut 150ms ease-in;
+}
+
+/* Dialog/AlertDialog content animation */
+[data-state="open"][data-slot="dialog-content"],
+[data-state="open"][data-slot="alert-dialog-content"] {
+  animation: scaleIn 200ms ease-out;
+}
+
+[data-state="closed"][data-slot="dialog-content"],
+[data-state="closed"][data-slot="alert-dialog-content"] {
+  animation: scaleOut 150ms ease-in;
+}
+
+/* Sheet animations */
+[data-slot="sheet-overlay"][data-state="open"] {
+  animation: fadeIn 300ms ease-out;
+}
+
+[data-slot="sheet-overlay"][data-state="closed"] {
+  animation: fadeOut 200ms ease-in;
+}
+
+[data-slot="sheet-content"][data-state="open"] {
+  animation: slideInFromRight 300ms ease-out;
+}
+
+[data-slot="sheet-content"][data-state="closed"] {
+  animation: slideOutToRight 200ms ease-in;
+}
+
