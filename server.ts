@@ -5,6 +5,7 @@ import next from 'next';
 import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePool, getConnection } from './lib/db';
+import { verifyAccessToken } from './lib/auth';
 import oracledb from 'oracledb';
 
 // .env.local 파일 로드
@@ -49,11 +50,26 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('클라이언트 연결:', socket.id);
 
+    // 연결 시 토큰 검증 (선택적 인증)
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    let authenticatedUserId: string | null = null;
+
+    if (token && typeof token === 'string') {
+      const decoded = verifyAccessToken(token);
+      if (decoded) {
+        authenticatedUserId = decoded.userId;
+        console.log('인증된 사용자 연결:', authenticatedUserId);
+      }
+    }
+
     // 세션 생성
     socket.on('create-session', async (data) => {
       let connection;
       try {
         const sessionId = data?.sessionId || uuidv4();
+        // 클라이언트에서 전달한 토큰 또는 연결 시 인증된 사용자 ID 사용
+        const userId = data?.userId || authenticatedUserId;
+
         connection = await getConnection();
 
         // 세션이 이미 존재하는지 확인
@@ -63,11 +79,18 @@ app.prepare().then(() => {
         );
 
         if (checkResult.rows && checkResult.rows.length === 0) {
-          // 세션 생성
+          // 세션 생성 (user_id 포함)
           await connection.execute(
-            `INSERT INTO sessions (session_id, socket_id, created_at, last_activity, status)
-             VALUES (:sessionId, :socketId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
-            { sessionId, socketId: socket.id }
+            `INSERT INTO sessions (session_id, socket_id, user_id, created_at, last_activity, status)
+             VALUES (:sessionId, :socketId, :userId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
+            { sessionId, socketId: socket.id, userId: userId || null }
+          );
+          await connection.commit();
+        } else if (userId) {
+          // 기존 세션에 user_id 업데이트 (세션에 user_id가 없는 경우에만)
+          await connection.execute(
+            `UPDATE sessions SET user_id = :userId WHERE session_id = :sessionId AND user_id IS NULL`,
+            { userId, sessionId }
           );
           await connection.commit();
         }
@@ -76,10 +99,11 @@ app.prepare().then(() => {
 
         socket.emit('session-created', {
           sessionId,
+          userId: userId || null,
           message: '세션이 생성되었습니다.',
         });
 
-        console.log('새 세션 생성:', sessionId);
+        console.log('새 세션 생성:', sessionId, userId ? `(사용자: ${userId})` : '(비로그인)');
       } catch (err) {
         console.error('세션 생성 실패:', err);
         socket.emit('error', { message: '세션 생성 실패' });
@@ -95,32 +119,53 @@ app.prepare().then(() => {
     });
 
     // 세션 참가
-    socket.on('join-session', async (sessionId) => {
+    socket.on('join-session', async (data) => {
       let connection;
       try {
+        // sessionId만 전달하거나 객체로 전달 가능
+        const sessionId = typeof data === 'string' ? data : data?.sessionId;
+        const userId = typeof data === 'object' ? (data?.userId || authenticatedUserId) : authenticatedUserId;
+
+        if (!sessionId) {
+          socket.emit('error', { message: '세션 ID가 필요합니다.' });
+          return;
+        }
+
         connection = await getConnection();
 
         // 세션이 없으면 자동으로 생성
         const checkResult = await connection.execute(
-          `SELECT session_id FROM sessions WHERE session_id = :sessionId`,
-          { sessionId }
+          `SELECT session_id, user_id FROM sessions WHERE session_id = :sessionId`,
+          { sessionId },
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         if (!checkResult.rows || checkResult.rows.length === 0) {
-          console.log('새 세션 자동 생성:', sessionId);
+          console.log('새 세션 자동 생성:', sessionId, userId ? `(사용자: ${userId})` : '(비로그인)');
           await connection.execute(
-            `INSERT INTO sessions (session_id, socket_id, created_at, last_activity, status)
-             VALUES (:sessionId, :socketId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
-            { sessionId, socketId: socket.id }
+            `INSERT INTO sessions (session_id, socket_id, user_id, created_at, last_activity, status)
+             VALUES (:sessionId, :socketId, :userId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
+            { sessionId, socketId: socket.id, userId: userId || null }
           );
           await connection.commit();
         } else {
-          // 세션 활동 시간 업데이트
-          await connection.execute(
-            `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = :socketId
-             WHERE session_id = :sessionId`,
-            { socketId: socket.id, sessionId }
-          );
+          // 세션 활동 시간 업데이트, user_id가 없으면 업데이트
+          const existingSession = checkResult.rows[0] as { SESSION_ID: string; USER_ID: string | null };
+
+          if (userId && !existingSession.USER_ID) {
+            // 기존 세션에 user_id가 없으면 업데이트
+            await connection.execute(
+              `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = :socketId, user_id = :userId
+               WHERE session_id = :sessionId`,
+              { socketId: socket.id, userId, sessionId }
+            );
+          } else {
+            await connection.execute(
+              `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = :socketId
+               WHERE session_id = :sessionId`,
+              { socketId: socket.id, sessionId }
+            );
+          }
           await connection.commit();
         }
 
