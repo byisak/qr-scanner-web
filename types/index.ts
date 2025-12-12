@@ -1,3 +1,59 @@
+// ============================================
+// 사용자 및 인증 타입
+// ============================================
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  profileImage: string | null;
+  provider: 'email' | 'kakao' | 'google' | 'apple';
+  providerId?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  user?: User;
+  accessToken?: string;
+  refreshToken?: string;
+  isNewUser?: boolean;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SocialLoginRequest {
+  accessToken: string;
+  idToken?: string; // Apple 로그인용
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface ProfileUpdateRequest {
+  name?: string;
+  profileImage?: string;
+}
+
+// ============================================
+// 스캔 데이터 타입
+// ============================================
+
 export interface ScanData {
   id: number;
   sessionId: string;
@@ -8,6 +64,8 @@ export interface ScanData {
 
 export interface Session {
   session_id: string;
+  user_id: string | null;
+  session_name: string | null;
   created_at: string;
   last_activity: string;
   status: string;
