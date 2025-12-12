@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     connection = await getConnection();
 
     const conditions: string[] = [];
-    const binds: Record<string, unknown> = {};
+    const binds: Record<string, string> = {};
 
     // 상태 필터
     if (statusFilter === 'ACTIVE') {
