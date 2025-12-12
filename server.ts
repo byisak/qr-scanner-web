@@ -229,7 +229,7 @@ app.prepare().then(() => {
         );
 
         // 스캔 데이터 삽입
-        const result = await connection.execute(
+        const result = await connection.execute<unknown, { id: number[] }>(
           `INSERT INTO scan_data (session_id, code, scan_timestamp, created_at)
            VALUES (:sessionId, :code, :scanTimestamp, CURRENT_TIMESTAMP)
            RETURNING id INTO :id`,
@@ -244,7 +244,7 @@ app.prepare().then(() => {
         await connection.commit();
 
         const scanRecord = {
-          id: result.outBinds?.id[0] || Date.now(),
+          id: result.outBinds?.id?.[0] || Date.now(),
           sessionId,
           code,
           scan_timestamp: timestamp || Date.now(),
