@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
 
     // 동적으로 업데이트 쿼리 생성
     const updates: string[] = [];
-    const binds: Record<string, unknown> = { id: tokenUser.userId };
+    const binds: Record<string, string | Date | null> = { id: tokenUser.userId };
 
     if (name) {
       updates.push('name = :name');
