@@ -61,7 +61,10 @@ export async function initializePool(): Promise<oracledb.Pool | null> {
  */
 export async function getConnection(): Promise<oracledb.Connection> {
   if (!pool) {
-    await initializePool();
+    const newPool = await initializePool();
+    if (!newPool) {
+      throw new Error('데이터베이스 연결이 설정되지 않았습니다. ORACLE_PASSWORD와 ORACLE_CONNECTION_STRING 환경 변수를 확인해주세요.');
+    }
   }
   return pool!.getConnection();
 }
