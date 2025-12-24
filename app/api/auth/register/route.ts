@@ -15,13 +15,23 @@ import type { RegisterRequest, User } from '@/types';
 
 export async function POST(request: NextRequest) {
   let connection: oracledb.Connection | null = null;
+  const timestamp = new Date().toISOString();
+
+  console.log(`\n========== [${timestamp}] 회원가입 요청 시작 ==========`);
+  console.log(`[REGISTER] IP: ${request.headers.get('x-forwarded-for') || 'unknown'}`);
+  console.log(`[REGISTER] User-Agent: ${request.headers.get('user-agent') || 'unknown'}`);
 
   try {
     const body = (await request.json()) as RegisterRequest;
     const { email, password, name } = body;
 
+    console.log(`[REGISTER] 요청 이메일: ${email || '(없음)'}`);
+    console.log(`[REGISTER] 요청 이름: ${name || '(없음)'}`);
+    console.log(`[REGISTER] 비밀번호 제공: ${password ? '예' : '아니오'}`);
+
     // 유효성 검사
     if (!email || !password || !name) {
+      console.log(`[REGISTER] ❌ 실패: 필수 필드 누락`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.VALIDATION_ERROR,
@@ -34,6 +44,7 @@ export async function POST(request: NextRequest) {
     // 이메일 형식 검사
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log(`[REGISTER] ❌ 실패: 이메일 형식 오류 - ${email}`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.VALIDATION_ERROR,
@@ -45,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     // 비밀번호 길이 검사
     if (password.length < 8) {
+      console.log(`[REGISTER] ❌ 실패: 비밀번호 길이 부족 (${password.length}자)`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.VALIDATION_ERROR,
@@ -54,7 +66,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`[REGISTER] DB 연결 시도...`);
     connection = await getConnection();
+    console.log(`[REGISTER] ✅ DB 연결 성공`);
 
     // 이메일 중복 확인
     const existingUser = await connection.execute(
@@ -64,6 +78,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (existingUser.rows && existingUser.rows.length > 0) {
+      console.log(`[REGISTER] ❌ 실패: 이미 가입된 이메일 - ${email}`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.EMAIL_EXISTS,
@@ -72,8 +87,10 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
+    console.log(`[REGISTER] 이메일 중복 확인 완료`);
 
     // 사용자 생성
+    console.log(`[REGISTER] 사용자 생성 중...`);
     const userId = uuidv4();
     const passwordHash = hashPassword(password);
     const now = new Date();
@@ -123,6 +140,9 @@ export async function POST(request: NextRequest) {
       createdAt: now.toISOString(),
     };
 
+    console.log(`[REGISTER] ✅✅ 회원가입 성공: ${user.email} (ID: ${user.id})`);
+    console.log(`========== 회원가입 요청 완료 ==========\n`);
+
     return NextResponse.json(
       {
         success: true,
@@ -133,7 +153,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Register error:', error);
+    console.error(`[REGISTER] ❌❌ 회원가입 오류:`, error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

@@ -25,13 +25,22 @@ interface UserRow {
 
 export async function POST(request: NextRequest) {
   let connection: oracledb.Connection | null = null;
+  const timestamp = new Date().toISOString();
+
+  console.log(`\n========== [${timestamp}] 로그인 요청 시작 ==========`);
+  console.log(`[LOGIN] IP: ${request.headers.get('x-forwarded-for') || 'unknown'}`);
+  console.log(`[LOGIN] User-Agent: ${request.headers.get('user-agent') || 'unknown'}`);
 
   try {
     const body = (await request.json()) as LoginRequest;
     const { email, password } = body;
 
+    console.log(`[LOGIN] 요청 이메일: ${email || '(없음)'}`);
+    console.log(`[LOGIN] 비밀번호 제공: ${password ? '예' : '아니오'}`);
+
     // 유효성 검사
     if (!email || !password) {
+      console.log(`[LOGIN] ❌ 실패: 유효성 검사 실패 - 이메일 또는 비밀번호 누락`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.VALIDATION_ERROR,
@@ -41,7 +50,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`[LOGIN] DB 연결 시도...`);
     connection = await getConnection();
+    console.log(`[LOGIN] ✅ DB 연결 성공`);
 
     // 사용자 조회
     const result = await connection.execute<UserRow>(
@@ -53,6 +64,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result.rows || result.rows.length === 0) {
+      console.log(`[LOGIN] ❌ 실패: 사용자를 찾을 수 없음 - ${email}`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
@@ -63,9 +75,11 @@ export async function POST(request: NextRequest) {
     }
 
     const userRow = result.rows[0];
+    console.log(`[LOGIN] 사용자 조회됨: ${userRow.EMAIL}, provider: ${userRow.PROVIDER}`);
 
     // 소셜 로그인 계정인 경우
     if (userRow.PROVIDER !== 'email') {
+      console.log(`[LOGIN] ❌ 실패: 소셜 로그인 계정 - ${userRow.PROVIDER}`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
@@ -76,7 +90,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 비밀번호 검증
+    console.log(`[LOGIN] 비밀번호 검증 중...`);
     if (!userRow.PASSWORD_HASH || !verifyPassword(password, userRow.PASSWORD_HASH)) {
+      console.log(`[LOGIN] ❌ 실패: 비밀번호 불일치`);
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
@@ -85,6 +101,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    console.log(`[LOGIN] ✅ 비밀번호 검증 성공`);
 
     // 기존 리프레시 토큰 삭제
     await connection.execute(
@@ -125,6 +142,9 @@ export async function POST(request: NextRequest) {
       createdAt: userRow.CREATED_AT.toISOString(),
     };
 
+    console.log(`[LOGIN] ✅✅ 로그인 성공: ${user.email} (ID: ${user.id})`);
+    console.log(`========== 로그인 요청 완료 ==========\n`);
+
     return NextResponse.json({
       success: true,
       user,
@@ -132,7 +152,7 @@ export async function POST(request: NextRequest) {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error(`[LOGIN] ❌❌ 로그인 오류:`, error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.INVALID_CREDENTIALS,
