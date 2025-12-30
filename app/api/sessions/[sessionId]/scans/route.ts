@@ -1,31 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { sessionId } = await params;
-    connection = await getConnection();
+    client = await getConnection();
 
-    const result = await connection.execute(
+    const result = await client.query(
       `SELECT id, session_id, code, scan_timestamp, created_at
        FROM scan_data
-       WHERE session_id = :sessionId
+       WHERE session_id = $1
        ORDER BY created_at ASC`,
-      { sessionId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      [sessionId]
     );
 
-    const scans = (result.rows || []).map((row: any) => ({
-      id: row.ID,
-      sessionId: row.SESSION_ID,
-      code: row.CODE,
-      scan_timestamp: row.SCAN_TIMESTAMP,
-      createdAt: row.CREATED_AT ? row.CREATED_AT.toISOString() : new Date().toISOString(),
+    const scans = result.rows.map((row: any) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      code: row.code,
+      scan_timestamp: row.scan_timestamp,
+      createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
     }));
 
     return NextResponse.json(scans);
@@ -33,12 +32,8 @@ export async function GET(
     console.error('스캔 데이터 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { optionalAuth } from '@/lib/auth-middleware';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 
 // GET - 세션 목록 조회 (status 파라미터로 필터링 가능)
 // ?status=ACTIVE (기본값) - 활성 세션만
@@ -9,7 +9,7 @@ import oracledb from 'oracledb';
 // ?status=ALL - 모든 세션
 // ?mine=true - 내 세션만 (인증 필요)
 export async function GET(request: NextRequest) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status') || 'ACTIVE';
@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
     // 인증 정보 확인 (선택적)
     const authUser = optionalAuth(request);
 
-    connection = await getConnection();
+    client = await getConnection();
 
     const conditions: string[] = [];
-    const binds: Record<string, unknown> = {};
+    const values: unknown[] = [];
+    let paramIndex = 1;
 
     // 상태 필터
     if (statusFilter === 'ACTIVE') {
@@ -33,15 +34,15 @@ export async function GET(request: NextRequest) {
 
     // 내 세션만 필터 (인증된 경우에만)
     if (mineOnly && authUser) {
-      conditions.push(`s.user_id = :userId`);
-      binds.userId = authUser.userId;
+      conditions.push(`s.user_id = $${paramIndex++}`);
+      values.push(authUser.userId);
     }
 
     const whereClause = conditions.length > 0
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
 
-    const result = await connection.execute(
+    const result = await client.query(
       `SELECT
         s.session_id,
         s.user_id,
@@ -56,19 +57,18 @@ export async function GET(request: NextRequest) {
        ${whereClause}
        GROUP BY s.session_id, s.user_id, s.session_name, s.created_at, s.last_activity, s.status, s.deleted_at
        ORDER BY s.created_at DESC`,
-      binds,
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      values
     );
 
-    const sessions = (result.rows || []).map((row: any) => ({
-      session_id: row.SESSION_ID,
-      user_id: row.USER_ID || null,
-      session_name: row.SESSION_NAME || null,
-      created_at: row.CREATED_AT ? row.CREATED_AT.toISOString() : new Date().toISOString(),
-      last_activity: row.LAST_ACTIVITY ? row.LAST_ACTIVITY.toISOString() : new Date().toISOString(),
-      status: row.STATUS,
-      deleted_at: row.DELETED_AT ? row.DELETED_AT.toISOString() : null,
-      scan_count: row.SCAN_COUNT || 0,
+    const sessions = result.rows.map((row: any) => ({
+      session_id: row.session_id,
+      user_id: row.user_id || null,
+      session_name: row.session_name || null,
+      created_at: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+      last_activity: row.last_activity ? row.last_activity.toISOString() : new Date().toISOString(),
+      status: row.status,
+      deleted_at: row.deleted_at ? row.deleted_at.toISOString() : null,
+      scan_count: parseInt(row.scan_count) || 0,
     }));
 
     return NextResponse.json(sessions);
@@ -76,12 +76,8 @@ export async function GET(request: NextRequest) {
     console.error('세션 목록 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

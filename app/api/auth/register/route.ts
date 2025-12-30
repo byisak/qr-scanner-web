@@ -1,6 +1,6 @@
 // POST /api/auth/register - 회원가입
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { getConnection } from '@/lib/db';
 import {
@@ -14,7 +14,7 @@ import {
 import type { RegisterRequest, User } from '@/types';
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as RegisterRequest;
@@ -54,16 +54,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 이메일 중복 확인
-    const existingUser = await connection.execute(
-      `SELECT id FROM users WHERE email = :email AND deleted_at IS NULL`,
-      { email: email.toLowerCase() },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    const existingUser = await client.query(
+      `SELECT id FROM users WHERE email = $1 AND deleted_at IS NULL`,
+      [email.toLowerCase()]
     );
 
-    if (existingUser.rows && existingUser.rows.length > 0) {
+    if (existingUser.rows.length > 0) {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.EMAIL_EXISTS,
@@ -78,17 +77,10 @@ export async function POST(request: NextRequest) {
     const passwordHash = hashPassword(password);
     const now = new Date();
 
-    await connection.execute(
+    await client.query(
       `INSERT INTO users (id, email, password_hash, name, provider, created_at, updated_at)
-       VALUES (:id, :email, :password_hash, :name, 'email', :created_at, :updated_at)`,
-      {
-        id: userId,
-        email: email.toLowerCase(),
-        password_hash: passwordHash,
-        name,
-        created_at: now,
-        updated_at: now,
-      }
+       VALUES ($1, $2, $3, $4, 'email', $5, $6)`,
+      [userId, email.toLowerCase(), passwordHash, name, now, now]
     );
 
     // 리프레시 토큰 생성 및 저장
@@ -96,19 +88,11 @@ export async function POST(request: NextRequest) {
     const refreshTokenId = uuidv4();
     const expiresAt = getRefreshTokenExpiry();
 
-    await connection.execute(
+    await client.query(
       `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES (:id, :user_id, :token, :expires_at, :created_at)`,
-      {
-        id: refreshTokenId,
-        user_id: userId,
-        token: refreshToken,
-        expires_at: expiresAt,
-        created_at: now,
-      }
+       VALUES ($1, $2, $3, $4, $5)`,
+      [refreshTokenId, userId, refreshToken, expiresAt, now]
     );
-
-    await connection.commit();
 
     // 액세스 토큰 생성
     const accessToken = generateAccessToken(userId, email.toLowerCase());
@@ -142,12 +126,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

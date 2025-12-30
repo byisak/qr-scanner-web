@@ -1,6 +1,6 @@
 // POST /api/auth/social/kakao - 카카오 소셜 로그인
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { getConnection } from '@/lib/db';
 import {
@@ -24,16 +24,16 @@ interface KakaoUserResponse {
 }
 
 interface UserRow {
-  ID: string;
-  EMAIL: string;
-  NAME: string;
-  PROFILE_IMAGE: string | null;
-  PROVIDER: string;
-  CREATED_AT: Date;
+  id: string;
+  email: string;
+  name: string;
+  profile_image: string | null;
+  provider: string;
+  created_at: Date;
 }
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as SocialLoginRequest;
@@ -72,36 +72,34 @@ export async function POST(request: NextRequest) {
     const name = kakaoUser.kakao_account?.profile?.nickname || '카카오 사용자';
     const profileImage = kakaoUser.kakao_account?.profile?.profile_image_url || null;
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 기존 사용자 확인 (provider_id로 검색)
-    let userResult = await connection.execute<UserRow>(
+    let userResult = await client.query<UserRow>(
       `SELECT id, email, name, profile_image, provider, created_at
        FROM users
-       WHERE provider = 'kakao' AND provider_id = :provider_id AND deleted_at IS NULL`,
-      { provider_id: providerId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       WHERE provider = 'kakao' AND provider_id = $1 AND deleted_at IS NULL`,
+      [providerId]
     );
 
     let isNewUser = false;
     let userRow: UserRow;
 
-    if (!userResult.rows || userResult.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       // 이메일로 기존 계정 확인
-      const emailCheck = await connection.execute<UserRow>(
+      const emailCheck = await client.query<UserRow>(
         `SELECT id, email, name, profile_image, provider, created_at
          FROM users
-         WHERE email = :email AND deleted_at IS NULL`,
-        { email: email.toLowerCase() },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+         WHERE email = $1 AND deleted_at IS NULL`,
+        [email.toLowerCase()]
       );
 
-      if (emailCheck.rows && emailCheck.rows.length > 0) {
+      if (emailCheck.rows.length > 0) {
         // 같은 이메일로 다른 방식으로 가입한 계정이 있음
         return NextResponse.json(
           createAuthErrorResponse(
             AuthErrorCodes.EMAIL_EXISTS,
-            `이 이메일은 이미 ${emailCheck.rows[0].PROVIDER} 로그인으로 가입되어 있습니다.`
+            `이 이메일은 이미 ${emailCheck.rows[0].provider} 로그인으로 가입되어 있습니다.`
           ),
           { status: 409 }
         );
@@ -111,48 +109,36 @@ export async function POST(request: NextRequest) {
       const userId = uuidv4();
       const now = new Date();
 
-      await connection.execute(
+      await client.query(
         `INSERT INTO users (id, email, name, profile_image, provider, provider_id, created_at, updated_at)
-         VALUES (:id, :email, :name, :profile_image, 'kakao', :provider_id, :created_at, :updated_at)`,
-        {
-          id: userId,
-          email: email.toLowerCase(),
-          name,
-          profile_image: profileImage,
-          provider_id: providerId,
-          created_at: now,
-          updated_at: now,
-        }
+         VALUES ($1, $2, $3, $4, 'kakao', $5, $6, $7)`,
+        [userId, email.toLowerCase(), name, profileImage, providerId, now, now]
       );
 
       isNewUser = true;
       userRow = {
-        ID: userId,
-        EMAIL: email.toLowerCase(),
-        NAME: name,
-        PROFILE_IMAGE: profileImage,
-        PROVIDER: 'kakao',
-        CREATED_AT: now,
+        id: userId,
+        email: email.toLowerCase(),
+        name: name,
+        profile_image: profileImage,
+        provider: 'kakao',
+        created_at: now,
       };
     } else {
       userRow = userResult.rows[0];
 
       // 프로필 정보 업데이트 (선택적)
-      await connection.execute(
-        `UPDATE users SET profile_image = :profile_image, updated_at = :updated_at
-         WHERE id = :id`,
-        {
-          profile_image: profileImage,
-          updated_at: new Date(),
-          id: userRow.ID,
-        }
+      await client.query(
+        `UPDATE users SET profile_image = $1, updated_at = $2
+         WHERE id = $3`,
+        [profileImage, new Date(), userRow.id]
       );
     }
 
     // 기존 리프레시 토큰 삭제
-    await connection.execute(
-      `DELETE FROM refresh_tokens WHERE user_id = :user_id`,
-      { user_id: userRow.ID }
+    await client.query(
+      `DELETE FROM refresh_tokens WHERE user_id = $1`,
+      [userRow.id]
     );
 
     // 새 리프레시 토큰 생성 및 저장
@@ -161,30 +147,22 @@ export async function POST(request: NextRequest) {
     const expiresAt = getRefreshTokenExpiry();
     const now = new Date();
 
-    await connection.execute(
+    await client.query(
       `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES (:id, :user_id, :token, :expires_at, :created_at)`,
-      {
-        id: refreshTokenId,
-        user_id: userRow.ID,
-        token: refreshToken,
-        expires_at: expiresAt,
-        created_at: now,
-      }
+       VALUES ($1, $2, $3, $4, $5)`,
+      [refreshTokenId, userRow.id, refreshToken, expiresAt, now]
     );
 
-    await connection.commit();
-
     // 액세스 토큰 생성
-    const accessToken = generateAccessToken(userRow.ID, userRow.EMAIL);
+    const accessToken = generateAccessToken(userRow.id, userRow.email);
 
     const user: User = {
-      id: userRow.ID,
-      email: userRow.EMAIL,
-      name: userRow.NAME,
-      profileImage: userRow.PROFILE_IMAGE,
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name,
+      profileImage: userRow.profile_image,
       provider: 'kakao',
-      createdAt: userRow.CREATED_AT.toISOString(),
+      createdAt: userRow.created_at.toISOString(),
     };
 
     return NextResponse.json({
@@ -204,12 +182,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

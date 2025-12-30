@@ -1,6 +1,6 @@
 // POST /api/auth/login - 이메일 로그인
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { getConnection } from '@/lib/db';
 import {
@@ -14,17 +14,17 @@ import {
 import type { LoginRequest, User } from '@/types';
 
 interface UserRow {
-  ID: string;
-  EMAIL: string;
-  PASSWORD_HASH: string;
-  NAME: string;
-  PROFILE_IMAGE: string | null;
-  PROVIDER: string;
-  CREATED_AT: Date;
+  id: string;
+  email: string;
+  password_hash: string;
+  name: string;
+  profile_image: string | null;
+  provider: string;
+  created_at: Date;
 }
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as LoginRequest;
@@ -41,18 +41,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 사용자 조회
-    const result = await connection.execute<UserRow>(
+    const result = await client.query<UserRow>(
       `SELECT id, email, password_hash, name, profile_image, provider, created_at
        FROM users
-       WHERE email = :email AND deleted_at IS NULL`,
-      { email: email.toLowerCase() },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       WHERE email = $1 AND deleted_at IS NULL`,
+      [email.toLowerCase()]
     );
 
-    if (!result.rows || result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
@@ -65,18 +64,18 @@ export async function POST(request: NextRequest) {
     const userRow = result.rows[0];
 
     // 소셜 로그인 계정인 경우
-    if (userRow.PROVIDER !== 'email') {
+    if (userRow.provider !== 'email') {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
-          `이 계정은 ${userRow.PROVIDER} 로그인으로 가입되었습니다.`
+          `이 계정은 ${userRow.provider} 로그인으로 가입되었습니다.`
         ),
         { status: 401 }
       );
     }
 
     // 비밀번호 검증
-    if (!userRow.PASSWORD_HASH || !verifyPassword(password, userRow.PASSWORD_HASH)) {
+    if (!userRow.password_hash || !verifyPassword(password, userRow.password_hash)) {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.INVALID_CREDENTIALS,
@@ -87,9 +86,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 기존 리프레시 토큰 삭제
-    await connection.execute(
-      `DELETE FROM refresh_tokens WHERE user_id = :user_id`,
-      { user_id: userRow.ID }
+    await client.query(
+      `DELETE FROM refresh_tokens WHERE user_id = $1`,
+      [userRow.id]
     );
 
     // 새 리프레시 토큰 생성 및 저장
@@ -98,31 +97,23 @@ export async function POST(request: NextRequest) {
     const expiresAt = getRefreshTokenExpiry();
     const now = new Date();
 
-    await connection.execute(
+    await client.query(
       `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES (:id, :user_id, :token, :expires_at, :created_at)`,
-      {
-        id: refreshTokenId,
-        user_id: userRow.ID,
-        token: refreshToken,
-        expires_at: expiresAt,
-        created_at: now,
-      }
+       VALUES ($1, $2, $3, $4, $5)`,
+      [refreshTokenId, userRow.id, refreshToken, expiresAt, now]
     );
 
-    await connection.commit();
-
     // 액세스 토큰 생성
-    const accessToken = generateAccessToken(userRow.ID, userRow.EMAIL);
+    const accessToken = generateAccessToken(userRow.id, userRow.email);
 
     // 사용자 정보 구성
     const user: User = {
-      id: userRow.ID,
-      email: userRow.EMAIL,
-      name: userRow.NAME,
-      profileImage: userRow.PROFILE_IMAGE,
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name,
+      profileImage: userRow.profile_image,
       provider: 'email',
-      createdAt: userRow.CREATED_AT.toISOString(),
+      createdAt: userRow.created_at.toISOString(),
     };
 
     return NextResponse.json({
@@ -141,12 +132,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

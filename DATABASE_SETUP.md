@@ -1,118 +1,148 @@
-# Oracle Database 설정 가이드
+# PostgreSQL Database 설정 가이드
 
-## 1. 데이터베이스 스키마 생성
-
-Oracle Cloud Console에서 SQL 실행:
-
-1. **Oracle Cloud Console 접속**
-   - https://cloud.oracle.com 로그인
-   - Autonomous Database → `qrcodedb` 선택
-   - "Database Actions" → "SQL" 클릭
-
-2. **스키마 실행**
-   - `schema.sql` 파일의 내용을 복사
-   - SQL 워크시트에 붙여넣기
-   - 실행 (Run Script 버튼)
-
-```sql
--- schema.sql 내용 실행
-CREATE TABLE sessions ( ... );
-CREATE TABLE scan_data ( ... );
-CREATE INDEX idx_scan_session ON scan_data(session_id);
-...
-```
-
-## 2. 연결 정보 확인
-
-### Option 1: TLS 연결 (권장)
-
-Oracle Cloud Console에서:
-1. Autonomous Database → `qrcodedb` 선택
-2. "DB Connection" 버튼 클릭
-3. "TLS" 탭 선택
-4. Connection String 복사 (예: qrcodedb_high)
-
-### Option 2: Wallet 다운로드
-
-1. "Wallet" 탭 선택
-2. "Download Wallet" 클릭
-3. 비밀번호 설정 및 다운로드
-4. 압축 해제 후 `TNS_ADMIN` 환경 변수 설정
-
-## 3. 환경 변수 설정
-
-`.env.local` 파일 수정:
+## 1. PostgreSQL 설치 (Ubuntu)
 
 ```bash
-# Oracle Database 연결 정보
-ORACLE_USER=ADMIN
-ORACLE_PASSWORD=실제-비밀번호
+# PostgreSQL 설치
+sudo apt update
+sudo apt install postgresql postgresql-contrib
 
-# TLS 연결 문자열 (Option 1)
-ORACLE_CONNECTION_STRING=(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-osaka-1.oraclecloud.com))(connect_data=(service_name=qrcodedb_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
-
-# 또는 Wallet 사용 시 (Option 2)
-ORACLE_CONNECTION_STRING=qrcodedb_high
+# PostgreSQL 서비스 시작
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
 ```
 
-## 4. Oracle Instant Client 설치 (Linux 서버)
+## 2. 데이터베이스 및 사용자 생성
 
 ```bash
-# Oracle Instant Client 다운로드
-wget https://download.oracle.com/otn_software/linux/instantclient/2115000/instantclient-basic-linux.x64-21.15.0.0.0dbru.zip
+# PostgreSQL 접속
+sudo -u postgres psql
 
-# 압축 해제
-unzip instantclient-basic-linux.x64-21.15.0.0.0dbru.zip
+# 데이터베이스 생성
+CREATE DATABASE qrscanner;
 
-# 환경 변수 설정
-export LD_LIBRARY_PATH=/path/to/instantclient_21_15:$LD_LIBRARY_PATH
+# 사용자 생성 및 비밀번호 설정
+CREATE USER qrscanner_user WITH ENCRYPTED PASSWORD 'your_secure_password';
 
-# Wallet 사용 시 (Option 2)
-export TNS_ADMIN=/path/to/wallet
+# 권한 부여
+GRANT ALL PRIVILEGES ON DATABASE qrscanner TO qrscanner_user;
+
+# 종료
+\q
 ```
 
-## 5. 연결 테스트
+## 3. 스키마 생성
 
 ```bash
+# 데이터베이스에 접속
+psql -U qrscanner_user -d qrscanner -h localhost
+
+# schema.sql 실행
+\i schema.sql
+```
+
+또는 직접 실행:
+
+```bash
+psql -U qrscanner_user -d qrscanner -h localhost -f schema.sql
+```
+
+## 4. 환경 변수 설정
+
+`.env.local` 파일 생성:
+
+```bash
+# PostgreSQL 연결 정보
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DATABASE=qrscanner
+POSTGRES_USER=qrscanner_user
+POSTGRES_PASSWORD=your_secure_password
+
+# JWT 인증
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+
+# 서버 설정
+NODE_ENV=production
+HOSTNAME=0.0.0.0
+PORT=3000
+```
+
+## 5. 원격 연결 설정 (필요한 경우)
+
+### pg_hba.conf 수정
+
+```bash
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+```
+
+다음 줄 추가:
+```
+host    qrscanner       qrscanner_user  0.0.0.0/0       md5
+```
+
+### postgresql.conf 수정
+
+```bash
+sudo nano /etc/postgresql/16/main/postgresql.conf
+```
+
+다음 설정 변경:
+```
+listen_addresses = '*'
+```
+
+### PostgreSQL 재시작
+
+```bash
+sudo systemctl restart postgresql
+```
+
+## 6. 연결 테스트
+
+```bash
+# 로컬 연결 테스트
+psql -U qrscanner_user -d qrscanner -h localhost
+
 # 서버 실행
 npm run dev
 
 # 로그 확인
-✅ Oracle DB 연결 풀 생성 성공
+✅ PostgreSQL DB 연결 풀 생성 성공
 > Ready on http://0.0.0.0:3000
 ```
 
-## 6. 문제 해결
+## 7. 문제 해결
 
 ### 연결 실패 시
 
 ```bash
-# 1. Instant Client 경로 확인
-echo $LD_LIBRARY_PATH
+# PostgreSQL 상태 확인
+sudo systemctl status postgresql
 
-# 2. TNS_ADMIN 확인 (Wallet 사용 시)
-echo $TNS_ADMIN
-ls $TNS_ADMIN/tnsnames.ora
+# 연결 테스트
+psql -U qrscanner_user -d qrscanner -h localhost
 
-# 3. 연결 문자열 테스트
-sqlplus ADMIN/password@connection_string
+# 로그 확인
+sudo tail -f /var/log/postgresql/postgresql-16-main.log
 ```
 
 ### 일반적인 오류
 
-**ORA-12541: TNS:no listener**
-- Connection String이 잘못되었거나 네트워크 문제
-- ACL 설정 확인 (Oracle Cloud Console)
-
-**ORA-01017: invalid username/password**
+**FATAL: password authentication failed**
 - 비밀번호 확인
-- ADMIN 계정 잠금 여부 확인
+- pg_hba.conf 설정 확인
 
-**DPI-1047: Cannot locate a 64-bit Oracle Client library**
-- Oracle Instant Client 미설치
-- LD_LIBRARY_PATH 미설정
+**FATAL: database "qrscanner" does not exist**
+- 데이터베이스 생성 확인
+- 데이터베이스 이름 확인
 
-## 7. 보안 권장사항
+**Connection refused**
+- PostgreSQL 서비스 실행 여부 확인
+- 포트 번호 확인 (기본: 5432)
+- 방화벽 설정 확인
+
+## 8. 보안 권장사항
 
 1. **.env.local 파일 보호**
    ```bash
@@ -125,19 +155,46 @@ sqlplus ADMIN/password@connection_string
 
 3. **프로덕션 환경**
    - 환경 변수는 서버 설정에서 관리
-   - Secrets Manager 사용 권장
+   - 강력한 비밀번호 사용
+   - SSL 연결 사용 권장
 
-## 8. 데이터베이스 관리
+## 9. 데이터베이스 관리
 
 ### 세션 정리 (오래된 세션 삭제)
 ```sql
-DELETE FROM sessions WHERE last_activity < SYSDATE - 1;
+DELETE FROM sessions WHERE last_activity < NOW() - INTERVAL '1 day';
 ```
 
 ### 백업
-- Oracle Autonomous Database는 자동 백업 (60일 보관)
-- 수동 백업: Database Actions → Backup
+```bash
+# 전체 백업
+pg_dump -U qrscanner_user -d qrscanner > backup.sql
 
-### 모니터링
-- Performance Hub에서 실시간 모니터링
-- SQL 성능 분석 가능
+# 복원
+psql -U qrscanner_user -d qrscanner < backup.sql
+```
+
+### 데이터베이스 상태 확인
+```sql
+-- 테이블 목록
+\dt
+
+-- 세션 수
+SELECT COUNT(*) FROM sessions;
+
+-- 스캔 데이터 수
+SELECT COUNT(*) FROM scan_data;
+
+-- 사용자 수
+SELECT COUNT(*) FROM users;
+```
+
+## 10. npm 패키지 설치
+
+```bash
+npm install
+```
+
+필요한 패키지:
+- `pg`: PostgreSQL 클라이언트
+- `@types/pg`: TypeScript 타입 정의
