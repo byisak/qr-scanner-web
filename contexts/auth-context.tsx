@@ -98,7 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY)
-      console.log('🔐 Auth 초기화 - 저장된 토큰:', storedToken ? `${storedToken.substring(0, 20)}...` : 'null')
 
       if (storedToken) {
         let currentToken = storedToken
@@ -106,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!userData) {
           // 토큰 만료 시 갱신 시도
-          console.log('🔐 토큰 만료 - 갱신 시도')
           const newToken = await refreshTokens()
           if (newToken) {
             currentToken = newToken
@@ -115,11 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (userData) {
-          console.log('🔐 사용자 인증 성공:', userData.email, '토큰 설정 중...')
           setUser(userData)
           setAccessToken(currentToken)
         } else {
-          console.log('🔐 사용자 인증 실패 - 토큰 삭제')
           clearTokens()
         }
       }

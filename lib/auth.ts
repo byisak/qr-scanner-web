@@ -3,7 +3,6 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 // 환경 변수에서 시크릿 키 가져오기
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-console.log('🔐 JWT_SECRET 로드됨:', JWT_SECRET.substring(0, 10) + '...');
 const JWT_ACCESS_EXPIRY = 60 * 60; // 1시간 (초)
 const JWT_REFRESH_EXPIRY = 30 * 24 * 60 * 60; // 30일 (초)
 
@@ -85,35 +84,23 @@ export function getRefreshTokenExpiry(): Date {
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.log('🔑 토큰 검증 실패: 형식 오류 (parts:', parts.length, ')');
-      return null;
-    }
+    if (parts.length !== 3) return null;
 
     const [header, payload, signature] = parts;
 
     // 서명 검증
     const expectedSignature = createSignature(header, payload);
-    if (signature !== expectedSignature) {
-      console.log('🔑 토큰 검증 실패: 서명 불일치');
-      console.log('🔑 받은 서명:', signature.substring(0, 20) + '...');
-      console.log('🔑 예상 서명:', expectedSignature.substring(0, 20) + '...');
-      return null;
-    }
+    if (signature !== expectedSignature) return null;
 
     // 페이로드 파싱
     const decoded = JSON.parse(base64UrlDecode(payload)) as JWTPayload;
 
     // 만료 시간 확인
     const now = Math.floor(Date.now() / 1000);
-    if (decoded.exp < now) {
-      console.log('🔑 토큰 검증 실패: 만료됨 (exp:', decoded.exp, ', now:', now, ')');
-      return null;
-    }
+    if (decoded.exp < now) return null;
 
     return decoded;
-  } catch (err) {
-    console.log('🔑 토큰 검증 실패: 예외 발생', err);
+  } catch {
     return null;
   }
 }

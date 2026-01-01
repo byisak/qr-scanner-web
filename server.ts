@@ -5,7 +5,6 @@ import next from 'next';
 import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePool, getConnection } from './lib/db';
-import { verifyAccessToken } from './lib/auth';
 import type { PoolClient } from 'pg';
 
 // .env.local 파일 로드
@@ -50,27 +49,12 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('클라이언트 연결:', socket.id);
 
-    // 연결 시 토큰 검증 (선택적 인증)
-    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-    console.log('🔑 받은 토큰:', token ? `${String(token).substring(0, 20)}...` : 'null');
-    let authenticatedUserId: string | null = null;
-
-    if (token && typeof token === 'string') {
-      const decoded = verifyAccessToken(token);
-      console.log('🔑 토큰 디코딩 결과:', decoded ? `userId: ${decoded.userId}` : '실패');
-      if (decoded) {
-        authenticatedUserId = decoded.userId;
-        console.log('인증된 사용자 연결:', authenticatedUserId);
-      }
-    }
-
     // 세션 생성
     socket.on('create-session', async (data) => {
       let client: PoolClient | null = null;
       try {
         const sessionId = data?.sessionId || uuidv4();
-        // 클라이언트에서 전달한 토큰 또는 연결 시 인증된 사용자 ID 사용
-        const userId = data?.userId || authenticatedUserId;
+        const userId = data?.userId || null;
 
         client = await getConnection();
 
@@ -122,12 +106,6 @@ app.prepare().then(() => {
         const sessionId = typeof data === 'string' ? data : data?.sessionId;
         const userId = typeof data === 'object' ? data?.userId : null;
 
-        // 🔍 디버그 로그
-        console.log('=== join-session 디버그 ===');
-        console.log('받은 data:', JSON.stringify(data));
-        console.log('클라이언트에서 받은 userId:', userId);
-        console.log('sessionId:', sessionId);
-
         if (!sessionId) {
           socket.emit('error', { message: '세션 ID가 필요합니다.' });
           return;
@@ -170,25 +148,10 @@ app.prepare().then(() => {
 
         socket.join(sessionId);
 
-        // 세션 소유자 확인
-        const sessionOwnerResult = await client.query(
-          `SELECT user_id FROM sessions WHERE session_id = $1`,
-          [sessionId]
-        );
-        const sessionOwnerId = sessionOwnerResult.rows[0]?.user_id;
-        const isOwner = userId && sessionOwnerId === userId;
-
-        // 🔍 디버그 로그
-        console.log('세션 소유자 ID:', sessionOwnerId);
-        console.log('현재 사용자 ID:', userId);
-        console.log('소유자 여부:', isOwner);
-
         // 기존 스캔 데이터 조회 (로그인 사용자만)
         let existingScans: any[] = [];
-        let filterMode: string;
 
         if (userId) {
-          filterMode = '로그인 - 내 스캔만';
           // 로그인: 내가 스캔한 데이터만 표시
           const scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
                               u.name as user_name, u.email as user_email
@@ -207,25 +170,15 @@ app.prepare().then(() => {
             userId: row.user_id || null,
             userName: row.user_name || row.user_email || null,
           }));
-        } else {
-          filterMode = '비로그인 - 스캔 데이터 없음';
-          // 비로그인: 스캔 데이터 표시 안함 (세션 코드만 표시)
-          existingScans = [];
         }
-
-        console.log('🔍 필터 모드:', filterMode);
-
-        console.log('🔍 조회된 스캔 수:', existingScans.length);
-        console.log('🔍 스캔 데이터 user_id 목록:', existingScans.map(s => s.userId));
-        console.log('=== join-session 디버그 끝 ===');
+        // 비로그인: 스캔 데이터 표시 안함 (existingScans = [])
 
         socket.emit('session-joined', {
           sessionId,
           existingData: existingScans,
-          isOwner,
         });
 
-        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)', filterMode);
+        console.log('세션 참가:', sessionId, userId ? `(사용자: ${userId}, 스캔: ${existingScans.length}개)` : '(비로그인)');
       } catch (err) {
         console.error('세션 참가 실패:', err);
         socket.emit('error', { message: '세션 참가 실패' });
