@@ -1,38 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import * as XLSX from 'xlsx';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { sessionId } = await params;
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'csv'; // csv 또는 xlsx
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 스캔 데이터 조회
-    const result = await connection.execute(
+    const result = await client.query(
       `SELECT id, session_id, code, scan_timestamp, created_at
        FROM scan_data
-       WHERE session_id = :sessionId
+       WHERE session_id = $1
        ORDER BY created_at ASC`,
-      { sessionId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      [sessionId]
     );
 
-    const scans = (result.rows || []).map((row: any, index: number) => ({
+    const scans = result.rows.map((row: any, index: number) => ({
       번호: index + 1,
-      'QR 코드': row.CODE,
-      '스캔 시간': row.SCAN_TIMESTAMP
-        ? new Date(row.SCAN_TIMESTAMP).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+      'QR 코드': row.code,
+      '스캔 시간': row.scan_timestamp
+        ? new Date(Number(row.scan_timestamp)).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
         : '',
-      '저장 시간': row.CREATED_AT
-        ? new Date(row.CREATED_AT).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+      '저장 시간': row.created_at
+        ? new Date(row.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
         : '',
     }));
 
@@ -88,12 +87,8 @@ export async function GET(
     console.error('데이터 내보내기 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

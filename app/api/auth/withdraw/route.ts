@@ -1,6 +1,6 @@
 // DELETE /api/auth/withdraw - 회원 탈퇴
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { getConnection } from '@/lib/db';
 import {
   getUserFromRequest,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/auth';
 
 export async function DELETE(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const authHeader = request.headers.get('authorization');
@@ -25,30 +25,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 리프레시 토큰 삭제
-    await connection.execute(
-      `DELETE FROM refresh_tokens WHERE user_id = :user_id`,
-      { user_id: user.userId }
+    await client.query(
+      `DELETE FROM refresh_tokens WHERE user_id = $1`,
+      [user.userId]
     );
 
     // 사용자 soft delete (deleted_at 설정)
-    await connection.execute(
-      `UPDATE users SET deleted_at = :deleted_at WHERE id = :id`,
-      {
-        deleted_at: new Date(),
-        id: user.userId,
-      }
+    await client.query(
+      `UPDATE users SET deleted_at = $1 WHERE id = $2`,
+      [new Date(), user.userId]
     );
 
     // 사용자의 세션들에서 user_id 제거 (NULL로 설정)
-    await connection.execute(
-      `UPDATE sessions SET user_id = NULL WHERE user_id = :user_id`,
-      { user_id: user.userId }
+    await client.query(
+      `UPDATE sessions SET user_id = NULL WHERE user_id = $1`,
+      [user.userId]
     );
-
-    await connection.commit();
 
     return NextResponse.json({
       success: true,
@@ -64,12 +59,8 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

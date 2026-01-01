@@ -1,6 +1,6 @@
 // POST /api/auth/check-email - 이메일 중복 확인
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { getConnection } from '@/lib/db';
 import {
   AuthErrorCodes,
@@ -12,7 +12,7 @@ interface CheckEmailRequest {
 }
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as CheckEmailRequest;
@@ -41,16 +41,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 이메일 존재 여부 확인
-    const result = await connection.execute(
-      `SELECT id FROM users WHERE email = :email AND deleted_at IS NULL`,
-      { email: email.toLowerCase() },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    const result = await client.query(
+      `SELECT id FROM users WHERE email = $1 AND deleted_at IS NULL`,
+      [email.toLowerCase()]
     );
 
-    const exists = result.rows && result.rows.length > 0;
+    const exists = result.rows.length > 0;
 
     return NextResponse.json({
       success: true,
@@ -67,12 +66,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

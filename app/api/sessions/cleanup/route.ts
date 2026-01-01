@@ -1,25 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 
 const DELETION_DAYS = 30;
 
 // POST - 30일이 지난 삭제된 세션들을 영구 삭제
 export async function POST() {
-  let connection;
+  let client: PoolClient | null = null;
   try {
-    connection = await getConnection();
+    client = await getConnection();
 
     // 30일이 지난 DELETED 상태의 세션 조회
-    const expiredResult = await connection.execute(
+    const expiredResult = await client.query(
       `SELECT session_id FROM sessions
        WHERE status = 'DELETED'
-       AND deleted_at < CURRENT_TIMESTAMP - INTERVAL '${DELETION_DAYS}' DAY`,
-      {},
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       AND deleted_at < CURRENT_TIMESTAMP - INTERVAL '${DELETION_DAYS} days'`
     );
 
-    const expiredSessions = (expiredResult.rows || []) as any[];
+    const expiredSessions = expiredResult.rows;
 
     if (expiredSessions.length === 0) {
       return NextResponse.json({
@@ -33,23 +31,21 @@ export async function POST() {
 
     // 각 세션의 스캔 데이터와 세션 삭제
     for (const session of expiredSessions) {
-      const sessionId = session.SESSION_ID;
+      const sessionId = session.session_id;
 
       // 스캔 데이터 삭제
-      const scanResult = await connection.execute(
-        `DELETE FROM scan_data WHERE session_id = :sessionId`,
-        { sessionId }
+      const scanResult = await client.query(
+        `DELETE FROM scan_data WHERE session_id = $1`,
+        [sessionId]
       );
-      totalDeletedScans += scanResult.rowsAffected || 0;
+      totalDeletedScans += scanResult.rowCount || 0;
 
       // 세션 삭제
-      await connection.execute(
-        `DELETE FROM sessions WHERE session_id = :sessionId`,
-        { sessionId }
+      await client.query(
+        `DELETE FROM sessions WHERE session_id = $1`,
+        [sessionId]
       );
     }
-
-    await connection.commit();
 
     console.log(`만료된 세션 정리 완료: ${expiredSessions.length}개 세션, ${totalDeletedScans}개 스캔 데이터 삭제`);
 
@@ -63,32 +59,26 @@ export async function POST() {
     console.error('만료된 세션 정리 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }
 
 // GET - 만료된 세션 수 조회
 export async function GET() {
-  let connection;
+  let client: PoolClient | null = null;
   try {
-    connection = await getConnection();
+    client = await getConnection();
 
-    const result = await connection.execute(
+    const result = await client.query(
       `SELECT COUNT(*) as expired_count FROM sessions
        WHERE status = 'DELETED'
-       AND deleted_at < CURRENT_TIMESTAMP - INTERVAL '${DELETION_DAYS}' DAY`,
-      {},
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       AND deleted_at < CURRENT_TIMESTAMP - INTERVAL '${DELETION_DAYS} days'`
     );
 
-    const row: any = result.rows?.[0];
-    const expiredCount = row?.EXPIRED_COUNT || 0;
+    const row = result.rows[0];
+    const expiredCount = parseInt(row?.expired_count) || 0;
 
     return NextResponse.json({
       expiredCount,
@@ -98,12 +88,8 @@ export async function GET() {
     console.error('만료된 세션 수 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

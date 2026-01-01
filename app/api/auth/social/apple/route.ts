@@ -1,6 +1,6 @@
 // POST /api/auth/social/apple - 애플 소셜 로그인
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { getConnection } from '@/lib/db';
 import {
@@ -34,12 +34,12 @@ interface AppleJWTPayload {
 }
 
 interface UserRow {
-  ID: string;
-  EMAIL: string;
-  NAME: string;
-  PROFILE_IMAGE: string | null;
-  PROVIDER: string;
-  CREATED_AT: Date;
+  id: string;
+  email: string;
+  name: string;
+  profile_image: string | null;
+  provider: string;
+  created_at: Date;
 }
 
 /**
@@ -65,7 +65,7 @@ function decodeAppleIdToken(idToken: string): AppleJWTPayload | null {
 }
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as AppleLoginRequest;
@@ -118,36 +118,34 @@ export async function POST(request: NextRequest) {
       name = `${firstName} ${lastName}`.trim() || 'Apple User';
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 기존 사용자 확인 (provider_id로 검색)
-    let userResult = await connection.execute<UserRow>(
+    let userResult = await client.query<UserRow>(
       `SELECT id, email, name, profile_image, provider, created_at
        FROM users
-       WHERE provider = 'apple' AND provider_id = :provider_id AND deleted_at IS NULL`,
-      { provider_id: providerId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       WHERE provider = 'apple' AND provider_id = $1 AND deleted_at IS NULL`,
+      [providerId]
     );
 
     let isNewUser = false;
     let userRow: UserRow;
 
-    if (!userResult.rows || userResult.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       // 이메일로 기존 계정 확인
-      const emailCheck = await connection.execute<UserRow>(
+      const emailCheck = await client.query<UserRow>(
         `SELECT id, email, name, profile_image, provider, created_at
          FROM users
-         WHERE email = :email AND deleted_at IS NULL`,
-        { email: email.toLowerCase() },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+         WHERE email = $1 AND deleted_at IS NULL`,
+        [email.toLowerCase()]
       );
 
-      if (emailCheck.rows && emailCheck.rows.length > 0) {
+      if (emailCheck.rows.length > 0) {
         // 같은 이메일로 다른 방식으로 가입한 계정이 있음
         return NextResponse.json(
           createAuthErrorResponse(
             AuthErrorCodes.EMAIL_EXISTS,
-            `이 이메일은 이미 ${emailCheck.rows[0].PROVIDER} 로그인으로 가입되어 있습니다.`
+            `이 이메일은 이미 ${emailCheck.rows[0].provider} 로그인으로 가입되어 있습니다.`
           ),
           { status: 409 }
         );
@@ -157,49 +155,38 @@ export async function POST(request: NextRequest) {
       const userId = uuidv4();
       const nowDate = new Date();
 
-      await connection.execute(
+      await client.query(
         `INSERT INTO users (id, email, name, provider, provider_id, created_at, updated_at)
-         VALUES (:id, :email, :name, 'apple', :provider_id, :created_at, :updated_at)`,
-        {
-          id: userId,
-          email: email.toLowerCase(),
-          name,
-          provider_id: providerId,
-          created_at: nowDate,
-          updated_at: nowDate,
-        }
+         VALUES ($1, $2, $3, 'apple', $4, $5, $6)`,
+        [userId, email.toLowerCase(), name, providerId, nowDate, nowDate]
       );
 
       isNewUser = true;
       userRow = {
-        ID: userId,
-        EMAIL: email.toLowerCase(),
-        NAME: name,
-        PROFILE_IMAGE: null,
-        PROVIDER: 'apple',
-        CREATED_AT: nowDate,
+        id: userId,
+        email: email.toLowerCase(),
+        name: name,
+        profile_image: null,
+        provider: 'apple',
+        created_at: nowDate,
       };
     } else {
       userRow = userResult.rows[0];
 
       // 이름이 제공된 경우에만 업데이트 (Apple은 첫 로그인 시에만 이름 제공)
       if (appleUser?.name) {
-        await connection.execute(
-          `UPDATE users SET name = :name, updated_at = :updated_at
-           WHERE id = :id`,
-          {
-            name,
-            updated_at: new Date(),
-            id: userRow.ID,
-          }
+        await client.query(
+          `UPDATE users SET name = $1, updated_at = $2
+           WHERE id = $3`,
+          [name, new Date(), userRow.id]
         );
       }
     }
 
     // 기존 리프레시 토큰 삭제
-    await connection.execute(
-      `DELETE FROM refresh_tokens WHERE user_id = :user_id`,
-      { user_id: userRow.ID }
+    await client.query(
+      `DELETE FROM refresh_tokens WHERE user_id = $1`,
+      [userRow.id]
     );
 
     // 새 리프레시 토큰 생성 및 저장
@@ -208,30 +195,22 @@ export async function POST(request: NextRequest) {
     const expiresAt = getRefreshTokenExpiry();
     const nowDate = new Date();
 
-    await connection.execute(
+    await client.query(
       `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES (:id, :user_id, :token, :expires_at, :created_at)`,
-      {
-        id: refreshTokenId,
-        user_id: userRow.ID,
-        token: refreshToken,
-        expires_at: expiresAt,
-        created_at: nowDate,
-      }
+       VALUES ($1, $2, $3, $4, $5)`,
+      [refreshTokenId, userRow.id, refreshToken, expiresAt, nowDate]
     );
 
-    await connection.commit();
-
     // 액세스 토큰 생성
-    const accessToken = generateAccessToken(userRow.ID, userRow.EMAIL);
+    const accessToken = generateAccessToken(userRow.id, userRow.email);
 
     const user: User = {
-      id: userRow.ID,
-      email: userRow.EMAIL,
-      name: userRow.NAME,
-      profileImage: userRow.PROFILE_IMAGE,
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name,
+      profileImage: userRow.profile_image,
       provider: 'apple',
-      createdAt: userRow.CREATED_AT.toISOString(),
+      createdAt: userRow.created_at.toISOString(),
     };
 
     return NextResponse.json({
@@ -251,12 +230,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

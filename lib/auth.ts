@@ -84,26 +84,20 @@ export function getRefreshTokenExpiry(): Date {
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
+    if (parts.length !== 3) return null;
 
     const [header, payload, signature] = parts;
 
     // 서명 검증
     const expectedSignature = createSignature(header, payload);
-    if (signature !== expectedSignature) {
-      return null;
-    }
+    if (signature !== expectedSignature) return null;
 
     // 페이로드 파싱
     const decoded = JSON.parse(base64UrlDecode(payload)) as JWTPayload;
 
     // 만료 시간 확인
     const now = Math.floor(Date.now() / 1000);
-    if (decoded.exp < now) {
-      return null;
-    }
+    if (decoded.exp < now) return null;
 
     return decoded;
   } catch {

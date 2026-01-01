@@ -1,6 +1,6 @@
 // POST /api/auth/logout - 로그아웃
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { getConnection } from '@/lib/db';
 import {
   getUserFromRequest,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const authHeader = request.headers.get('authorization');
@@ -25,15 +25,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 사용자의 모든 리프레시 토큰 삭제
-    await connection.execute(
-      `DELETE FROM refresh_tokens WHERE user_id = :user_id`,
-      { user_id: user.userId }
+    await client.query(
+      `DELETE FROM refresh_tokens WHERE user_id = $1`,
+      [user.userId]
     );
-
-    await connection.commit();
 
     return NextResponse.json({
       success: true,
@@ -49,12 +47,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

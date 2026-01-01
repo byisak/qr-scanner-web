@@ -1,6 +1,6 @@
 // GET /api/auth/me - 내 정보 조회
 import { NextRequest, NextResponse } from 'next/server';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 import { getConnection } from '@/lib/db';
 import {
   getUserFromRequest,
@@ -10,17 +10,17 @@ import {
 import type { User } from '@/types';
 
 interface UserRow {
-  ID: string;
-  EMAIL: string;
-  NAME: string;
-  PROFILE_IMAGE: string | null;
-  PROVIDER: string;
-  CREATED_AT: Date;
-  UPDATED_AT: Date;
+  id: string;
+  email: string;
+  name: string;
+  profile_image: string | null;
+  provider: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export async function GET(request: NextRequest) {
-  let connection: oracledb.Connection | null = null;
+  let client: PoolClient | null = null;
 
   try {
     const authHeader = request.headers.get('authorization');
@@ -36,18 +36,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    connection = await getConnection();
+    client = await getConnection();
 
     // 사용자 정보 조회
-    const result = await connection.execute<UserRow>(
+    const result = await client.query<UserRow>(
       `SELECT id, email, name, profile_image, provider, created_at, updated_at
        FROM users
-       WHERE id = :id AND deleted_at IS NULL`,
-      { id: tokenUser.userId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       WHERE id = $1 AND deleted_at IS NULL`,
+      [tokenUser.userId]
     );
 
-    if (!result.rows || result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.USER_NOT_FOUND,
@@ -60,13 +59,13 @@ export async function GET(request: NextRequest) {
     const userRow = result.rows[0];
 
     const user: User = {
-      id: userRow.ID,
-      email: userRow.EMAIL,
-      name: userRow.NAME,
-      profileImage: userRow.PROFILE_IMAGE,
-      provider: userRow.PROVIDER as User['provider'],
-      createdAt: userRow.CREATED_AT.toISOString(),
-      updatedAt: userRow.UPDATED_AT?.toISOString(),
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name,
+      profileImage: userRow.profile_image,
+      provider: userRow.provider as User['provider'],
+      createdAt: userRow.created_at.toISOString(),
+      updatedAt: userRow.updated_at?.toISOString(),
     };
 
     return NextResponse.json({
@@ -83,12 +82,8 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

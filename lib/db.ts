@@ -1,57 +1,59 @@
-import oracledb from 'oracledb';
-
-// Oracle Instant Client 자동 초기화 (Linux)
-try {
-  oracledb.initOracleClient();
-} catch (err: any) {
-  console.warn('Oracle Instant Client already initialized or not needed');
-}
+import { Pool, PoolClient } from 'pg';
 
 // 연결 풀 설정
-let pool: oracledb.Pool | null = null;
+let pool: Pool | null = null;
 
-interface OracleConfig {
+interface PostgresConfig {
+  host: string;
+  port: number;
+  database: string;
   user: string;
   password: string;
-  connectString: string;
 }
 
 /**
- * Oracle Database 연결 풀 초기화
+ * PostgreSQL Database 연결 풀 초기화
  */
-export async function initializePool(): Promise<oracledb.Pool | null> {
+export async function initializePool(): Promise<Pool | null> {
   if (pool) {
     return pool;
   }
 
-  const config: OracleConfig = {
-    user: process.env.ORACLE_USER || 'ADMIN',
-    password: process.env.ORACLE_PASSWORD || '',
-    connectString: process.env.ORACLE_CONNECTION_STRING || '',
+  const config: PostgresConfig = {
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+    database: process.env.POSTGRES_DATABASE || 'qrscanner',
+    user: process.env.POSTGRES_USER || 'postgres',
+    password: process.env.POSTGRES_PASSWORD || '',
   };
 
-  if (!config.password || !config.connectString) {
-    console.warn('⚠️  Oracle database credentials not configured.');
+  if (!config.password) {
+    console.warn('⚠️  PostgreSQL database credentials not configured.');
     console.warn('⚠️  Running in MEMORY MODE - data will be lost on restart!');
-    console.warn('⚠️  Please configure ORACLE_PASSWORD and ORACLE_CONNECTION_STRING in .env.local');
+    console.warn('⚠️  Please configure POSTGRES_PASSWORD in .env.local');
     return null;
   }
 
   try {
-    pool = await oracledb.createPool({
+    pool = new Pool({
+      host: config.host,
+      port: config.port,
+      database: config.database,
       user: config.user,
       password: config.password,
-      connectString: config.connectString,
-      poolMin: 2,
-      poolMax: 10,
-      poolIncrement: 1,
-      poolTimeout: 60,
+      min: 2,
+      max: 10,
+      idleTimeoutMillis: 60000,
     });
 
-    console.log('✅ Oracle DB 연결 풀 생성 성공');
+    // 연결 테스트
+    const client = await pool.connect();
+    client.release();
+
+    console.log('✅ PostgreSQL DB 연결 풀 생성 성공');
     return pool;
   } catch (err) {
-    console.error('❌ Oracle DB 연결 실패:', err);
+    console.error('❌ PostgreSQL DB 연결 실패:', err);
     throw err;
   }
 }
@@ -59,11 +61,21 @@ export async function initializePool(): Promise<oracledb.Pool | null> {
 /**
  * 연결 풀에서 연결 가져오기
  */
-export async function getConnection(): Promise<oracledb.Connection> {
+export async function getConnection(): Promise<PoolClient> {
   if (!pool) {
     await initializePool();
   }
-  return pool!.getConnection();
+  return pool!.connect();
+}
+
+/**
+ * 풀에서 직접 쿼리 실행 (단순 쿼리용)
+ */
+export async function query(text: string, params?: unknown[]) {
+  if (!pool) {
+    await initializePool();
+  }
+  return pool!.query(text, params);
 }
 
 /**
@@ -71,9 +83,9 @@ export async function getConnection(): Promise<oracledb.Connection> {
  */
 export async function closePool(): Promise<void> {
   if (pool) {
-    await pool.close(0);
+    await pool.end();
     pool = null;
-    console.log('🔌 Oracle DB 연결 풀 종료');
+    console.log('🔌 PostgreSQL DB 연결 풀 종료');
   }
 }
 

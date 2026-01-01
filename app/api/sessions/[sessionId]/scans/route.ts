@@ -1,31 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import oracledb from 'oracledb';
+import { getUserFromRequest } from '@/lib/auth';
+import type { PoolClient } from 'pg';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { sessionId } = await params;
-    connection = await getConnection();
+    const authHeader = request.headers.get('authorization');
+    const user = getUserFromRequest(authHeader);
 
-    const result = await connection.execute(
-      `SELECT id, session_id, code, scan_timestamp, created_at
-       FROM scan_data
-       WHERE session_id = :sessionId
-       ORDER BY created_at ASC`,
-      { sessionId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
+    // 비로그인: 빈 배열 반환
+    if (!user) {
+      return NextResponse.json([]);
+    }
 
-    const scans = (result.rows || []).map((row: any) => ({
-      id: row.ID,
-      sessionId: row.SESSION_ID,
-      code: row.CODE,
-      scan_timestamp: row.SCAN_TIMESTAMP,
-      createdAt: row.CREATED_AT ? row.CREATED_AT.toISOString() : new Date().toISOString(),
+    client = await getConnection();
+
+    // 로그인: 내가 스캔한 것만
+    const query = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                    u.name as user_name, u.email as user_email
+             FROM scan_data sd
+             LEFT JOIN users u ON sd.user_id = u.id
+             WHERE sd.session_id = $1 AND sd.user_id = $2
+             ORDER BY sd.created_at ASC`;
+
+    const result = await client.query(query, [sessionId, user.userId]);
+
+    const scans = result.rows.map((row: any) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      code: row.code,
+      scan_timestamp: row.scan_timestamp,
+      createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+      userId: row.user_id || null,
+      userName: row.user_name || row.user_email || null,
     }));
 
     return NextResponse.json(scans);
@@ -33,12 +45,8 @@ export async function GET(
     console.error('스캔 데이터 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }

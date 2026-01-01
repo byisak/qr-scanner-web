@@ -1,38 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import oracledb from 'oracledb';
+import type { PoolClient } from 'pg';
 
 // GET - 세션 상세 조회
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { sessionId } = await params;
-    connection = await getConnection();
+    client = await getConnection();
 
-    const result = await connection.execute(
+    const result = await client.query(
       `SELECT session_id, socket_id, session_name, created_at, last_activity, status, deleted_at
        FROM sessions
-       WHERE session_id = :sessionId`,
-      { sessionId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+       WHERE session_id = $1`,
+      [sessionId]
     );
 
-    if (!result.rows || result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json({ error: '세션을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    const row: any = result.rows[0];
+    const row = result.rows[0];
     const session = {
-      session_id: row.SESSION_ID,
-      socket_id: row.SOCKET_ID,
-      session_name: row.SESSION_NAME || null,
-      created_at: row.CREATED_AT ? row.CREATED_AT.toISOString() : null,
-      last_activity: row.LAST_ACTIVITY ? row.LAST_ACTIVITY.toISOString() : null,
-      status: row.STATUS,
-      deleted_at: row.DELETED_AT ? row.DELETED_AT.toISOString() : null,
+      session_id: row.session_id,
+      socket_id: row.socket_id,
+      session_name: row.session_name || null,
+      created_at: row.created_at ? row.created_at.toISOString() : null,
+      last_activity: row.last_activity ? row.last_activity.toISOString() : null,
+      status: row.status,
+      deleted_at: row.deleted_at ? row.deleted_at.toISOString() : null,
     };
 
     return NextResponse.json(session);
@@ -40,12 +39,8 @@ export async function GET(
     console.error('세션 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }
@@ -55,30 +50,28 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  let connection;
+  let client: PoolClient | null = null;
   try {
     const { sessionId } = await params;
-    connection = await getConnection();
+    client = await getConnection();
 
     // 세션 존재 확인
-    const checkResult = await connection.execute(
-      `SELECT session_id, status FROM sessions WHERE session_id = :sessionId`,
-      { sessionId },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    const checkResult = await client.query(
+      `SELECT session_id, status FROM sessions WHERE session_id = $1`,
+      [sessionId]
     );
 
-    if (!checkResult.rows || checkResult.rows.length === 0) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: '세션을 찾을 수 없습니다.' }, { status: 404 });
     }
 
     // Soft Delete 수행 (status를 DELETED로 변경, deleted_at 기록)
-    await connection.execute(
+    await client.query(
       `UPDATE sessions
        SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP
-       WHERE session_id = :sessionId`,
-      { sessionId }
+       WHERE session_id = $1`,
+      [sessionId]
     );
-    await connection.commit();
 
     console.log('세션 Soft Delete 완료:', sessionId);
 
@@ -91,12 +84,8 @@ export async function DELETE(
     console.error('세션 Soft Delete 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error('Connection close error:', err);
-      }
+    if (client) {
+      client.release();
     }
   }
 }
