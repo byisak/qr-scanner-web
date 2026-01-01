@@ -162,16 +162,48 @@ app.prepare().then(() => {
 
         socket.join(sessionId);
 
-        // 기존 스캔 데이터 조회 (사용자 정보 포함)
-        const scanResult = await client.query(
-          `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                  u.name as user_name, u.email as user_email
-           FROM scan_data sd
-           LEFT JOIN users u ON sd.user_id = u.id
-           WHERE sd.session_id = $1
-           ORDER BY sd.created_at ASC`,
+        // 세션 소유자 확인
+        const sessionOwnerResult = await client.query(
+          `SELECT user_id FROM sessions WHERE session_id = $1`,
           [sessionId]
         );
+        const sessionOwnerId = sessionOwnerResult.rows[0]?.user_id;
+        const isOwner = userId && sessionOwnerId === userId;
+
+        // 기존 스캔 데이터 조회 (사용자에 따라 필터링)
+        let scanQuery: string;
+        let scanParams: any[];
+
+        if (!userId) {
+          // 비로그인: 전체 스캔 (공유 URL 접속)
+          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                              u.name as user_name, u.email as user_email
+                       FROM scan_data sd
+                       LEFT JOIN users u ON sd.user_id = u.id
+                       WHERE sd.session_id = $1
+                       ORDER BY sd.created_at ASC`;
+          scanParams = [sessionId];
+        } else if (isOwner) {
+          // 세션 소유자: 전체 스캔
+          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                              u.name as user_name, u.email as user_email
+                       FROM scan_data sd
+                       LEFT JOIN users u ON sd.user_id = u.id
+                       WHERE sd.session_id = $1
+                       ORDER BY sd.created_at ASC`;
+          scanParams = [sessionId];
+        } else {
+          // 로그인했지만 세션 소유자가 아님: 내 스캔만
+          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                              u.name as user_name, u.email as user_email
+                       FROM scan_data sd
+                       LEFT JOIN users u ON sd.user_id = u.id
+                       WHERE sd.session_id = $1 AND sd.user_id = $2
+                       ORDER BY sd.created_at ASC`;
+          scanParams = [sessionId, userId];
+        }
+
+        const scanResult = await client.query(scanQuery, scanParams);
 
         const existingScans = scanResult.rows.map((row: any) => ({
           id: row.id,
@@ -186,9 +218,10 @@ app.prepare().then(() => {
         socket.emit('session-joined', {
           sessionId,
           existingData: existingScans,
+          isOwner,
         });
 
-        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)');
+        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)', isOwner ? '(소유자)' : userId ? '(비소유자)' : '(비로그인)');
       } catch (err) {
         console.error('세션 참가 실패:', err);
         socket.emit('error', { message: '세션 참가 실패' });

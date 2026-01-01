@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ScanData } from '@/types';
 
+const ACCESS_TOKEN_KEY = 'qr_access_token';
+
 export function useSocket(sessionId: string | null) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [scans, setScans] = useState<ScanData[]>([]);
@@ -13,16 +15,20 @@ export function useSocket(sessionId: string | null) {
   useEffect(() => {
     if (!sessionId) return;
 
+    // 인증 토큰 가져오기
+    const token = typeof window !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+
     // 브라우저에서 현재 접속한 호스트를 자동으로 사용
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId);
+    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId, token ? '(인증됨)' : '(비인증)');
 
     const socketIo = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      auth: token ? { token } : undefined,
     });
 
     socketIo.on('connect', () => {
@@ -30,8 +36,8 @@ export function useSocket(sessionId: string | null) {
       setIsConnected(true);
       setError(null);
 
-      // 세션 참가
-      socketIo.emit('join-session', sessionId);
+      // 세션 참가 (userId도 함께 전달)
+      socketIo.emit('join-session', { sessionId });
     });
 
     socketIo.on('session-joined', (data: { sessionId: string; existingData: ScanData[] }) => {
