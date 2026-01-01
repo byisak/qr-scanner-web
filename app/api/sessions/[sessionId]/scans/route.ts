@@ -12,10 +12,12 @@ export async function GET(
     client = await getConnection();
 
     const result = await client.query(
-      `SELECT id, session_id, code, scan_timestamp, created_at
-       FROM scan_data
-       WHERE session_id = $1
-       ORDER BY created_at ASC`,
+      `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+              u.name as user_name, u.email as user_email
+       FROM scan_data sd
+       LEFT JOIN users u ON sd.user_id = u.id
+       WHERE sd.session_id = $1
+       ORDER BY sd.created_at ASC`,
       [sessionId]
     );
 
@@ -25,6 +27,8 @@ export async function GET(
       code: row.code,
       scan_timestamp: row.scan_timestamp,
       createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+      userId: row.user_id || null,
+      userName: row.user_name || row.user_email || null,
     }));
 
     return NextResponse.json(scans);

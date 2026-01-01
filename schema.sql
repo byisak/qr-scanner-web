@@ -72,16 +72,26 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS scan_data (
     id SERIAL PRIMARY KEY,
     session_id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(36),                  -- 스캔을 전송한 사용자
     code VARCHAR(1000) NOT NULL,
     scan_timestamp BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_session
         FOREIGN KEY (session_id)
         REFERENCES sessions(session_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_scan_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL
 );
+
+-- 기존 테이블에 user_id 컬럼 추가 (마이그레이션용)
+-- ALTER TABLE scan_data ADD COLUMN IF NOT EXISTS user_id VARCHAR(36);
+-- ALTER TABLE scan_data ADD CONSTRAINT fk_scan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
 
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_scan_session ON scan_data(session_id);
+CREATE INDEX IF NOT EXISTS idx_scan_user ON scan_data(user_id);
 CREATE INDEX IF NOT EXISTS idx_scan_created ON scan_data(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_activity ON sessions(last_activity DESC);

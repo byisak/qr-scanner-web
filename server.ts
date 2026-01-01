@@ -162,12 +162,14 @@ app.prepare().then(() => {
 
         socket.join(sessionId);
 
-        // 기존 스캔 데이터 조회
+        // 기존 스캔 데이터 조회 (사용자 정보 포함)
         const scanResult = await client.query(
-          `SELECT id, session_id, code, scan_timestamp, created_at
-           FROM scan_data
-           WHERE session_id = $1
-           ORDER BY created_at ASC`,
+          `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                  u.name as user_name, u.email as user_email
+           FROM scan_data sd
+           LEFT JOIN users u ON sd.user_id = u.id
+           WHERE sd.session_id = $1
+           ORDER BY sd.created_at ASC`,
           [sessionId]
         );
 
@@ -177,6 +179,8 @@ app.prepare().then(() => {
           code: row.code,
           scan_timestamp: row.scan_timestamp,
           createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+          userId: row.user_id || null,
+          userName: row.user_name || row.user_email || null,
         }));
 
         socket.emit('session-joined', {
@@ -199,7 +203,9 @@ app.prepare().then(() => {
     socket.on('scan-data', async (payload) => {
       let client: PoolClient | null = null;
       try {
-        const { sessionId, code, timestamp } = payload;
+        const { sessionId, code, timestamp, userId } = payload;
+        // 클라이언트에서 전달한 userId 또는 연결 시 인증된 사용자 ID 사용
+        const scanUserId = userId || authenticatedUserId;
 
         if (!sessionId || !code) {
           socket.emit('error', { message: '잘못된 데이터 형식' });
@@ -214,13 +220,25 @@ app.prepare().then(() => {
           [sessionId]
         );
 
-        // 스캔 데이터 삽입
+        // 스캔 데이터 삽입 (user_id 포함)
         const result = await client.query(
-          `INSERT INTO scan_data (session_id, code, scan_timestamp, created_at)
-           VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+          `INSERT INTO scan_data (session_id, user_id, code, scan_timestamp, created_at)
+           VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
            RETURNING id`,
-          [sessionId, code, timestamp || Date.now()]
+          [sessionId, scanUserId || null, code, timestamp || Date.now()]
         );
+
+        // 사용자 정보 조회 (있는 경우)
+        let userName = null;
+        if (scanUserId) {
+          const userResult = await client.query(
+            `SELECT name, email FROM users WHERE id = $1`,
+            [scanUserId]
+          );
+          if (userResult.rows.length > 0) {
+            userName = userResult.rows[0].name || userResult.rows[0].email;
+          }
+        }
 
         const scanRecord = {
           id: result.rows[0].id,
@@ -228,6 +246,8 @@ app.prepare().then(() => {
           code,
           scan_timestamp: timestamp || Date.now(),
           createdAt: new Date().toISOString(),
+          userId: scanUserId || null,
+          userName: userName,
         };
 
         // 모든 클라이언트에게 브로드캐스트
@@ -241,7 +261,7 @@ app.prepare().then(() => {
         const dateObject = new Date(timestamp);
         const kstDate = dateObject.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
-        console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate);
+        console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate, scanUserId ? `사용자: ${userName || scanUserId}` : '(비로그인)');
       } catch (err) {
         console.error('스캔 데이터 저장 실패:', err);
         socket.emit('error', { message: '데이터 저장 실패' });
