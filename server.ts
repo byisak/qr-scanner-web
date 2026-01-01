@@ -184,12 +184,22 @@ app.prepare().then(() => {
         console.log('현재 사용자 ID:', userId);
         console.log('소유자 여부:', isOwner);
 
-        // 기존 스캔 데이터 조회 (사용자에 따라 필터링)
+        // 기존 스캔 데이터 조회 (로그인 사용자는 자신의 스캔만)
         let scanQuery: string;
         let scanParams: any[];
         let filterMode: string;
 
-        if (!userId) {
+        if (userId) {
+          filterMode = '로그인 - 내 스캔만';
+          // 로그인: 내가 스캔한 데이터만 표시 (세션 소유자 여부 무관)
+          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                              u.name as user_name, u.email as user_email
+                       FROM scan_data sd
+                       LEFT JOIN users u ON sd.user_id = u.id
+                       WHERE sd.session_id = $1 AND sd.user_id = $2
+                       ORDER BY sd.created_at ASC`;
+          scanParams = [sessionId, userId];
+        } else {
           filterMode = '비로그인 - 전체 스캔';
           // 비로그인: 전체 스캔 (공유 URL 접속)
           scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
@@ -199,26 +209,6 @@ app.prepare().then(() => {
                        WHERE sd.session_id = $1
                        ORDER BY sd.created_at ASC`;
           scanParams = [sessionId];
-        } else if (isOwner) {
-          filterMode = '세션 소유자 - 전체 스캔';
-          // 세션 소유자: 전체 스캔
-          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                              u.name as user_name, u.email as user_email
-                       FROM scan_data sd
-                       LEFT JOIN users u ON sd.user_id = u.id
-                       WHERE sd.session_id = $1
-                       ORDER BY sd.created_at ASC`;
-          scanParams = [sessionId];
-        } else {
-          filterMode = '비소유자 - 내 스캔만';
-          // 로그인했지만 세션 소유자가 아님: 내 스캔만
-          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                              u.name as user_name, u.email as user_email
-                       FROM scan_data sd
-                       LEFT JOIN users u ON sd.user_id = u.id
-                       WHERE sd.session_id = $1 AND sd.user_id = $2
-                       ORDER BY sd.created_at ASC`;
-          scanParams = [sessionId, userId];
         }
 
         console.log('🔍 필터 모드:', filterMode);
