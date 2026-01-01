@@ -276,25 +276,31 @@ app.prepare().then(() => {
           [sessionId]
         );
 
-        // 스캔 데이터 삽입 (user_id 포함)
+        // 사용자 정보 조회 및 유효성 확인
+        let validUserId: string | null = null;
+        let userName: string | null = null;
+
+        if (scanUserId) {
+          const userResult = await client.query(
+            `SELECT id, name, email FROM users WHERE id = $1`,
+            [scanUserId]
+          );
+          if (userResult.rows.length > 0) {
+            // DB에 존재하는 사용자만 user_id 저장
+            validUserId = userResult.rows[0].id;
+            userName = userResult.rows[0].name || userResult.rows[0].email;
+          } else {
+            console.log('⚠️ 사용자 ID가 DB에 없음:', scanUserId, '- user_id를 null로 저장');
+          }
+        }
+
+        // 스캔 데이터 삽입 (유효한 user_id만 저장)
         const result = await client.query(
           `INSERT INTO scan_data (session_id, user_id, code, scan_timestamp, created_at)
            VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
            RETURNING id`,
-          [sessionId, scanUserId || null, code, timestamp || Date.now()]
+          [sessionId, validUserId, code, timestamp || Date.now()]
         );
-
-        // 사용자 정보 조회 (있는 경우)
-        let userName = null;
-        if (scanUserId) {
-          const userResult = await client.query(
-            `SELECT name, email FROM users WHERE id = $1`,
-            [scanUserId]
-          );
-          if (userResult.rows.length > 0) {
-            userName = userResult.rows[0].name || userResult.rows[0].email;
-          }
-        }
 
         const scanRecord = {
           id: result.rows[0].id,
@@ -302,7 +308,7 @@ app.prepare().then(() => {
           code,
           scan_timestamp: timestamp || Date.now(),
           createdAt: new Date().toISOString(),
-          userId: scanUserId || null,
+          userId: validUserId,
           userName: userName,
         };
 
@@ -317,7 +323,7 @@ app.prepare().then(() => {
         const dateObject = new Date(timestamp);
         const kstDate = dateObject.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
-        console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate, scanUserId ? `사용자: ${userName || scanUserId}` : '(비로그인)');
+        console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate, validUserId ? `사용자: ${userName}` : '(사용자 미확인)');
       } catch (err) {
         console.error('스캔 데이터 저장 실패:', err);
         socket.emit('error', { message: '데이터 저장 실패' });
