@@ -118,15 +118,14 @@ app.prepare().then(() => {
     socket.on('join-session', async (data) => {
       let client: PoolClient | null = null;
       try {
-        // sessionId만 전달하거나 객체로 전달 가능
+        // sessionId와 userId를 클라이언트에서 직접 받음
         const sessionId = typeof data === 'string' ? data : data?.sessionId;
-        const userId = typeof data === 'object' ? (data?.userId || authenticatedUserId) : authenticatedUserId;
+        const userId = typeof data === 'object' ? data?.userId : null;
 
         // 🔍 디버그 로그
         console.log('=== join-session 디버그 ===');
         console.log('받은 data:', JSON.stringify(data));
-        console.log('authenticatedUserId (토큰에서):', authenticatedUserId);
-        console.log('최종 userId:', userId);
+        console.log('클라이언트에서 받은 userId:', userId);
         console.log('sessionId:', sessionId);
 
         if (!sessionId) {

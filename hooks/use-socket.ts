@@ -4,38 +4,35 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ScanData } from '@/types';
 
-export function useSocket(sessionId: string | null, accessToken: string | null | undefined) {
+// userId를 직접 받아서 서버로 전달
+export function useSocket(sessionId: string | null, userId: string | null | undefined) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [scans, setScans] = useState<ScanData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // 토큰 변경 시 기존 스캔 데이터 유지를 위한 ref
   const scansRef = useRef<ScanData[]>([]);
 
   useEffect(() => {
     if (!sessionId) return;
 
-    // 브라우저에서 현재 접속한 호스트를 자동으로 사용
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId);
-    console.log('🔌 accessToken:', accessToken ? `${accessToken.substring(0, 30)}...` : 'null');
+    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId, '사용자:', userId || '(비로그인)');
 
     const socketIo = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      auth: accessToken ? { token: accessToken } : undefined,
     });
 
     socketIo.on('connect', () => {
-      console.log('✅ Socket 연결 성공:', socketIo.id, accessToken ? '(인증됨)' : '(비인증)');
+      console.log('✅ Socket 연결 성공:', socketIo.id);
       setIsConnected(true);
       setError(null);
 
-      // 세션 참가
-      socketIo.emit('join-session', { sessionId });
+      // 세션 참가 - userId를 직접 전달
+      socketIo.emit('join-session', { sessionId, userId: userId || null });
     });
 
     socketIo.on('session-joined', (data: { sessionId: string; existingData: ScanData[] }) => {
@@ -54,7 +51,6 @@ export function useSocket(sessionId: string | null, accessToken: string | null |
       console.warn('⚠️ Socket 연결 해제:', reason);
       setIsConnected(false);
       if (reason === 'io server disconnect') {
-        // 서버가 연결을 끊은 경우 재연결 시도
         socketIo.connect();
       }
     });
@@ -77,7 +73,7 @@ export function useSocket(sessionId: string | null, accessToken: string | null |
       console.log('🔌 Socket 연결 종료');
       socketIo.disconnect();
     };
-  }, [sessionId, accessToken]); // accessToken도 의존성에 추가하여 토큰 변경 시 재연결
+  }, [sessionId, userId]);
 
   const clearScans = useCallback(() => {
     setScans([]);

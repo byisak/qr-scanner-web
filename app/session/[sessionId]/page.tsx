@@ -31,8 +31,9 @@ export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
   const sessionId = params.sessionId as string;
-  const { accessToken, isAuthenticated, isLoading } = useAuth();
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, accessToken);
+  const { user, isAuthenticated, isLoading } = useAuth();
+  // userId를 직접 전달하여 서버에서 필터링
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
