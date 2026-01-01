@@ -18,7 +18,8 @@ export function useSocket(sessionId: string | null, accessToken: string | null |
     // 브라우저에서 현재 접속한 호스트를 자동으로 사용
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId, accessToken ? '(인증됨)' : '(비인증)');
+    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId);
+    console.log('🔌 accessToken:', accessToken ? `${accessToken.substring(0, 30)}...` : 'null');
 
     const socketIo = io(socketUrl, {
       transports: ['websocket', 'polling'],

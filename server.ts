@@ -52,10 +52,12 @@ app.prepare().then(() => {
 
     // 연결 시 토큰 검증 (선택적 인증)
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    console.log('🔑 받은 토큰:', token ? `${String(token).substring(0, 20)}...` : 'null');
     let authenticatedUserId: string | null = null;
 
     if (token && typeof token === 'string') {
       const decoded = verifyAccessToken(token);
+      console.log('🔑 토큰 디코딩 결과:', decoded ? `userId: ${decoded.userId}` : '실패');
       if (decoded) {
         authenticatedUserId = decoded.userId;
         console.log('인증된 사용자 연결:', authenticatedUserId);
