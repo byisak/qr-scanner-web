@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { useSocket } from '@/hooks/use-socket';
+import { useAuth } from '@/contexts/auth-context';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
@@ -29,7 +30,8 @@ import { ModeToggle } from '@/components/mode-toggle';
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId);
+  const { accessToken } = useAuth();
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, accessToken);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
