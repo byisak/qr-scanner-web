@@ -120,6 +120,13 @@ app.prepare().then(() => {
         const sessionId = typeof data === 'string' ? data : data?.sessionId;
         const userId = typeof data === 'object' ? (data?.userId || authenticatedUserId) : authenticatedUserId;
 
+        // 🔍 디버그 로그
+        console.log('=== join-session 디버그 ===');
+        console.log('받은 data:', JSON.stringify(data));
+        console.log('authenticatedUserId (토큰에서):', authenticatedUserId);
+        console.log('최종 userId:', userId);
+        console.log('sessionId:', sessionId);
+
         if (!sessionId) {
           socket.emit('error', { message: '세션 ID가 필요합니다.' });
           return;
@@ -170,11 +177,18 @@ app.prepare().then(() => {
         const sessionOwnerId = sessionOwnerResult.rows[0]?.user_id;
         const isOwner = userId && sessionOwnerId === userId;
 
+        // 🔍 디버그 로그
+        console.log('세션 소유자 ID:', sessionOwnerId);
+        console.log('현재 사용자 ID:', userId);
+        console.log('소유자 여부:', isOwner);
+
         // 기존 스캔 데이터 조회 (사용자에 따라 필터링)
         let scanQuery: string;
         let scanParams: any[];
+        let filterMode: string;
 
         if (!userId) {
+          filterMode = '비로그인 - 전체 스캔';
           // 비로그인: 전체 스캔 (공유 URL 접속)
           scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
                               u.name as user_name, u.email as user_email
@@ -184,6 +198,7 @@ app.prepare().then(() => {
                        ORDER BY sd.created_at ASC`;
           scanParams = [sessionId];
         } else if (isOwner) {
+          filterMode = '세션 소유자 - 전체 스캔';
           // 세션 소유자: 전체 스캔
           scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
                               u.name as user_name, u.email as user_email
@@ -193,6 +208,7 @@ app.prepare().then(() => {
                        ORDER BY sd.created_at ASC`;
           scanParams = [sessionId];
         } else {
+          filterMode = '비소유자 - 내 스캔만';
           // 로그인했지만 세션 소유자가 아님: 내 스캔만
           scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
                               u.name as user_name, u.email as user_email
@@ -202,6 +218,9 @@ app.prepare().then(() => {
                        ORDER BY sd.created_at ASC`;
           scanParams = [sessionId, userId];
         }
+
+        console.log('🔍 필터 모드:', filterMode);
+        console.log('🔍 쿼리 파라미터:', scanParams);
 
         const scanResult = await client.query(scanQuery, scanParams);
 
@@ -215,13 +234,17 @@ app.prepare().then(() => {
           userName: row.user_name || row.user_email || null,
         }));
 
+        console.log('🔍 조회된 스캔 수:', existingScans.length);
+        console.log('🔍 스캔 데이터 user_id 목록:', existingScans.map(s => s.userId));
+        console.log('=== join-session 디버그 끝 ===');
+
         socket.emit('session-joined', {
           sessionId,
           existingData: existingScans,
           isOwner,
         });
 
-        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)', isOwner ? '(소유자)' : userId ? '(비소유자)' : '(비로그인)');
+        console.log('클라이언트 세션 참가:', sessionId, '(기존 스캔:', existingScans.length, '개)', filterMode);
       } catch (err) {
         console.error('세션 참가 실패:', err);
         socket.emit('error', { message: '세션 참가 실패' });
