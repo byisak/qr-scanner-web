@@ -194,8 +194,8 @@ app.prepare().then(() => {
       let client: PoolClient | null = null;
       try {
         const { sessionId, code, timestamp, userId } = payload;
-        // 클라이언트에서 전달한 userId 또는 연결 시 인증된 사용자 ID 사용
-        const scanUserId = userId || authenticatedUserId;
+        // 클라이언트에서 전달한 userId 사용
+        const scanUserId = userId || null;
 
         if (!sessionId || !code) {
           socket.emit('error', { message: '잘못된 데이터 형식' });
