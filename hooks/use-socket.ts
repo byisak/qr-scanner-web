@@ -11,13 +11,20 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scansRef = useRef<ScanData[]>([]);
+  // userId를 ref로 저장하여 콜백에서 최신 값 사용
+  const userIdRef = useRef<string | null | undefined>(userId);
+
+  // userId가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     if (!sessionId) return;
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId, '사용자:', userId || '(비로그인)');
+    console.log('🔌 Socket 연결 시도:', socketUrl, '세션:', sessionId);
 
     const socketIo = io(socketUrl, {
       transports: ['websocket', 'polling'],
@@ -31,8 +38,10 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
       setIsConnected(true);
       setError(null);
 
-      // 세션 참가 - userId를 직접 전달
-      socketIo.emit('join-session', { sessionId, userId: userId || null });
+      // ref에서 최신 userId 값 읽기
+      const currentUserId = userIdRef.current;
+      console.log('🔌 세션 참가 요청 - userId:', currentUserId || '(비로그인)');
+      socketIo.emit('join-session', { sessionId, userId: currentUserId || null });
     });
 
     socketIo.on('session-joined', (data: { sessionId: string; existingData: ScanData[] }) => {
@@ -73,7 +82,15 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
       console.log('🔌 Socket 연결 종료');
       socketIo.disconnect();
     };
-  }, [sessionId, userId]);
+  }, [sessionId]); // userId 제거 - ref로 관리
+
+  // userId가 변경되면 세션 재참가
+  useEffect(() => {
+    if (socket && socket.connected && sessionId) {
+      console.log('🔄 userId 변경 감지 - 세션 재참가:', userId || '(비로그인)');
+      socket.emit('join-session', { sessionId, userId: userId || null });
+    }
+  }, [socket, sessionId, userId]);
 
   const clearScans = useCallback(() => {
     setScans([]);
