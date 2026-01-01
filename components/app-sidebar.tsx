@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock } from "lucide-react"
+import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 
 interface Session {
   session_id: string;
@@ -39,17 +40,30 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { user, isAuthenticated, accessToken, logout } = useAuth()
   const [sessionInput, setSessionInput] = React.useState('')
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
 
-  // 세션 목록 가져오기
+  // 세션 목록 가져오기 (로그인한 경우만)
   const fetchSessions = React.useCallback(async () => {
+    // 비로그인 시 세션 목록을 가져오지 않음 (보안)
+    if (!isAuthenticated || !accessToken) {
+      setSessions([])
+      setDeletedSessions([])
+      setIsLoading(false)
+      return
+    }
+
     try {
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${accessToken}`
+      }
+
       const [activeRes, deletedRes] = await Promise.all([
-        fetch('/api/sessions?status=ACTIVE'),
-        fetch('/api/sessions?status=DELETED')
+        fetch('/api/sessions?status=ACTIVE&mine=true', { headers }),
+        fetch('/api/sessions?status=DELETED&mine=true', { headers })
       ])
 
       if (activeRes.ok) {
@@ -66,7 +80,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [isAuthenticated, accessToken])
 
   React.useEffect(() => {
     fetchSessions()
@@ -233,12 +247,25 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
               className="flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer"
             >
               <List className="size-4" />
-              세션 목록 ({sessions.length})
+              세션 목록 {isAuthenticated ? `(${sessions.length})` : ''}
             </a>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {isLoading ? (
+              {!isAuthenticated ? (
+                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  <p className="mb-2">세션 목록을 보려면</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => router.push('/login')}
+                  >
+                    <LogIn className="size-4 mr-2" />
+                    로그인
+                  </Button>
+                </div>
+              ) : isLoading ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                   로딩 중...
                 </div>
@@ -271,71 +298,95 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <a
-              href="/dashboard/trash"
-              className={`flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer ${isTrashPage ? 'text-foreground font-medium' : ''}`}
-            >
-              <Clock className="size-4" />
-              삭제대기 ({deletedSessions.length})
-            </a>
-          </SidebarGroupLabel>
-          {deletedSessions.length > 0 && (
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {deletedSessions.slice(0, 5).map((session) => (
-                  <SidebarMenuItem key={session.session_id}>
-                    <SidebarMenuButton
-                      className="opacity-60"
-                      tooltip={`${session.session_name || session.session_id} (삭제됨)`}
-                      onClick={() => router.push('/dashboard/trash')}
-                    >
-                      <QrCode className="size-4" />
-                      <span className="truncate line-through">{session.session_name || session.session_id}</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuAction
-                      onClick={(e) => handleRestoreSession(session.session_id, e)}
-                      showOnHover
-                      className="right-8"
-                    >
-                      <RotateCcw className="size-4" />
-                      <span className="sr-only">복구</span>
-                    </SidebarMenuAction>
-                    <SidebarMenuAction
-                      onClick={(e) => handlePermanentDelete(session.session_id, e)}
-                      showOnHover
-                    >
-                      <Trash className="size-4 text-destructive" />
-                      <span className="sr-only">영구삭제</span>
-                    </SidebarMenuAction>
-                  </SidebarMenuItem>
-                ))}
-                {deletedSessions.length > 5 && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className="text-muted-foreground"
-                      onClick={() => router.push('/dashboard/trash')}
-                    >
-                      <span className="text-xs">+{deletedSessions.length - 5}개 더보기...</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          )}
-        </SidebarGroup>
+        {isAuthenticated && (
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <a
+                href="/dashboard/trash"
+                className={`flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer ${isTrashPage ? 'text-foreground font-medium' : ''}`}
+              >
+                <Clock className="size-4" />
+                삭제대기 ({deletedSessions.length})
+              </a>
+            </SidebarGroupLabel>
+            {deletedSessions.length > 0 && (
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {deletedSessions.slice(0, 5).map((session) => (
+                    <SidebarMenuItem key={session.session_id}>
+                      <SidebarMenuButton
+                        className="opacity-60"
+                        tooltip={`${session.session_name || session.session_id} (삭제됨)`}
+                        onClick={() => router.push('/dashboard/trash')}
+                      >
+                        <QrCode className="size-4" />
+                        <span className="truncate line-through">{session.session_name || session.session_id}</span>
+                      </SidebarMenuButton>
+                      <SidebarMenuAction
+                        onClick={(e) => handleRestoreSession(session.session_id, e)}
+                        showOnHover
+                        className="right-8"
+                      >
+                        <RotateCcw className="size-4" />
+                        <span className="sr-only">복구</span>
+                      </SidebarMenuAction>
+                      <SidebarMenuAction
+                        onClick={(e) => handlePermanentDelete(session.session_id, e)}
+                        showOnHover
+                      >
+                        <Trash className="size-4 text-destructive" />
+                        <span className="sr-only">영구삭제</span>
+                      </SidebarMenuAction>
+                    </SidebarMenuItem>
+                  ))}
+                  {deletedSessions.length > 5 && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="text-muted-foreground"
+                        onClick={() => router.push('/dashboard/trash')}
+                      >
+                        <span className="text-xs">+{deletedSessions.length - 5}개 더보기...</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            )}
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="/dashboard">
-                <span className="text-xs text-muted-foreground">대시보드로 이동</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {isAuthenticated && user ? (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip={user.email}>
+                  <User className="size-4" />
+                  <span className="truncate">{user.name || user.email}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => logout()}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="size-4" />
+                  <span>로그아웃</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          ) : (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => router.push('/login')}
+                className="text-primary"
+              >
+                <LogIn className="size-4" />
+                <span>로그인</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
 
