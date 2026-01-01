@@ -184,47 +184,37 @@ app.prepare().then(() => {
         console.log('현재 사용자 ID:', userId);
         console.log('소유자 여부:', isOwner);
 
-        // 기존 스캔 데이터 조회 (로그인 사용자는 자신의 스캔만)
-        let scanQuery: string;
-        let scanParams: any[];
+        // 기존 스캔 데이터 조회 (로그인 사용자만)
+        let existingScans: any[] = [];
         let filterMode: string;
 
         if (userId) {
           filterMode = '로그인 - 내 스캔만';
-          // 로그인: 내가 스캔한 데이터만 표시 (세션 소유자 여부 무관)
-          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+          // 로그인: 내가 스캔한 데이터만 표시
+          const scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
                               u.name as user_name, u.email as user_email
                        FROM scan_data sd
                        LEFT JOIN users u ON sd.user_id = u.id
                        WHERE sd.session_id = $1 AND sd.user_id = $2
                        ORDER BY sd.created_at ASC`;
-          scanParams = [sessionId, userId];
+          const scanResult = await client.query(scanQuery, [sessionId, userId]);
+
+          existingScans = scanResult.rows.map((row: any) => ({
+            id: row.id,
+            sessionId: row.session_id,
+            code: row.code,
+            scan_timestamp: row.scan_timestamp,
+            createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+            userId: row.user_id || null,
+            userName: row.user_name || row.user_email || null,
+          }));
         } else {
-          filterMode = '비로그인 - 전체 스캔';
-          // 비로그인: 전체 스캔 (공유 URL 접속)
-          scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                              u.name as user_name, u.email as user_email
-                       FROM scan_data sd
-                       LEFT JOIN users u ON sd.user_id = u.id
-                       WHERE sd.session_id = $1
-                       ORDER BY sd.created_at ASC`;
-          scanParams = [sessionId];
+          filterMode = '비로그인 - 스캔 데이터 없음';
+          // 비로그인: 스캔 데이터 표시 안함 (세션 코드만 표시)
+          existingScans = [];
         }
 
         console.log('🔍 필터 모드:', filterMode);
-        console.log('🔍 쿼리 파라미터:', scanParams);
-
-        const scanResult = await client.query(scanQuery, scanParams);
-
-        const existingScans = scanResult.rows.map((row: any) => ({
-          id: row.id,
-          sessionId: row.session_id,
-          code: row.code,
-          scan_timestamp: row.scan_timestamp,
-          createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
-          userId: row.user_id || null,
-          userName: row.user_name || row.user_email || null,
-        }));
 
         console.log('🔍 조회된 스캔 수:', existingScans.length);
         console.log('🔍 스캔 데이터 user_id 목록:', existingScans.map(s => s.userId));

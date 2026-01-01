@@ -13,32 +13,22 @@ export async function GET(
     const authHeader = request.headers.get('authorization');
     const user = getUserFromRequest(authHeader);
 
-    client = await getConnection();
-
-    let query: string;
-    let queryParams: any[];
-
-    if (user) {
-      // 로그인: 내가 스캔한 것만 (세션 소유자 여부 무관)
-      query = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                      u.name as user_name, u.email as user_email
-               FROM scan_data sd
-               LEFT JOIN users u ON sd.user_id = u.id
-               WHERE sd.session_id = $1 AND sd.user_id = $2
-               ORDER BY sd.created_at ASC`;
-      queryParams = [sessionId, user.userId];
-    } else {
-      // 비로그인: 전체 스캔 보기 (공유 URL 접속)
-      query = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                      u.name as user_name, u.email as user_email
-               FROM scan_data sd
-               LEFT JOIN users u ON sd.user_id = u.id
-               WHERE sd.session_id = $1
-               ORDER BY sd.created_at ASC`;
-      queryParams = [sessionId];
+    // 비로그인: 빈 배열 반환
+    if (!user) {
+      return NextResponse.json([]);
     }
 
-    const result = await client.query(query, queryParams);
+    client = await getConnection();
+
+    // 로그인: 내가 스캔한 것만
+    const query = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                    u.name as user_name, u.email as user_email
+             FROM scan_data sd
+             LEFT JOIN users u ON sd.user_id = u.id
+             WHERE sd.session_id = $1 AND sd.user_id = $2
+             ORDER BY sd.created_at ASC`;
+
+    const result = await client.query(query, [sessionId, user.userId]);
 
     const scans = result.rows.map((row: any) => ({
       id: row.id,
