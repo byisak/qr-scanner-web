@@ -148,30 +148,37 @@ app.prepare().then(() => {
 
         socket.join(sessionId);
 
-        // 기존 스캔 데이터 조회 (로그인 사용자만)
+        // 기존 스캔 데이터 조회
         let existingScans: any[] = [];
 
-        if (userId) {
-          // 로그인: 내가 스캔한 데이터만 표시
-          const scanQuery = `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
-                              u.name as user_name, u.email as user_email
-                       FROM scan_data sd
-                       LEFT JOIN users u ON sd.user_id = u.id
-                       WHERE sd.session_id = $1 AND sd.user_id = $2
-                       ORDER BY sd.created_at ASC`;
-          const scanResult = await client.query(scanQuery, [sessionId, userId]);
+        // 로그인 여부와 관계없이 해당 세션의 모든 스캔 데이터 표시
+        const scanQuery = userId
+          ? `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                    u.name as user_name, u.email as user_email
+             FROM scan_data sd
+             LEFT JOIN users u ON sd.user_id = u.id
+             WHERE sd.session_id = $1 AND sd.user_id = $2
+             ORDER BY sd.created_at ASC`
+          : `SELECT sd.id, sd.session_id, sd.user_id, sd.code, sd.scan_timestamp, sd.created_at,
+                    u.name as user_name, u.email as user_email
+             FROM scan_data sd
+             LEFT JOIN users u ON sd.user_id = u.id
+             WHERE sd.session_id = $1
+             ORDER BY sd.created_at ASC`;
 
-          existingScans = scanResult.rows.map((row: any) => ({
-            id: row.id,
-            sessionId: row.session_id,
-            code: row.code,
-            scan_timestamp: row.scan_timestamp,
-            createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
-            userId: row.user_id || null,
-            userName: row.user_name || row.user_email || null,
-          }));
-        }
-        // 비로그인: 스캔 데이터 표시 안함 (existingScans = [])
+        const scanResult = userId
+          ? await client.query(scanQuery, [sessionId, userId])
+          : await client.query(scanQuery, [sessionId]);
+
+        existingScans = scanResult.rows.map((row: any) => ({
+          id: row.id,
+          sessionId: row.session_id,
+          code: row.code,
+          scan_timestamp: row.scan_timestamp,
+          createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
+          userId: row.user_id || null,
+          userName: row.user_name || row.user_email || null,
+        }));
 
         socket.emit('session-joined', {
           sessionId,
