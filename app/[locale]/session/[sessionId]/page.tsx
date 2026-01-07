@@ -1,9 +1,26 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { useAuth } from '@/contexts/auth-context';
 import { AppSidebar } from '@/components/app-sidebar';
+
+// 방문한 세션을 localStorage에 저장
+const VISITED_SESSIONS_KEY = 'visitedSessions';
+
+function addVisitedSession(sessionId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const data = localStorage.getItem(VISITED_SESSIONS_KEY);
+    const sessions = data ? JSON.parse(data) : [];
+    const filtered = sessions.filter((s: { sessionId: string }) => s.sessionId !== sessionId);
+    filtered.unshift({ sessionId, visitedAt: new Date().toISOString() });
+    const trimmed = filtered.slice(0, 20);
+    localStorage.setItem(VISITED_SESSIONS_KEY, JSON.stringify(trimmed));
+  } catch {
+    // localStorage 오류 무시
+  }
+}
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,19 +38,25 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet, LogIn } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { Download, FileSpreadsheet } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
-import { createColumns } from '@/components/scan-table-columns';
+import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
 import { ModeToggle } from '@/components/mode-toggle';
 
 export default function SessionPage() {
   const params = useParams();
-  const router = useRouter();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
-  // userId를 직접 전달하여 서버에서 필터링
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id);
+  // userId와 인증 로딩 상태를 전달하여 인증 완료 후 연결
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id, isLoading);
+
+  // 비로그인 사용자: 방문한 세션을 localStorage에 저장
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && sessionId) {
+      addVisitedSession(sessionId);
+    }
+  }, [isLoading, isAuthenticated, sessionId]);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
@@ -75,7 +98,10 @@ export default function SessionPage() {
     }
   }, [removeScans]);
 
-  const columns = useMemo(() => createColumns(handleDeleteScan), [handleDeleteScan]);
+  const columns = useMemo(
+    () => isAuthenticated ? createColumns(handleDeleteScan) : createReadOnlyColumns(),
+    [handleDeleteScan, isAuthenticated]
+  );
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
     try {
@@ -162,39 +188,31 @@ export default function SessionPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   로딩 중...
                 </div>
-              ) : !isAuthenticated ? (
-                <div className="text-center py-12">
-                  <div className="text-muted-foreground mb-4">
-                    스캔 데이터를 보려면 로그인이 필요합니다
-                  </div>
-                  <Button onClick={() => router.push('/login')}>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    로그인하기
-                  </Button>
-                </div>
               ) : (
                 <>
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport('csv')}
-                      disabled={scans.length === 0}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      CSV 내보내기
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport('xlsx')}
-                      disabled={scans.length === 0}
-                    >
-                      <FileSpreadsheet className="mr-2 h-4 w-4" />
-                      Excel 내보내기
-                    </Button>
-                  </div>
-                  <ScanDataTable columns={columns} data={scans} onDeleteSelected={handleDeleteSelected} />
+                  {isAuthenticated && (
+                    <div className="flex gap-2 mb-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExport('csv')}
+                        disabled={scans.length === 0}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        CSV 내보내기
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExport('xlsx')}
+                        disabled={scans.length === 0}
+                      >
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        Excel 내보내기
+                      </Button>
+                    </div>
+                  )}
+                  <ScanDataTable columns={columns} data={scans} onDeleteSelected={isAuthenticated ? handleDeleteSelected : undefined} />
                 </>
               )}
             </CardContent>

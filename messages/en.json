@@ -1,0 +1,170 @@
+{
+  "common": {
+    "appName": "QR Scanner Pro",
+    "language": "Language",
+    "korean": "한국어",
+    "english": "English",
+    "loading": "Loading..."
+  },
+  "nav": {
+    "features": "Features",
+    "useCases": "Use Cases",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "openWebApp": "Open Web App",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "heroTitle1": "The Fastest and Most Accurate",
+    "heroTitle2": "QR Code Barcode Scanner",
+    "heroDescription": "Scan thousands of barcodes at once and transmit to PC in real-time. Professional scanner optimized for inventory management, logistics, and warehouse operations.",
+    "downloadAppStore": "Download on App Store",
+    "downloadGooglePlay": "Download on Google Play",
+    "rating": "4.8 stars · 1,250+ reviews",
+    "whyChoose": "Why QR Scanner Pro?",
+    "whoUses": "Who Uses This",
+    "faqTitle": "Frequently Asked Questions",
+    "ctaTitle": "Get Started Now",
+    "ctaDescription": "Boost your inventory management efficiency with a free download",
+    "appStore": "App Store",
+    "googlePlay": "Google Play"
+  },
+  "features": {
+    "bulkScan": {
+      "title": "Ultra-Fast Bulk Scanning",
+      "description": "Scan thousands of barcodes quickly in continuous scan mode. Reduce inventory time by 90%."
+    },
+    "realtime": {
+      "title": "Real-time PC Transfer",
+      "description": "Scanned data appears instantly in your PC web browser. No additional software required."
+    },
+    "export": {
+      "title": "CSV/Excel Export",
+      "description": "Export scan history to CSV or Excel files. Easily integrates with ERP and WMS systems."
+    },
+    "offline": {
+      "title": "Offline Mode",
+      "description": "Scan without internet. Works in warehouses, basements, and areas with poor network."
+    },
+    "allBarcodes": {
+      "title": "All Barcode Support",
+      "description": "Recognizes 30+ barcode formats including QR, EAN-13, Code128, UPC-A, DataMatrix."
+    },
+    "validation": {
+      "title": "Barcode Validation",
+      "description": "Automatic checksum verification prevents incorrect barcode entries. Maintains accurate inventory data."
+    }
+  },
+  "useCases": {
+    "logistics": {
+      "title": "Logistics Centers",
+      "description": "Inbound/outbound barcode scanning, inventory checks, picking list verification"
+    },
+    "warehouse": {
+      "title": "Warehouse Managers",
+      "description": "Inventory location tracking, location barcode scanning"
+    },
+    "retail": {
+      "title": "Retail Stores",
+      "description": "Product receiving, price tag checking, inventory surveys"
+    },
+    "manufacturing": {
+      "title": "Manufacturing",
+      "description": "Material tracking, production line monitoring, quality control"
+    }
+  },
+  "faq": {
+    "q1": {
+      "question": "Is QR Scanner Pro free?",
+      "answer": "Yes, QR Scanner Pro is free to download and use. All basic scanning features are free, and you can upgrade to Pro version for premium features."
+    },
+    "q2": {
+      "question": "How can I use QR Scanner Pro for inventory management?",
+      "answer": "QR Scanner Pro's bulk scan mode lets you continuously scan thousands of barcodes and transmit them to PC in real-time or export to CSV/Excel files. It's optimized for warehouse, logistics center, and retail store inventory."
+    },
+    "q3": {
+      "question": "What makes QR Scanner Pro different from other scanner apps?",
+      "answer": "QR Scanner Pro is designed for business use, offering professional features like bulk scanning, real-time PC transfer, multiple barcode format support, and offline mode. Unlike regular QR scanners, it's optimized for inventory management workflows."
+    },
+    "q4": {
+      "question": "How do I transfer scan data to PC in real-time?",
+      "answer": "Enable receive mode on scanview.app website, then enter the same connection code in the app. Scanned barcodes will appear on your PC screen in real-time. No additional software installation needed - just a web browser."
+    },
+    "q5": {
+      "question": "Which barcode formats are supported?",
+      "answer": "We support 30+ barcode formats including QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417, and Aztec."
+    }
+  },
+  "footer": {
+    "description": "Professional QR code barcode scanner optimized for inventory management, logistics, and warehouse operations",
+    "product": "Product",
+    "support": "Support",
+    "legal": "Legal",
+    "webApp": "Web App",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "copyright": "© 2024 ScanView. All rights reserved."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "activeSessions": "Active Sessions",
+    "noSessions": "No active sessions. Please create a session in the app.",
+    "scanCount": "Scans",
+    "created": "Created",
+    "view": "View",
+    "recentlyVisited": "Recently Visited Sessions",
+    "noVisited": "No recently visited sessions",
+    "visitedAt": "Visited"
+  },
+  "session": {
+    "title": "Session",
+    "sessionCode": "Session Code",
+    "sessionCodeDesc": "Enter this code in the app or scan the QR code",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "scanData": "Scan Data",
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "exportFailed": "Export failed",
+    "exportError": "Failed to export data."
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "Real-time Scan Monitor",
+    "addSession": "Add Session",
+    "sessionIdPlaceholder": "Session ID...",
+    "sessionList": "Session List",
+    "noSessions": "Add a session",
+    "deletedSessions": "Deleted Sessions",
+    "loginPrompt": "To view session list",
+    "login": "Login",
+    "restore": "Restore",
+    "permanentDelete": "Permanently Delete",
+    "moreItems": "more..."
+  },
+  "table": {
+    "number": "No.",
+    "qrCode": "QR Code",
+    "scanTime": "Scan Time",
+    "saveTime": "Save Time",
+    "actions": "Actions",
+    "delete": "Delete",
+    "deleteSelected": "Delete Selected",
+    "noData": "No scan data yet",
+    "selected": "selected"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "loginWithGoogle": "Login with Google",
+    "loginWithApple": "Login with Apple",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUp": "Sign up",
+    "signIn": "Sign in"
+  }
+}
