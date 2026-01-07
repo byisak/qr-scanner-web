@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User } from "lucide-react"
+import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, Key, ChevronUp } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -19,6 +19,13 @@ import {
   SidebarMenuButton,
   SidebarMenuAction,
 } from "@/components/ui/sidebar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
@@ -359,23 +366,47 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       <SidebarFooter>
         <SidebarMenu>
           {isAuthenticated && user ? (
-            <>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={user.email}>
-                  <User className="size-4" />
-                  <span className="truncate">{user.name || user.email}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => logout()}
-                  className="text-muted-foreground hover:text-foreground"
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <User className="size-4" />
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{user.name || t('sidebar.user')}</span>
+                      <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                    <ChevronUp className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="top"
+                  align="end"
+                  sideOffset={4}
                 >
-                  <LogOut className="size-4" />
-                  <span>{t('nav.logout')}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
+                    <Settings className="mr-2 size-4" />
+                    {t('sidebar.profileSettings')}
+                  </DropdownMenuItem>
+                  {user.provider === 'email' && (
+                    <DropdownMenuItem onClick={() => router.push('/dashboard/profile/password')}>
+                      <Key className="mr-2 size-4" />
+                      {t('sidebar.changePassword')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 size-4" />
+                    {t('nav.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
               <SidebarMenuButton
