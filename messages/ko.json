@@ -1,0 +1,170 @@
+{
+  "common": {
+    "appName": "QR Scanner Pro",
+    "language": "언어",
+    "korean": "한국어",
+    "english": "English",
+    "loading": "로딩 중..."
+  },
+  "nav": {
+    "features": "기능",
+    "useCases": "활용사례",
+    "blog": "블로그",
+    "faq": "FAQ",
+    "openWebApp": "웹앱 열기",
+    "login": "로그인",
+    "logout": "로그아웃"
+  },
+  "home": {
+    "heroTitle1": "가장 빠르고 정확한",
+    "heroTitle2": "QR코드 바코드 스캐너",
+    "heroDescription": "수천 개의 바코드를 한 번에 스캔하고 실시간으로 PC에 전송하세요. 재고관리, 물류, 창고 업무에 최적화된 전문가용 스캐너입니다.",
+    "downloadAppStore": "App Store 다운로드",
+    "downloadGooglePlay": "Google Play 다운로드",
+    "rating": "4.8점 · 1,250+ 리뷰",
+    "whyChoose": "왜 QR Scanner Pro인가요?",
+    "whoUses": "이런 분들이 사용합니다",
+    "faqTitle": "자주 묻는 질문",
+    "ctaTitle": "지금 바로 시작하세요",
+    "ctaDescription": "무료 다운로드로 재고관리 효율을 높이세요",
+    "appStore": "App Store",
+    "googlePlay": "Google Play"
+  },
+  "features": {
+    "bulkScan": {
+      "title": "초고속 대량 스캔",
+      "description": "연속 스캔 모드로 수천 개의 바코드를 빠르게 스캔. 재고 실사 시간을 90% 단축합니다."
+    },
+    "realtime": {
+      "title": "실시간 PC 전송",
+      "description": "스캔한 데이터가 즉시 PC 웹브라우저에 표시됩니다. 별도 소프트웨어 설치 불필요."
+    },
+    "export": {
+      "title": "CSV/엑셀 내보내기",
+      "description": "스캔 이력을 CSV, 엑셀 파일로 내보내기. ERP, WMS 시스템과 쉽게 연동됩니다."
+    },
+    "offline": {
+      "title": "오프라인 모드",
+      "description": "인터넷 없이도 스캔 가능. 창고, 지하 등 네트워크 환경이 열악한 곳에서도 OK."
+    },
+    "allBarcodes": {
+      "title": "모든 바코드 지원",
+      "description": "QR코드, EAN-13, Code128, UPC-A, DataMatrix 등 30+ 바코드 형식 인식."
+    },
+    "validation": {
+      "title": "바코드 유효성 검사",
+      "description": "체크섬 자동 검증으로 잘못된 바코드 입력 방지. 정확한 재고 데이터 유지."
+    }
+  },
+  "useCases": {
+    "logistics": {
+      "title": "물류센터",
+      "description": "입출고 바코드 스캔, 재고 실사, 피킹 리스트 확인"
+    },
+    "warehouse": {
+      "title": "창고 관리자",
+      "description": "재고 위치 추적, 로케이션 바코드 스캔"
+    },
+    "retail": {
+      "title": "소매점",
+      "description": "상품 입고, 가격표 확인, 재고 조사"
+    },
+    "manufacturing": {
+      "title": "제조업",
+      "description": "자재 입출고, 생산 라인 추적, 품질 관리"
+    }
+  },
+  "faq": {
+    "q1": {
+      "question": "QR Scanner Pro는 무료인가요?",
+      "answer": "네, QR Scanner Pro는 무료로 다운로드하여 사용할 수 있습니다. 기본 스캔 기능은 모두 무료이며, 프리미엄 기능을 원하시면 Pro 버전으로 업그레이드할 수 있습니다."
+    },
+    "q2": {
+      "question": "재고관리에 QR Scanner Pro를 어떻게 활용할 수 있나요?",
+      "answer": "QR Scanner Pro는 대량 스캔 모드로 수천 개의 바코드를 연속 스캔하고, 실시간으로 PC에 전송하거나 CSV/엑셀 파일로 내보낼 수 있습니다. 창고, 물류센터, 소매점의 재고 실사에 최적화되어 있습니다."
+    },
+    "q3": {
+      "question": "QR Scanner Pro와 다른 스캐너 앱의 차이점은 무엇인가요?",
+      "answer": "QR Scanner Pro는 업무용으로 설계되어 대량 스캔, 실시간 PC 전송, 다양한 바코드 형식 지원, 오프라인 모드 등 전문가 기능을 제공합니다. 일반 QR 스캐너 앱과 달리 재고관리 워크플로우에 최적화되어 있습니다."
+    },
+    "q4": {
+      "question": "PC로 스캔 데이터를 실시간 전송하는 방법은?",
+      "answer": "scanview.app 웹사이트에서 받기 모드를 활성화하고, 앱에서 동일한 연결 코드를 입력하면 스캔한 바코드가 실시간으로 PC 화면에 표시됩니다. 별도 소프트웨어 설치 없이 웹브라우저만 있으면 됩니다."
+    },
+    "q5": {
+      "question": "어떤 바코드 형식을 지원하나요?",
+      "answer": "QR코드, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417, Aztec 등 30가지 이상의 바코드 형식을 지원합니다."
+    }
+  },
+  "footer": {
+    "description": "재고관리, 물류, 창고 업무에 최적화된 전문가용 QR코드 바코드 스캐너",
+    "product": "제품",
+    "support": "지원",
+    "legal": "법적 고지",
+    "webApp": "웹앱",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관",
+    "copyright": "© 2024 ScanView. All rights reserved."
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "activeSessions": "활성 세션 목록",
+    "noSessions": "활성 세션이 없습니다. 앱에서 세션을 생성하세요.",
+    "scanCount": "스캔 수",
+    "created": "생성",
+    "view": "보기",
+    "recentlyVisited": "최근 방문한 세션",
+    "noVisited": "최근 방문한 세션이 없습니다",
+    "visitedAt": "방문"
+  },
+  "session": {
+    "title": "세션",
+    "sessionCode": "세션 코드",
+    "sessionCodeDesc": "앱에서 이 코드를 입력하거나 QR코드를 스캔하세요",
+    "connected": "연결됨",
+    "disconnected": "연결 끊김",
+    "scanData": "스캔 데이터",
+    "exportCsv": "CSV 내보내기",
+    "exportExcel": "Excel 내보내기",
+    "exportFailed": "내보내기 실패",
+    "exportError": "데이터 내보내기에 실패했습니다."
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "실시간 스캔 모니터",
+    "addSession": "세션 추가",
+    "sessionIdPlaceholder": "세션 ID...",
+    "sessionList": "세션 목록",
+    "noSessions": "세션을 추가하세요",
+    "deletedSessions": "삭제대기",
+    "loginPrompt": "세션 목록을 보려면",
+    "login": "로그인",
+    "restore": "복구",
+    "permanentDelete": "영구삭제",
+    "moreItems": "개 더보기..."
+  },
+  "table": {
+    "number": "번호",
+    "qrCode": "QR 코드",
+    "scanTime": "스캔 시간",
+    "saveTime": "저장 시간",
+    "actions": "작업",
+    "delete": "삭제",
+    "deleteSelected": "선택 삭제",
+    "noData": "스캔 데이터가 없습니다",
+    "selected": "개 선택됨"
+  },
+  "auth": {
+    "login": "로그인",
+    "register": "회원가입",
+    "email": "이메일",
+    "password": "비밀번호",
+    "name": "이름",
+    "loginWithGoogle": "Google로 로그인",
+    "loginWithApple": "Apple로 로그인",
+    "noAccount": "계정이 없으신가요?",
+    "hasAccount": "이미 계정이 있으신가요?",
+    "signUp": "회원가입",
+    "signIn": "로그인"
+  }
+}
