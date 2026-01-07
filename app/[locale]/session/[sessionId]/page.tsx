@@ -101,7 +101,7 @@ export default function SessionPage() {
       toast.success(t('session.newScanReceived'), {
         description: newScansCount > 1
           ? t('session.newScansCount', { count: newScansCount })
-          : scans[0]?.qr_code?.substring(0, 50) || '',
+          : scans[0]?.code?.substring(0, 50) || '',
       });
     }
     prevScansLengthRef.current = scans.length;
