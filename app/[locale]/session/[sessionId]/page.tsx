@@ -44,8 +44,10 @@ import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { useTranslations } from 'next-intl';
 
 export default function SessionPage() {
+  const t = useTranslations();
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -69,13 +71,13 @@ export default function SessionPage() {
         removeScan(scanId);
       } else {
         const data = await res.json();
-        alert(data.error || '삭제 실패');
+        alert(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
-      console.error('스캔 데이터 삭제 실패:', error);
-      alert('스캔 데이터 삭제 중 오류가 발생했습니다.');
+      console.error('Scan data delete failed:', error);
+      alert(t('session.deleteError'));
     }
-  }, [removeScan]);
+  }, [removeScan, t]);
 
   const handleDeleteSelected = useCallback(async (ids: number[]) => {
     try {
@@ -91,13 +93,13 @@ export default function SessionPage() {
         removeScans(ids);
       } else {
         const data = await res.json();
-        alert(data.error || '삭제 실패');
+        alert(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
-      console.error('다중 스캔 데이터 삭제 실패:', error);
-      alert('스캔 데이터 삭제 중 오류가 발생했습니다.');
+      console.error('Bulk scan data delete failed:', error);
+      alert(t('session.deleteError'));
     }
-  }, [removeScans]);
+  }, [removeScans, t]);
 
   const columns = useMemo(
     () => isAuthenticated ? createColumns(handleDeleteScan) : createReadOnlyColumns(),
@@ -109,7 +111,7 @@ export default function SessionPage() {
       const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`);
 
       if (!response.ok) {
-        throw new Error('내보내기 실패');
+        throw new Error(t('session.exportFailed'));
       }
 
       const blob = await response.blob();
@@ -123,7 +125,7 @@ export default function SessionPage() {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Export error:', err);
-      alert('데이터 내보내기에 실패했습니다.');
+      alert(t('session.exportError'));
     }
   };
 
@@ -138,11 +140,11 @@ export default function SessionPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">대시보드</BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>세션: {sessionId}</BreadcrumbPage>
+                  <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -154,18 +156,17 @@ export default function SessionPage() {
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {/* 세션 코드 표시 카드 */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">세션 코드</CardTitle>
+                  <CardTitle className="text-2xl">{t('session.sessionCode')}</CardTitle>
                   <CardDescription className="mt-1">
-                    앱에서 이 코드를 입력하거나 QR코드를 스캔하세요
+                    {t('session.sessionCodeDesc')}
                   </CardDescription>
                 </div>
                 <Badge variant={isConnected ? 'default' : 'destructive'}>
-                  {isConnected ? '연결됨' : '연결 끊김'}
+                  {isConnected ? t('session.connected') : t('session.disconnected')}
                 </Badge>
               </div>
               <div className="mt-4 p-4 bg-muted rounded-lg text-center">
@@ -179,16 +180,15 @@ export default function SessionPage() {
             </CardHeader>
           </Card>
 
-          {/* 스캔 데이터 카드 - 로그인 필요 */}
           <Card>
             <CardHeader>
-              <CardTitle>스캔 데이터</CardTitle>
+              <CardTitle>{t('session.scanData')}</CardTitle>
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  로딩 중...
+                  {t('common.loading')}
                 </div>
               ) : (
                 <>
@@ -201,7 +201,7 @@ export default function SessionPage() {
                         disabled={scans.length === 0}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        CSV 내보내기
+                        {t('session.exportCsv')}
                       </Button>
                       <Button
                         variant="outline"
@@ -210,7 +210,7 @@ export default function SessionPage() {
                         disabled={scans.length === 0}
                       >
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Excel 내보내기
+                        {t('session.exportExcel')}
                       </Button>
                     </div>
                   )}

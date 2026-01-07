@@ -108,14 +108,19 @@
   },
   "dashboard": {
     "title": "대시보드",
-    "activeSessions": "활성 세션 목록",
+    "activeSessions": "내 세션 목록",
+    "mySessionsDesc": "내가 생성한 세션만 표시됩니다",
     "noSessions": "활성 세션이 없습니다. 앱에서 세션을 생성하세요.",
     "scanCount": "스캔 수",
     "created": "생성",
     "view": "보기",
     "recentlyVisited": "최근 방문한 세션",
+    "recentlyVisitedDesc": "이 브라우저에서 방문한 세션입니다",
     "noVisited": "최근 방문한 세션이 없습니다",
-    "visitedAt": "방문"
+    "visitedAt": "방문",
+    "loginRequired": "로그인이 필요합니다",
+    "loginRequiredDesc": "세션을 관리하고 스캔 데이터를 저장하려면 로그인하세요",
+    "confirmDelete": "세션을 삭제하시겠습니까?"
   },
   "session": {
     "title": "세션",
@@ -127,7 +132,9 @@
     "exportCsv": "CSV 내보내기",
     "exportExcel": "Excel 내보내기",
     "exportFailed": "내보내기 실패",
-    "exportError": "데이터 내보내기에 실패했습니다."
+    "exportError": "데이터 내보내기에 실패했습니다.",
+    "deleteFailed": "삭제 실패",
+    "deleteError": "스캔 데이터 삭제 중 오류가 발생했습니다."
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -137,11 +144,14 @@
     "sessionList": "세션 목록",
     "noSessions": "세션을 추가하세요",
     "deletedSessions": "삭제대기",
+    "deleted": "삭제됨",
     "loginPrompt": "세션 목록을 보려면",
     "login": "로그인",
     "restore": "복구",
     "permanentDelete": "영구삭제",
-    "moreItems": "개 더보기..."
+    "moreItems": "개 더보기...",
+    "deleteFailed": "삭제 실패",
+    "deleteError": "세션 삭제 중 오류가 발생했습니다."
   },
   "table": {
     "number": "번호",
@@ -166,5 +176,26 @@
     "hasAccount": "이미 계정이 있으신가요?",
     "signUp": "회원가입",
     "signIn": "로그인"
+  },
+  "trash": {
+    "title": "삭제대기 세션",
+    "autoDeleteInfo": "삭제 후 {days}일이 지나면 자동으로 영구 삭제됩니다.",
+    "noDeletedSessions": "삭제대기 중인 세션이 없습니다.",
+    "cleanupExpired": "만료된 세션 정리",
+    "restore": "복구",
+    "permanentDelete": "영구 삭제",
+    "deletedAt": "삭제일",
+    "expired": "만료됨",
+    "remainingDaysHours": "{days}일 {hours}시간 남음",
+    "remainingHours": "{hours}시간 남음",
+    "restoreFailed": "복구 실패",
+    "restoreError": "세션 복구 중 오류가 발생했습니다.",
+    "confirmPermanentDelete": "세션을 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "permanentDeleteFailed": "영구 삭제 실패",
+    "permanentDeleteError": "세션 영구 삭제 중 오류가 발생했습니다.",
+    "confirmDeleteExpired": "만료된 세션을 모두 영구 삭제하시겠습니까?",
+    "expiredDeleted": "{count}개의 만료된 세션이 삭제되었습니다.",
+    "cleanupFailed": "정리 실패",
+    "cleanupError": "만료된 세션 정리 중 오류가 발생했습니다."
   }
 }

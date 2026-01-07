@@ -23,6 +23,7 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Trash2, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
 
 // 방문한 세션을 localStorage에 저장/조회하는 유틸리티
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -62,6 +63,8 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading, accessToken } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [visitedSessions, setVisitedSessions] = useState<VisitedSession[]>([]);
+  const t = useTranslations();
+  const locale = useLocale();
 
   const fetchSessions = useCallback(async () => {
     if (!isAuthenticated || !accessToken) return;
@@ -104,7 +107,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm('세션을 삭제하시겠습니까?')) return;
+    if (!confirm(t('dashboard.confirmDelete'))) return;
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -135,7 +138,7 @@ export default function Dashboard() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>대시보드</BreadcrumbPage>
+                  <BreadcrumbPage>{t('dashboard.title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -150,20 +153,19 @@ export default function Dashboard() {
           {isLoading ? (
             <Card>
               <CardContent className="py-8">
-                <p className="text-center text-muted-foreground">로딩 중...</p>
+                <p className="text-center text-muted-foreground">{t('common.loading')}</p>
               </CardContent>
             </Card>
           ) : isAuthenticated ? (
-            // 로그인한 사용자: 자신의 세션 목록 표시
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">내 세션 목록</CardTitle>
-                <CardDescription>내가 생성한 세션만 표시됩니다</CardDescription>
+                <CardTitle className="text-2xl">{t('dashboard.activeSessions')}</CardTitle>
+                <CardDescription>{t('dashboard.mySessionsDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {sessions.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    활성 세션이 없습니다. 앱에서 세션을 생성하세요.
+                    {t('dashboard.noSessions')}
                   </p>
                 ) : (
                   <div className="grid gap-4">
@@ -174,12 +176,12 @@ export default function Dashboard() {
                             <div>
                               <p className="font-mono text-sm font-semibold">{session.session_id}</p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                스캔 수: {session.scan_count} | 생성: {new Date(session.created_at).toLocaleString('ko-KR')}
+                                {t('dashboard.scanCount')}: {session.scan_count} | {t('dashboard.created')}: {new Date(session.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                               </p>
                             </div>
                             <div className="flex gap-2">
                               <Button onClick={() => viewSession(session.session_id)}>
-                                보기
+                                {t('dashboard.view')}
                               </Button>
                               <Button
                                 variant="outline"
@@ -198,13 +200,12 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : (
-            // 비로그인 사용자: 로그인 안내 및 최근 방문 세션
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-2xl">로그인이 필요합니다</CardTitle>
+                  <CardTitle className="text-2xl">{t('dashboard.loginRequired')}</CardTitle>
                   <CardDescription>
-                    세션을 관리하고 스캔 데이터를 저장하려면 로그인하세요
+                    {t('dashboard.loginRequiredDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -212,11 +213,11 @@ export default function Dashboard() {
                     <Link href="/login">
                       <Button>
                         <LogIn className="mr-2 h-4 w-4" />
-                        로그인
+                        {t('auth.login')}
                       </Button>
                     </Link>
                     <Link href="/register">
-                      <Button variant="outline">회원가입</Button>
+                      <Button variant="outline">{t('auth.register')}</Button>
                     </Link>
                   </div>
                 </CardContent>
@@ -225,8 +226,8 @@ export default function Dashboard() {
               {visitedSessions.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>최근 방문한 세션</CardTitle>
-                    <CardDescription>이 브라우저에서 방문한 세션입니다</CardDescription>
+                    <CardTitle>{t('dashboard.recentlyVisited')}</CardTitle>
+                    <CardDescription>{t('dashboard.recentlyVisitedDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
@@ -237,11 +238,11 @@ export default function Dashboard() {
                               <div>
                                 <p className="font-mono text-sm font-semibold">{visited.sessionId}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  방문: {new Date(visited.visitedAt).toLocaleString('ko-KR')}
+                                  {t('dashboard.visitedAt')}: {new Date(visited.visitedAt).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                                 </p>
                               </div>
                               <Button onClick={() => viewSession(visited.sessionId)}>
-                                보기
+                                {t('dashboard.view')}
                               </Button>
                             </div>
                           </CardContent>
