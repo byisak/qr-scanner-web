@@ -129,9 +129,11 @@ app.prepare().then(() => {
         } else {
           // 세션 활동 시간 업데이트, user_id가 없으면 업데이트
           const existingSession = checkResult.rows[0];
+          console.log('기존 세션 발견:', sessionId, '현재 user_id:', existingSession.user_id, '요청 userId:', userId);
 
           if (userId && !existingSession.user_id) {
             // 기존 세션에 user_id가 없으면 업데이트
+            console.log('세션 user_id 업데이트:', sessionId, '->', userId);
             await client.query(
               `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = $1, user_id = $2
                WHERE session_id = $3`,

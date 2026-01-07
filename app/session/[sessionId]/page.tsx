@@ -48,8 +48,8 @@ export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
-  // userId를 직접 전달하여 서버에서 필터링
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id);
+  // userId와 인증 로딩 상태를 전달하여 인증 완료 후 연결
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id, isLoading);
 
   // 비로그인 사용자: 방문한 세션을 localStorage에 저장
   useEffect(() => {

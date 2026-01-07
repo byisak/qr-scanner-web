@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ScanData } from '@/types';
 
-// userId를 직접 받아서 서버로 전달
-export function useSocket(sessionId: string | null, userId: string | null | undefined) {
+// userId와 authLoading을 직접 받아서 서버로 전달
+export function useSocket(sessionId: string | null, userId: string | null | undefined, authLoading: boolean = false) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [scans, setScans] = useState<ScanData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -13,14 +13,22 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
   const scansRef = useRef<ScanData[]>([]);
   // userId를 ref로 저장하여 콜백에서 최신 값 사용
   const userIdRef = useRef<string | null | undefined>(userId);
+  // 인증 완료 후 첫 연결인지 추적
+  const hasJoinedWithAuthRef = useRef(false);
 
   // userId가 변경될 때마다 ref 업데이트
   useEffect(() => {
     userIdRef.current = userId;
+    console.log('🔐 userId ref 업데이트:', userId || '(없음)');
   }, [userId]);
 
   useEffect(() => {
     if (!sessionId) return;
+    // 인증 로딩 중이면 소켓 연결 대기
+    if (authLoading) {
+      console.log('⏳ 인증 로딩 중... 소켓 연결 대기');
+      return;
+    }
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
@@ -82,7 +90,7 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
       console.log('🔌 Socket 연결 종료');
       socketIo.disconnect();
     };
-  }, [sessionId]); // userId 제거 - ref로 관리
+  }, [sessionId, authLoading]); // authLoading이 false가 되면 연결
 
   // userId가 변경되면 세션 재참가
   useEffect(() => {
