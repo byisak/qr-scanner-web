@@ -58,21 +58,25 @@ export function addVisitedSession(sessionId: string) {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, accessToken } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [visitedSessions, setVisitedSessions] = useState<VisitedSession[]>([]);
 
   const fetchSessions = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !accessToken) return;
     try {
-      // 로그인한 사용자만 자신의 세션 조회
-      const res = await fetch('/api/sessions?mine=true');
+      // 로그인한 사용자만 자신의 세션 조회 (인증 토큰 포함)
+      const res = await fetch('/api/sessions?mine=true', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       const data = await res.json();
       setSessions(data);
     } catch (err) {
       console.error('세션 목록 로드 실패:', err);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
     if (isAuthenticated) {
