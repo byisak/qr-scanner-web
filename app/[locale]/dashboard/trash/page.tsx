@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/types';
 import { ModeToggle } from '@/components/mode-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { RotateCcw, Trash2, Clock } from 'lucide-react';
 
 const DELETION_DAYS = 30;
@@ -168,7 +169,8 @@ export default function TrashPage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4">
+          <div className="px-4 flex items-center gap-2">
+            <LanguageSwitcher />
             <ModeToggle />
           </div>
         </header>

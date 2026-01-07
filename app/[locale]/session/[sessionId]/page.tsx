@@ -43,6 +43,7 @@ import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
 import { ModeToggle } from '@/components/mode-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 export default function SessionPage() {
   const params = useParams();
@@ -146,7 +147,8 @@ export default function SessionPage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4">
+          <div className="px-4 flex items-center gap-2">
+            <LanguageSwitcher />
             <ModeToggle />
           </div>
         </header>
