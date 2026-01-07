@@ -1,9 +1,26 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { useAuth } from '@/contexts/auth-context';
 import { AppSidebar } from '@/components/app-sidebar';
+
+// 방문한 세션을 localStorage에 저장
+const VISITED_SESSIONS_KEY = 'visitedSessions';
+
+function addVisitedSession(sessionId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const data = localStorage.getItem(VISITED_SESSIONS_KEY);
+    const sessions = data ? JSON.parse(data) : [];
+    const filtered = sessions.filter((s: { sessionId: string }) => s.sessionId !== sessionId);
+    filtered.unshift({ sessionId, visitedAt: new Date().toISOString() });
+    const trimmed = filtered.slice(0, 20);
+    localStorage.setItem(VISITED_SESSIONS_KEY, JSON.stringify(trimmed));
+  } catch {
+    // localStorage 오류 무시
+  }
+}
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,6 +50,13 @@ export default function SessionPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   // userId를 직접 전달하여 서버에서 필터링
   const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id);
+
+  // 비로그인 사용자: 방문한 세션을 localStorage에 저장
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && sessionId) {
+      addVisitedSession(sessionId);
+    }
+  }, [isLoading, isAuthenticated, sessionId]);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
