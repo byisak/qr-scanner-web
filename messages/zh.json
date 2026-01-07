@@ -1,0 +1,204 @@
+{
+  "common": {
+    "appName": "QR Scanner Pro",
+    "language": "语言",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "es": "Español",
+    "loading": "加载中..."
+  },
+  "nav": {
+    "features": "功能",
+    "useCases": "使用场景",
+    "blog": "博客",
+    "faq": "常见问题",
+    "openWebApp": "打开网页应用",
+    "login": "登录",
+    "logout": "退出"
+  },
+  "home": {
+    "heroTitle1": "最快速、最精准的",
+    "heroTitle2": "二维码条形码扫描器",
+    "heroDescription": "一次扫描数千个条形码并实时传输到电脑。专为库存管理、物流和仓储业务优化的专业扫描器。",
+    "downloadAppStore": "App Store 下载",
+    "downloadGooglePlay": "Google Play 下载",
+    "rating": "4.8星 · 1,250+ 评价",
+    "whyChoose": "为什么选择 QR Scanner Pro？",
+    "whoUses": "谁在使用",
+    "faqTitle": "常见问题",
+    "ctaTitle": "立即开始",
+    "ctaDescription": "免费下载，提升库存管理效率",
+    "appStore": "App Store",
+    "googlePlay": "Google Play"
+  },
+  "features": {
+    "bulkScan": {
+      "title": "超快批量扫描",
+      "description": "连续扫描模式快速扫描数千个条形码。库存盘点时间减少90%。"
+    },
+    "realtime": {
+      "title": "实时电脑传输",
+      "description": "扫描数据即时显示在电脑浏览器上。无需安装额外软件。"
+    },
+    "export": {
+      "title": "CSV/Excel 导出",
+      "description": "将扫描历史导出为CSV或Excel文件。轻松与ERP、WMS系统集成。"
+    },
+    "offline": {
+      "title": "离线模式",
+      "description": "无网络也能扫描。在仓库、地下室等网络信号差的地方也能使用。"
+    },
+    "allBarcodes": {
+      "title": "支持所有条形码",
+      "description": "识别30+种条形码格式，包括QR、EAN-13、Code128、UPC-A、DataMatrix。"
+    },
+    "validation": {
+      "title": "条形码验证",
+      "description": "自动校验和验证防止错误条形码输入。保持准确的库存数据。"
+    }
+  },
+  "useCases": {
+    "logistics": {
+      "title": "物流中心",
+      "description": "入库/出库条形码扫描、库存盘点、拣货清单核对"
+    },
+    "warehouse": {
+      "title": "仓库管理员",
+      "description": "库存位置追踪、货位条形码扫描"
+    },
+    "retail": {
+      "title": "零售店铺",
+      "description": "商品入库、价格标签检查、库存调查"
+    },
+    "manufacturing": {
+      "title": "制造业",
+      "description": "材料追踪、生产线监控、质量控制"
+    }
+  },
+  "faq": {
+    "q1": {
+      "question": "QR Scanner Pro 是免费的吗？",
+      "answer": "是的，QR Scanner Pro 可以免费下载使用。所有基本扫描功能都是免费的，您可以升级到Pro版本获得高级功能。"
+    },
+    "q2": {
+      "question": "如何使用 QR Scanner Pro 进行库存管理？",
+      "answer": "QR Scanner Pro 的批量扫描模式可以连续扫描数千个条形码，实时传输到电脑或导出为CSV/Excel文件。专为仓库、物流中心和零售店库存盘点优化。"
+    },
+    "q3": {
+      "question": "QR Scanner Pro 与其他扫描应用有什么不同？",
+      "answer": "QR Scanner Pro 专为商业用途设计，提供批量扫描、实时电脑传输、多种条形码格式支持和离线模式等专业功能。与普通二维码扫描器不同，它专为库存管理工作流程优化。"
+    },
+    "q4": {
+      "question": "如何实时将扫描数据传输到电脑？",
+      "answer": "在 scanview.app 网站启用接收模式，然后在应用中输入相同的连接代码。扫描的条形码会实时显示在电脑屏幕上。无需安装额外软件 - 只需要浏览器。"
+    },
+    "q5": {
+      "question": "支持哪些条形码格式？",
+      "answer": "我们支持30多种条形码格式，包括 QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417 和 Aztec。"
+    }
+  },
+  "footer": {
+    "description": "专为库存管理、物流和仓储业务优化的专业二维码条形码扫描器",
+    "product": "产品",
+    "support": "支持",
+    "legal": "法律信息",
+    "webApp": "网页应用",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "copyright": "© 2024 ScanView. 保留所有权利。"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "activeSessions": "我的会话",
+    "mySessionsDesc": "只显示您创建的会话",
+    "noSessions": "没有活动会话。请在应用中创建会话。",
+    "scanCount": "扫描次数",
+    "created": "创建时间",
+    "view": "查看",
+    "recentlyVisited": "最近访问的会话",
+    "recentlyVisitedDesc": "您在此浏览器中访问过的会话",
+    "noVisited": "没有最近访问的会话",
+    "visitedAt": "访问时间",
+    "loginRequired": "需要登录",
+    "loginRequiredDesc": "登录以管理会话和保存扫描数据",
+    "confirmDelete": "确定要删除此会话吗？"
+  },
+  "session": {
+    "title": "会话",
+    "sessionCode": "会话代码",
+    "sessionCodeDesc": "在应用中输入此代码或扫描二维码",
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "scanData": "扫描数据",
+    "exportCsv": "导出 CSV",
+    "exportExcel": "导出 Excel",
+    "exportFailed": "导出失败",
+    "exportError": "数据导出失败。",
+    "deleteFailed": "删除失败",
+    "deleteError": "删除扫描数据时出错。"
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "实时扫描监控",
+    "addSession": "添加会话",
+    "sessionIdPlaceholder": "会话ID...",
+    "sessionList": "会话列表",
+    "noSessions": "添加一个会话",
+    "deletedSessions": "已删除",
+    "deleted": "已删除",
+    "loginPrompt": "查看会话列表请",
+    "login": "登录",
+    "restore": "恢复",
+    "permanentDelete": "删除",
+    "moreItems": "更多...",
+    "deleteFailed": "删除失败",
+    "deleteError": "删除会话失败。"
+  },
+  "table": {
+    "number": "序号",
+    "qrCode": "二维码",
+    "scanTime": "扫描时间",
+    "saveTime": "保存时间",
+    "actions": "操作",
+    "delete": "删除",
+    "deleteSelected": "删除选中",
+    "noData": "暂无扫描数据",
+    "selected": "已选择"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "name": "姓名",
+    "loginWithGoogle": "使用 Google 登录",
+    "loginWithApple": "使用 Apple 登录",
+    "noAccount": "还没有账户？",
+    "hasAccount": "已有账户？",
+    "signUp": "注册",
+    "signIn": "登录"
+  },
+  "trash": {
+    "title": "已删除会话",
+    "autoDeleteInfo": "删除后 {days} 天将自动永久删除。",
+    "noDeletedSessions": "没有已删除的会话。",
+    "cleanupExpired": "清理已过期",
+    "restore": "恢复",
+    "permanentDelete": "永久删除",
+    "deletedAt": "删除时间",
+    "expired": "已过期",
+    "remainingDaysHours": "剩余 {days}天 {hours}小时",
+    "remainingHours": "剩余 {hours}小时",
+    "restoreFailed": "恢复失败",
+    "restoreError": "恢复会话失败。",
+    "confirmPermanentDelete": "确定要永久删除此会话吗？此操作无法撤销。",
+    "permanentDeleteFailed": "永久删除失败",
+    "permanentDeleteError": "永久删除会话失败。",
+    "confirmDeleteExpired": "确定要永久删除所有已过期的会话吗？",
+    "expiredDeleted": "已删除 {count} 个过期会话。",
+    "cleanupFailed": "清理失败",
+    "cleanupError": "清理过期会话失败。"
+  }
+}

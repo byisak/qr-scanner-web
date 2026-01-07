@@ -1,0 +1,204 @@
+{
+  "common": {
+    "appName": "QR Scanner Pro",
+    "language": "言語",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "es": "Español",
+    "loading": "読み込み中..."
+  },
+  "nav": {
+    "features": "機能",
+    "useCases": "活用事例",
+    "blog": "ブログ",
+    "faq": "よくある質問",
+    "openWebApp": "ウェブアプリを開く",
+    "login": "ログイン",
+    "logout": "ログアウト"
+  },
+  "home": {
+    "heroTitle1": "最速・最高精度の",
+    "heroTitle2": "QRコード・バーコードスキャナー",
+    "heroDescription": "数千のバーコードを一度にスキャンし、リアルタイムでPCに転送。在庫管理、物流、倉庫業務に最適化されたプロフェッショナルスキャナー。",
+    "downloadAppStore": "App Store でダウンロード",
+    "downloadGooglePlay": "Google Play でダウンロード",
+    "rating": "4.8点 · 1,250+ レビュー",
+    "whyChoose": "なぜ QR Scanner Pro を選ぶのか？",
+    "whoUses": "こんな方におすすめ",
+    "faqTitle": "よくある質問",
+    "ctaTitle": "今すぐ始めましょう",
+    "ctaDescription": "無料ダウンロードで在庫管理の効率を向上",
+    "appStore": "App Store",
+    "googlePlay": "Google Play"
+  },
+  "features": {
+    "bulkScan": {
+      "title": "超高速一括スキャン",
+      "description": "連続スキャンモードで数千のバーコードを素早くスキャン。棚卸し時間を90%削減。"
+    },
+    "realtime": {
+      "title": "リアルタイムPC転送",
+      "description": "スキャンデータがPCのブラウザに即座に表示。追加ソフトウェアのインストール不要。"
+    },
+    "export": {
+      "title": "CSV/Excel エクスポート",
+      "description": "スキャン履歴をCSVまたはExcelファイルにエクスポート。ERPやWMSシステムと簡単に連携。"
+    },
+    "offline": {
+      "title": "オフラインモード",
+      "description": "インターネットなしでもスキャン可能。倉庫、地下など電波の届きにくい場所でもOK。"
+    },
+    "allBarcodes": {
+      "title": "全バーコード対応",
+      "description": "QR、EAN-13、Code128、UPC-A、DataMatrixなど30種類以上のバーコード形式を認識。"
+    },
+    "validation": {
+      "title": "バーコード検証",
+      "description": "チェックサム自動検証で誤ったバーコード入力を防止。正確な在庫データを維持。"
+    }
+  },
+  "useCases": {
+    "logistics": {
+      "title": "物流センター",
+      "description": "入出庫バーコードスキャン、棚卸し、ピッキングリスト確認"
+    },
+    "warehouse": {
+      "title": "倉庫管理者",
+      "description": "在庫位置追跡、ロケーションバーコードスキャン"
+    },
+    "retail": {
+      "title": "小売店",
+      "description": "商品入荷、価格タグ確認、在庫調査"
+    },
+    "manufacturing": {
+      "title": "製造業",
+      "description": "資材追跡、生産ライン監視、品質管理"
+    }
+  },
+  "faq": {
+    "q1": {
+      "question": "QR Scanner Pro は無料ですか？",
+      "answer": "はい、QR Scanner Pro は無料でダウンロードして使用できます。基本的なスキャン機能はすべて無料で、プレミアム機能を利用したい場合はPro版にアップグレードできます。"
+    },
+    "q2": {
+      "question": "在庫管理に QR Scanner Pro をどのように活用できますか？",
+      "answer": "QR Scanner Pro の一括スキャンモードで数千のバーコードを連続スキャンし、リアルタイムでPCに転送またはCSV/Excelファイルにエクスポートできます。倉庫、物流センター、小売店の棚卸しに最適化されています。"
+    },
+    "q3": {
+      "question": "QR Scanner Pro と他のスキャナーアプリの違いは何ですか？",
+      "answer": "QR Scanner Pro はビジネス用途向けに設計されており、一括スキャン、リアルタイムPC転送、複数バーコード形式サポート、オフラインモードなどの専門機能を提供します。一般的なQRスキャナーと異なり、在庫管理ワークフローに最適化されています。"
+    },
+    "q4": {
+      "question": "スキャンデータをリアルタイムでPCに転送する方法は？",
+      "answer": "scanview.app ウェブサイトで受信モードを有効にし、アプリで同じ接続コードを入力します。スキャンしたバーコードがリアルタイムでPC画面に表示されます。追加ソフトウェアのインストール不要 - ブラウザだけでOK。"
+    },
+    "q5": {
+      "question": "どのバーコード形式に対応していますか？",
+      "answer": "QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417、Aztecなど30種類以上のバーコード形式に対応しています。"
+    }
+  },
+  "footer": {
+    "description": "在庫管理、物流、倉庫業務に最適化されたプロフェッショナルQRコード・バーコードスキャナー",
+    "product": "製品",
+    "support": "サポート",
+    "legal": "法的情報",
+    "webApp": "ウェブアプリ",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "copyright": "© 2024 ScanView. All rights reserved."
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "activeSessions": "マイセッション",
+    "mySessionsDesc": "作成したセッションのみ表示されます",
+    "noSessions": "アクティブなセッションがありません。アプリでセッションを作成してください。",
+    "scanCount": "スキャン数",
+    "created": "作成日時",
+    "view": "表示",
+    "recentlyVisited": "最近訪問したセッション",
+    "recentlyVisitedDesc": "このブラウザで訪問したセッション",
+    "noVisited": "最近訪問したセッションはありません",
+    "visitedAt": "訪問日時",
+    "loginRequired": "ログインが必要です",
+    "loginRequiredDesc": "セッションの管理とスキャンデータの保存にはログインしてください",
+    "confirmDelete": "このセッションを削除しますか？"
+  },
+  "session": {
+    "title": "セッション",
+    "sessionCode": "セッションコード",
+    "sessionCodeDesc": "アプリでこのコードを入力するか、QRコードをスキャンしてください",
+    "connected": "接続中",
+    "disconnected": "切断",
+    "scanData": "スキャンデータ",
+    "exportCsv": "CSV エクスポート",
+    "exportExcel": "Excel エクスポート",
+    "exportFailed": "エクスポート失敗",
+    "exportError": "データのエクスポートに失敗しました。",
+    "deleteFailed": "削除失敗",
+    "deleteError": "スキャンデータの削除中にエラーが発生しました。"
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "リアルタイムスキャンモニター",
+    "addSession": "セッション追加",
+    "sessionIdPlaceholder": "セッションID...",
+    "sessionList": "セッション一覧",
+    "noSessions": "セッションを追加してください",
+    "deletedSessions": "削除済み",
+    "deleted": "削除済み",
+    "loginPrompt": "セッション一覧を見るには",
+    "login": "ログイン",
+    "restore": "復元",
+    "permanentDelete": "削除",
+    "moreItems": "件追加...",
+    "deleteFailed": "削除失敗",
+    "deleteError": "セッションの削除に失敗しました。"
+  },
+  "table": {
+    "number": "番号",
+    "qrCode": "QRコード",
+    "scanTime": "スキャン時間",
+    "saveTime": "保存時間",
+    "actions": "操作",
+    "delete": "削除",
+    "deleteSelected": "選択削除",
+    "noData": "スキャンデータがありません",
+    "selected": "件選択中"
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "新規登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "name": "名前",
+    "loginWithGoogle": "Google でログイン",
+    "loginWithApple": "Apple でログイン",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "hasAccount": "すでにアカウントをお持ちですか？",
+    "signUp": "新規登録",
+    "signIn": "ログイン"
+  },
+  "trash": {
+    "title": "削除済みセッション",
+    "autoDeleteInfo": "削除後 {days} 日で自動的に完全削除されます。",
+    "noDeletedSessions": "削除済みセッションはありません。",
+    "cleanupExpired": "期限切れを整理",
+    "restore": "復元",
+    "permanentDelete": "完全削除",
+    "deletedAt": "削除日時",
+    "expired": "期限切れ",
+    "remainingDaysHours": "残り {days}日 {hours}時間",
+    "remainingHours": "残り {hours}時間",
+    "restoreFailed": "復元失敗",
+    "restoreError": "セッションの復元に失敗しました。",
+    "confirmPermanentDelete": "このセッションを完全に削除しますか？この操作は取り消せません。",
+    "permanentDeleteFailed": "完全削除失敗",
+    "permanentDeleteError": "セッションの完全削除に失敗しました。",
+    "confirmDeleteExpired": "期限切れのセッションをすべて完全削除しますか？",
+    "expiredDeleted": "{count} 件の期限切れセッションが削除されました。",
+    "cleanupFailed": "整理失敗",
+    "cleanupError": "期限切れセッションの整理に失敗しました。"
+  }
+}

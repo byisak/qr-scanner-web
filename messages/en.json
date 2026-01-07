@@ -2,8 +2,11 @@
   "common": {
     "appName": "QR Scanner Pro",
     "language": "Language",
-    "korean": "한국어",
-    "english": "English",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "es": "Español",
     "loading": "Loading..."
   },
   "nav": {
