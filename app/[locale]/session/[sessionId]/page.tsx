@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { useAuth } from '@/contexts/auth-context';
 import { AppSidebar } from '@/components/app-sidebar';
+import { QRCodeSVG } from 'qrcode.react';
+import { toast } from '@/components/ui/sonner';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -38,7 +40,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet } from 'lucide-react';
+import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
@@ -46,13 +48,39 @@ import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
 
+// 스캔 알림 사운드 재생
+function playNotificationSound() {
+  try {
+    const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  } catch {
+    // 오디오 재생 실패 무시
+  }
+}
+
 export default function SessionPage() {
   const t = useTranslations();
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
-  // userId와 인증 로딩 상태를 전달하여 인증 완료 후 연결
   const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id, isLoading);
+
+  const [copied, setCopied] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevScansLengthRef = useRef(scans.length);
 
   // 비로그인 사용자: 방문한 세션을 localStorage에 저장
   useEffect(() => {
@@ -60,6 +88,46 @@ export default function SessionPage() {
       addVisitedSession(sessionId);
     }
   }, [isLoading, isAuthenticated, sessionId]);
+
+  // 새 스캔 도착 시 사운드 재생 및 토스트 표시
+  useEffect(() => {
+    if (scans.length > prevScansLengthRef.current) {
+      const newScansCount = scans.length - prevScansLengthRef.current;
+
+      if (soundEnabled) {
+        playNotificationSound();
+      }
+
+      toast.success(t('session.newScanReceived'), {
+        description: newScansCount > 1
+          ? t('session.newScansCount', { count: newScansCount })
+          : scans[0]?.qr_code?.substring(0, 50) || '',
+      });
+    }
+    prevScansLengthRef.current = scans.length;
+  }, [scans.length, soundEnabled, scans, t]);
+
+  // 세션 ID 복사
+  const handleCopySessionId = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(sessionId);
+      setCopied(true);
+      toast.success(t('session.copied'));
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(t('session.copyFailed'));
+    }
+  }, [sessionId, t]);
+
+  // URL 복사
+  const handleCopyUrl = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success(t('session.urlCopied'));
+    } catch {
+      toast.error(t('session.copyFailed'));
+    }
+  }, [t]);
 
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
@@ -69,13 +137,14 @@ export default function SessionPage() {
 
       if (res.ok) {
         removeScan(scanId);
+        toast.success(t('session.scanDeleted'));
       } else {
         const data = await res.json();
-        alert(data.error || t('session.deleteFailed'));
+        toast.error(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
       console.error('Scan data delete failed:', error);
-      alert(t('session.deleteError'));
+      toast.error(t('session.deleteError'));
     }
   }, [removeScan, t]);
 
@@ -91,13 +160,14 @@ export default function SessionPage() {
 
       if (res.ok) {
         removeScans(ids);
+        toast.success(t('session.scansDeleted', { count: ids.length }));
       } else {
         const data = await res.json();
-        alert(data.error || t('session.deleteFailed'));
+        toast.error(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
       console.error('Bulk scan data delete failed:', error);
-      alert(t('session.deleteError'));
+      toast.error(t('session.deleteError'));
     }
   }, [removeScans, t]);
 
@@ -107,6 +177,7 @@ export default function SessionPage() {
   );
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
+    const loadingToast = toast.loading(t('session.exporting'));
     try {
       const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`);
 
@@ -123,9 +194,13 @@ export default function SessionPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      toast.dismiss(loadingToast);
+      toast.success(t('session.exportSuccess'));
     } catch (err) {
       console.error('Export error:', err);
-      alert(t('session.exportError'));
+      toast.dismiss(loadingToast);
+      toast.error(t('session.exportError'));
     }
   };
 
@@ -165,15 +240,72 @@ export default function SessionPage() {
                     {t('session.sessionCodeDesc')}
                   </CardDescription>
                 </div>
-                <Badge variant={isConnected ? 'default' : 'destructive'}>
-                  {isConnected ? t('session.connected') : t('session.disconnected')}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    title={soundEnabled ? t('session.soundOff') : t('session.soundOn')}
+                  >
+                    {soundEnabled ? (
+                      <Volume2 className="h-4 w-4" />
+                    ) : (
+                      <VolumeX className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                  <Badge variant={isConnected ? 'default' : 'destructive'}>
+                    {isConnected ? t('session.connected') : t('session.disconnected')}
+                  </Badge>
+                </div>
               </div>
-              <div className="mt-4 p-4 bg-muted rounded-lg text-center">
-                <span className="text-3xl font-mono font-bold tracking-wider">{sessionId}</span>
+
+              {/* QR Code & Session ID */}
+              <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
+                {/* QR Code */}
+                <div className="p-4 bg-white rounded-lg shadow-sm">
+                  <QRCodeSVG
+                    value={`scanview://${sessionId}`}
+                    size={160}
+                    level="M"
+                    includeMargin={true}
+                  />
+                </div>
+
+                {/* Session ID & Actions */}
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                      <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
+                        {sessionId}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCopySessionId}
+                        className="h-8 w-8"
+                      >
+                        {copied ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <Button variant="outline" size="sm" onClick={handleCopyUrl}>
+                      <Copy className="mr-2 h-3 w-3" />
+                      {t('session.copyUrl')}
+                    </Button>
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t('session.scanQrOrEnterCode')}
+                  </p>
+                </div>
               </div>
+
               {error && (
-                <div className="mt-2 text-sm text-destructive bg-destructive/10 p-2 rounded">
+                <div className="mt-4 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
                   {error}
                 </div>
               )}
@@ -182,7 +314,10 @@ export default function SessionPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('session.scanData')}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t('session.scanData')}</CardTitle>
+                <Badge variant="secondary">{scans.length} {t('session.items')}</Badge>
+              </div>
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">

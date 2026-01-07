@@ -13,7 +13,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Trash2 } from "lucide-react"
+import { Trash2, ScanLine, Search } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 import {
   Table,
@@ -48,6 +49,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
   data,
   onDeleteSelected,
 }: DataTableProps<TData, TValue>) {
+  const t = useTranslations()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -91,39 +93,42 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Input
-            placeholder="QR 코드 검색..."
-            value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("code")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          {selectedCount > 0 && (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('table.searchPlaceholder')}
+              value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                table.getColumn("code")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm pl-8"
+            />
+          </div>
+          {selectedCount > 0 && onDeleteSelected && (
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
                   <Trash2 className="mr-2 h-4 w-4" />
-                  선택 삭제 ({selectedCount})
+                  {t('table.deleteSelected')} ({selectedCount})
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>선택한 데이터 삭제</AlertDialogTitle>
+                  <AlertDialogTitle>{t('table.deleteSelectedTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    선택한 {selectedCount}개의 스캔 데이터를 삭제하시겠습니까?
+                    {t('table.deleteSelectedDesc', { count: selectedCount })}
                     <br />
                     <br />
-                    이 작업은 되돌릴 수 없습니다.
+                    {t('table.deleteWarning')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogCancel>{t('table.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteSelected}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    삭제
+                    {t('table.delete')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -131,7 +136,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
           )}
         </div>
         <div className="text-sm text-muted-foreground">
-          총 스캔 수: <span className="font-bold">{data.length}</span>
+          {t('table.totalScans')}: <span className="font-bold">{data.length}</span>
         </div>
       </div>
 
@@ -176,9 +181,17 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-48"
                 >
-                  스캔된 데이터가 없습니다.
+                  <div className="flex flex-col items-center justify-center text-center py-8">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <ScanLine className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium text-foreground mb-1">{t('table.noData')}</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      {t('table.noDataDesc')}
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -190,16 +203,17 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
         <div className="flex-1 text-sm text-muted-foreground">
           {selectedCount > 0 && (
             <span className="mr-4 font-medium text-foreground">
-              {selectedCount}개 선택됨
+              {selectedCount} {t('table.selected')}
             </span>
           )}
-          {table.getFilteredRowModel().rows.length}개 중{" "}
-          {table.getRowModel().rows.length}개 표시
+          {t('table.showingOf', {
+            showing: table.getRowModel().rows.length,
+            total: table.getFilteredRowModel().rows.length
+          })}
         </div>
         <div className="flex items-center space-x-2">
           <div className="text-sm text-muted-foreground">
-            페이지 {table.getState().pagination.pageIndex + 1} /{" "}
-            {table.getPageCount()}
+            {t('table.page')} {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
           </div>
           <Button
             variant="outline"
@@ -207,7 +221,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            이전
+            {t('table.previous')}
           </Button>
           <Button
             variant="outline"
@@ -215,7 +229,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            다음
+            {t('table.next')}
           </Button>
         </div>
       </div>
