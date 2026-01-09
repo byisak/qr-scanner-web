@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google';
+import { Geist, Geist_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -19,10 +19,11 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const notoSansKR = Noto_Sans_KR({
-  variable: '--font-noto-sans-kr',
+// 한국어용 - IBM의 프로페셔널한 폰트
+const ibmPlexSansKR = IBM_Plex_Sans_KR({
+  variable: '--font-ibm-plex-kr',
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const viewport: Viewport = {
@@ -87,7 +88,7 @@ export default async function LocaleLayout({
   // Use Korean font for Korean locale
   const fontVariable =
     locale === 'ko'
-      ? `${notoSansKR.variable} ${geistMono.variable}`
+      ? `${ibmPlexSansKR.variable} ${geistMono.variable}`
       : `${geistSans.variable} ${geistMono.variable}`;
 
   return (
