@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, ChevronUp } from "lucide-react"
+import { QrCode, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, ChevronUp } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -26,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { ProfileModal } from "@/components/profile-modal"
@@ -50,7 +49,6 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
   const router = useRouter()
   const pathname = usePathname()
   const { user, isAuthenticated, accessToken, logout } = useAuth()
-  const [sessionInput, setSessionInput] = React.useState('')
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -105,29 +103,6 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
     window.addEventListener('sidebar-refresh', handleRefresh)
     return () => window.removeEventListener('sidebar-refresh', handleRefresh)
   }, [fetchSessions])
-
-  const handleAddSession = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (sessionInput.trim()) {
-      const sessionId = sessionInput.trim()
-
-      // 중복 체크
-      if (sessions.find(s => s.session_id === sessionId)) {
-        router.push(`/session/${sessionId}`)
-        setSessionInput('')
-        return
-      }
-
-      // 새 세션으로 이동 (세션 페이지에서 자동 생성됨)
-      setSessionInput('')
-      router.push(`/session/${sessionId}`)
-
-      // 약간의 지연 후 목록 새로고침
-      setTimeout(() => {
-        fetchSessions()
-      }, 1000)
-    }
-  }
 
   const handleSessionClick = (sessionId: string) => {
     router.push(`/session/${sessionId}`)
@@ -232,23 +207,6 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('sidebar.addSession')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <form onSubmit={handleAddSession} className="flex gap-2 px-2 py-2">
-              <Input
-                placeholder={t('sidebar.sessionIdPlaceholder')}
-                value={sessionInput}
-                onChange={(e) => setSessionInput(e.target.value)}
-                className="h-8"
-              />
-              <Button type="submit" size="sm" className="h-8 w-8 p-0">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </form>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <a
