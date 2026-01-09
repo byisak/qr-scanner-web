@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google';
+import {
+  Inter,
+  IBM_Plex_Sans_KR,
+  Zen_Kaku_Gothic_New,
+  Noto_Sans_SC,
+  JetBrains_Mono
+} from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -9,20 +15,39 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// 영어/스페인어용 - 모던하고 깔끔한 산세리프
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+// 한국어용 - IBM의 프로페셔널한 폰트
+const ibmPlexSansKR = IBM_Plex_Sans_KR({
+  variable: '--font-ibm-plex-kr',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
-const notoSansKR = Noto_Sans_KR({
-  variable: '--font-noto-sans-kr',
+// 일본어용 - 모던하고 세련된 고딕체
+const zenKakuGothic = Zen_Kaku_Gothic_New({
+  variable: '--font-zen-kaku',
   subsets: ['latin'],
   weight: ['400', '500', '700'],
+});
+
+// 중국어용 - 범용적이고 안정적인 폰트
+const notoSansSC = Noto_Sans_SC({
+  variable: '--font-noto-sc',
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+});
+
+// 모노스페이스 - 코드/데이터 표시용
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
+  subsets: ['latin'],
+  weight: ['400', '500'],
 });
 
 export const viewport: Viewport = {
@@ -84,15 +109,24 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // Use Korean font for Korean locale
-  const fontVariable =
-    locale === 'ko'
-      ? `${notoSansKR.variable} ${geistMono.variable}`
-      : `${geistSans.variable} ${geistMono.variable}`;
+  // 언어별 최적화된 폰트 적용
+  const getFontVariables = () => {
+    const mono = jetbrainsMono.variable;
+    switch (locale) {
+      case 'ko':
+        return `${ibmPlexSansKR.variable} ${mono}`;
+      case 'ja':
+        return `${zenKakuGothic.variable} ${mono}`;
+      case 'zh':
+        return `${notoSansSC.variable} ${mono}`;
+      default: // en, es 등 라틴 언어
+        return `${inter.variable} ${mono}`;
+    }
+  };
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${fontVariable} antialiased`}>
+      <body className={`${getFontVariables()} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
