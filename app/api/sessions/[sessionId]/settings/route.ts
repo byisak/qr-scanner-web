@@ -123,12 +123,22 @@ export async function PUT(
 
     const session = sessionResult.rows[0];
 
-    // 세션 소유자만 설정 변경 가능 (소유자가 있는 경우)
-    if (session.user_id && user && session.user_id !== user.userId) {
-      return NextResponse.json(
-        { error: '이 세션의 설정을 변경할 권한이 없습니다.' },
-        { status: 403 }
-      );
+    // 세션 소유자가 있는 경우 인증 필수
+    if (session.user_id) {
+      // 로그인하지 않은 경우
+      if (!user) {
+        return NextResponse.json(
+          { error: '이 세션의 설정을 변경하려면 로그인이 필요합니다.' },
+          { status: 401 }
+        );
+      }
+      // 소유자가 아닌 경우
+      if (session.user_id !== user.userId) {
+        return NextResponse.json(
+          { error: '이 세션의 설정을 변경할 권한이 없습니다.' },
+          { status: 403 }
+        );
+      }
     }
 
     // 업데이트할 필드 준비
