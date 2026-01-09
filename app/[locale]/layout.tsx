@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono, Zen_Kaku_Gothic_New, Noto_Sans_SC } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -9,32 +9,14 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
 
-// 영어/스페인어용 - 모던하고 UI에 최적화된 폰트
-const inter = Inter({
-  variable: '--font-inter',
+const geistSans = Geist({
+  variable: '--font-geist-sans',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
 });
 
-// 일본어용 - 모던하고 세련된 고딕체
-const zenKakuGothic = Zen_Kaku_Gothic_New({
-  variable: '--font-zen-kaku',
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
-});
-
-// 중국어용 - 범용적이고 안정적인 폰트
-const notoSansSC = Noto_Sans_SC({
-  variable: '--font-noto-sc',
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-});
-
-// 모노스페이스 - 코드/QR코드 데이터 표시용
-const jetbrainsMono = JetBrains_Mono({
-  variable: '--font-mono',
-  subsets: ['latin'],
-  weight: ['400', '500'],
 });
 
 export const viewport: Viewport = {
@@ -96,22 +78,8 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // 언어별 폰트 클래스 및 변수 설정
-  const getFontConfig = () => {
-    const monoVar = jetbrainsMono.variable;
-    switch (locale) {
-      case 'ko':
-        return { fontVar: monoVar, fontClass: 'font-pretendard' };
-      case 'ja':
-        return { fontVar: `${zenKakuGothic.variable} ${monoVar}`, fontClass: 'font-zen-kaku' };
-      case 'zh':
-        return { fontVar: `${notoSansSC.variable} ${monoVar}`, fontClass: 'font-noto-sc' };
-      default: // en, es
-        return { fontVar: `${inter.variable} ${monoVar}`, fontClass: 'font-inter' };
-    }
-  };
-
-  const { fontVar, fontClass } = getFontConfig();
+  // 폰트 변수 설정
+  const fontVariable = `${geistSans.variable} ${geistMono.variable}`;
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -124,7 +92,7 @@ export default async function LocaleLayout({
           />
         )}
       </head>
-      <body className={`${fontVar} ${fontClass} antialiased`}>
+      <body className={`${fontVariable} ${locale === 'ko' ? 'font-pretendard' : ''} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
