@@ -51,11 +51,18 @@ export async function GET(request: NextRequest) {
         s.last_activity,
         s.status,
         s.deleted_at,
-        COUNT(sd.id) as scan_count
+        COUNT(sd.id) as scan_count,
+        ss.is_public,
+        CASE WHEN ss.password_hash IS NOT NULL THEN true ELSE false END as has_password,
+        ss.max_participants,
+        ss.allow_anonymous,
+        ss.expires_at
        FROM sessions s
        LEFT JOIN scan_data sd ON s.session_id = sd.session_id
+       LEFT JOIN session_settings ss ON s.session_id = ss.session_id
        ${whereClause}
-       GROUP BY s.session_id, s.user_id, s.session_name, s.created_at, s.last_activity, s.status, s.deleted_at
+       GROUP BY s.session_id, s.user_id, s.session_name, s.created_at, s.last_activity, s.status, s.deleted_at,
+                ss.is_public, ss.password_hash, ss.max_participants, ss.allow_anonymous, ss.expires_at
        ORDER BY s.created_at DESC`,
       values
     );
@@ -69,6 +76,13 @@ export async function GET(request: NextRequest) {
       status: row.status,
       deleted_at: row.deleted_at ? row.deleted_at.toISOString() : null,
       scan_count: parseInt(row.scan_count) || 0,
+      settings: {
+        isPublic: row.is_public ?? true,
+        hasPassword: row.has_password ?? false,
+        maxParticipants: row.max_participants || null,
+        allowAnonymous: row.allow_anonymous ?? true,
+        expiresAt: row.expires_at ? row.expires_at.toISOString() : null,
+      },
     }));
 
     return NextResponse.json(sessions);
