@@ -5,7 +5,8 @@ import { io, Socket } from 'socket.io-client';
 import { ScanData } from '@/types';
 
 // userId와 authLoading을 직접 받아서 서버로 전달
-export function useSocket(sessionId: string | null, userId: string | null | undefined, authLoading: boolean = false) {
+// enabled: false이면 소켓 연결하지 않음 (비밀번호 보호 세션 등에서 사용)
+export function useSocket(sessionId: string | null, userId: string | null | undefined, authLoading: boolean = false, enabled: boolean = true) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [scans, setScans] = useState<ScanData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -24,6 +25,11 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
 
   useEffect(() => {
     if (!sessionId) return;
+    // enabled가 false이면 소켓 연결하지 않음
+    if (!enabled) {
+      console.log('🔒 접근 권한 없음 - 소켓 연결 차단');
+      return;
+    }
     // 인증 로딩 중이면 소켓 연결 대기
     if (authLoading) {
       console.log('⏳ 인증 로딩 중... 소켓 연결 대기');
@@ -90,7 +96,7 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
       console.log('🔌 Socket 연결 종료');
       socketIo.disconnect();
     };
-  }, [sessionId, authLoading]); // authLoading이 false가 되면 연결
+  }, [sessionId, authLoading, enabled]); // enabled가 true가 되면 연결
 
   // userId가 변경되면 세션 재참가
   useEffect(() => {

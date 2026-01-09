@@ -9,14 +9,6 @@ import { toast } from '@/components/ui/sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Lock, ShieldX } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -98,11 +90,9 @@ export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id, isLoading);
 
   const [copied, setCopied] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const prevScansLengthRef = useRef(scans.length);
 
   // 세션 접근 제어 상태
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
@@ -112,6 +102,16 @@ export default function SessionPage() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [verifyingPassword, setVerifyingPassword] = useState(false);
+
+  // 접근 허용 후에만 소켓 연결 (비밀번호 보호 세션 보안)
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(
+    sessionId,
+    user?.id,
+    isLoading,
+    accessGranted // 접근 허용 전까지 소켓 연결 차단
+  );
+
+  const prevScansLengthRef = useRef(scans.length);
 
   // 세션 설정 로드
   useEffect(() => {
@@ -359,55 +359,87 @@ export default function SessionPage() {
     );
   }
 
+  // 비밀번호 보호 세션 - 비밀번호 입력 화면 (데이터 렌더링하지 않음)
+  if (!settingsLoading && sessionSettings?.hasPassword && !accessGranted) {
+    return (
+      <SidebarProvider>
+        <AppSidebar currentSessionId={sessionId} />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 flex-1">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="px-4 flex items-center gap-2">
+              <LanguageSwitcher />
+              <ModeToggle />
+            </div>
+          </header>
+
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
+            <Card className="max-w-md w-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{t('session.passwordProtected')}</CardTitle>
+                <CardDescription className="mt-2">
+                  {t('session.passwordProtectedDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="session-password">{t('session.password')}</Label>
+                  <Input
+                    id="session-password"
+                    type="password"
+                    placeholder={t('session.passwordPlaceholder')}
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handlePasswordSubmit();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                </div>
+                <Button
+                  onClick={handlePasswordSubmit}
+                  disabled={verifyingPassword}
+                  className="w-full"
+                >
+                  {verifyingPassword ? t('common.loading') : t('session.unlock')}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  {t('session.sessionId')}: <span className="font-mono">{sessionId}</span>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar currentSessionId={sessionId} />
       <SidebarInset>
-        {/* 비밀번호 입력 모달 */}
-        <Dialog open={passwordModalOpen} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-              <DialogTitle className="text-center">{t('session.passwordProtected')}</DialogTitle>
-              <DialogDescription className="text-center">
-                {t('session.passwordProtectedDesc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="session-password">{t('session.password')}</Label>
-                <Input
-                  id="session-password"
-                  type="password"
-                  placeholder={t('session.passwordPlaceholder')}
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handlePasswordSubmit();
-                    }
-                  }}
-                  autoFocus
-                />
-                {passwordError && (
-                  <p className="text-sm text-destructive">{passwordError}</p>
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={handlePasswordSubmit}
-                disabled={verifyingPassword}
-                className="w-full"
-              >
-                {verifyingPassword ? t('common.loading') : t('session.unlock')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4 flex-1">
             <SidebarTrigger className="-ml-1" />
