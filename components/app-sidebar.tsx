@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, Key, ChevronUp } from "lucide-react"
+import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, ChevronUp } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
+import { ProfileModal } from "@/components/profile-modal"
 
 interface Session {
   session_id: string;
@@ -53,6 +54,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [profileModalOpen, setProfileModalOpen] = React.useState(false)
   const t = useTranslations()
 
   // 세션 목록 가져오기 (로그인한 경우만)
@@ -389,16 +391,10 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                   align="end"
                   sideOffset={4}
                 >
-                  <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
+                  <DropdownMenuItem onClick={() => setProfileModalOpen(true)}>
                     <Settings className="mr-2 size-4" />
                     {t('sidebar.profileSettings')}
                   </DropdownMenuItem>
-                  {user.provider === 'email' && (
-                    <DropdownMenuItem onClick={() => router.push('/dashboard/profile/password')}>
-                      <Key className="mr-2 size-4" />
-                      {t('sidebar.changePassword')}
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 size-4" />
@@ -422,6 +418,11 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       </SidebarFooter>
 
       <SidebarRail />
+
+      <ProfileModal
+        open={profileModalOpen}
+        onOpenChange={setProfileModalOpen}
+      />
     </Sidebar>
   )
 }

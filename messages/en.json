@@ -7,7 +7,8 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "cancel": "Cancel"
   },
   "nav": {
     "features": "Features",
