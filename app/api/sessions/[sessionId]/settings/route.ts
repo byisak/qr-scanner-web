@@ -6,7 +6,7 @@ import type { PoolClient } from 'pg';
 
 interface SessionSettings {
   session_id: string;
-  password_hash: string | null;
+  has_password: boolean;
   is_public: boolean;
   access_code: string | null;
   max_participants: number | null;
