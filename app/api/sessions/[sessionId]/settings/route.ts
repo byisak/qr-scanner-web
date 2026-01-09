@@ -62,7 +62,7 @@ export async function GET(
     const settings = result.rows[0];
     return NextResponse.json({
       sessionId: settings.session_id,
-      hasPassword: settings.password_hash !== null,
+      hasPassword: settings.has_password,
       isPublic: settings.is_public,
       accessCode: settings.access_code,
       maxParticipants: settings.max_participants,
