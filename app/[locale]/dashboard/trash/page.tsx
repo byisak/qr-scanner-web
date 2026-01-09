@@ -17,13 +17,15 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/types';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { RotateCcw, Trash2, Clock } from 'lucide-react';
+import { RotateCcw, Trash2, Clock, LogIn } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useAuth } from '@/contexts/auth-context';
+import Link from 'next/link';
 
 const DELETION_DAYS = 30;
 
@@ -56,6 +58,7 @@ export default function TrashPage() {
   const [isLoading, setIsLoading] = useState(true);
   const t = useTranslations();
   const locale = useLocale();
+  const { isAuthenticated, isLoading: authLoading, accessToken } = useAuth();
 
   const formatRemainingTime = (days: number, hours: number) => {
     if (days === 0 && hours === 0) return t('trash.expired');
@@ -64,8 +67,16 @@ export default function TrashPage() {
   };
 
   const fetchDeletedSessions = useCallback(async () => {
+    if (!accessToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
-      const res = await fetch('/api/sessions?status=DELETED');
+      const res = await fetch('/api/sessions?status=DELETED', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setDeletedSessions(data);
@@ -75,10 +86,14 @@ export default function TrashPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
-    fetchDeletedSessions();
+    if (!authLoading && isAuthenticated) {
+      fetchDeletedSessions();
+    } else if (!authLoading) {
+      setIsLoading(false);
+    }
 
     // 사이드바 새로고침 이벤트 리스너
     const handleRefresh = () => {
@@ -89,12 +104,15 @@ export default function TrashPage() {
     return () => {
       window.removeEventListener('sidebar-refresh', handleRefresh);
     };
-  }, [fetchDeletedSessions]);
+  }, [fetchDeletedSessions, authLoading, isAuthenticated]);
 
   const handleRestore = async (sessionId: string) => {
     try {
       const res = await fetch(`/api/sessions/${sessionId}/restore`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
 
       if (res.ok) {
@@ -115,7 +133,10 @@ export default function TrashPage() {
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
 
       if (res.ok) {
@@ -136,7 +157,10 @@ export default function TrashPage() {
 
     try {
       const res = await fetch('/api/sessions/cleanup', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
 
       if (res.ok) {
@@ -153,6 +177,60 @@ export default function TrashPage() {
       alert(t('trash.cleanupError'));
     }
   };
+
+  // 로그인하지 않은 사용자에게 로그인 안내 표시
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 flex-1">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{t('trash.title')}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="px-4 flex items-center gap-2">
+              <LanguageSwitcher />
+              <ModeToggle />
+            </div>
+          </header>
+
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
+            <Card className="max-w-md w-full text-center">
+              <CardHeader>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                  <LogIn className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <CardTitle className="text-xl">{t('dashboard.loginRequired')}</CardTitle>
+                <CardDescription className="mt-2">
+                  {t('dashboard.loginRequiredDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/login">
+                  <Button className="w-full">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    {t('nav.login')}
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
