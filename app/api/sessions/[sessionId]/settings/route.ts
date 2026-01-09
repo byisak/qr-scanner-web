@@ -352,17 +352,25 @@ export async function POST(
       [sessionId]
     );
 
-    // 설정이 없거나 공개 세션이면 접근 허용
-    if (result.rows.length === 0 || result.rows[0].is_public) {
+    // 설정이 없으면 접근 허용
+    if (result.rows.length === 0) {
       return NextResponse.json({ success: true, accessGranted: true });
     }
 
     const settings = result.rows[0];
 
-    // 비밀번호가 없으면 접근 허용
+    // 비밀번호가 없으면 공개 여부에 따라 결정
     if (!settings.password_hash) {
-      return NextResponse.json({ success: true, accessGranted: true });
+      // 비밀번호 없고 공개 세션이면 접근 허용
+      if (settings.is_public) {
+        return NextResponse.json({ success: true, accessGranted: true });
+      }
+      // 비밀번호 없고 비공개 세션이면 접근 거부
+      return NextResponse.json({ success: false, accessGranted: false, error: '비공개 세션입니다.' }, { status: 403 });
     }
+
+    // 비밀번호가 있으면 검증 필요 (공개/비공개 상관없이)
+    console.log('🔐 비밀번호 검증 시작:', { sessionId, hasPasswordHash: !!settings.password_hash, inputPassword: password ? '***' : null });
 
     // 비밀번호 검증
     if (!password) {
@@ -373,14 +381,17 @@ export async function POST(
     }
 
     const isValid = verifyPassword(password, settings.password_hash);
+    console.log('🔐 비밀번호 검증 결과:', { isValid });
 
     if (!isValid) {
+      console.log('❌ 비밀번호 불일치');
       return NextResponse.json(
         { success: false, accessGranted: false, error: '비밀번호가 올바르지 않습니다.' },
         { status: 401 }
       );
     }
 
+    console.log('✅ 비밀번호 검증 성공');
     return NextResponse.json({ success: true, accessGranted: true });
   } catch (error) {
     console.error('비밀번호 검증 오류:', error);
