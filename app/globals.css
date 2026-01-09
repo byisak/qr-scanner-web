@@ -134,9 +134,9 @@
     font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
-  /* 모노스페이스 - QR코드/테이블 데이터용 */
+  /* 모노스페이스 - QR코드/테이블 데이터용 (언어별 폰트 fallback 포함) */
   .font-mono, code, pre, table td.font-mono, [data-table-cell] {
-    font-family: 'JetBrains Mono', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    font-family: 'JetBrains Mono', 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   }
 }
 
