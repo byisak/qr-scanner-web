@@ -4,7 +4,7 @@
 
 :root {
   --radius: 0.625rem;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --font-mono: 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -136,7 +136,7 @@
 
   /* 모노스페이스 - QR코드/테이블 데이터용 (언어별 폰트 fallback 포함) */
   .font-mono, code, pre, table td.font-mono, [data-table-cell] {
-    font-family: 'JetBrains Mono', 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    font-family: 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   }
 }
 

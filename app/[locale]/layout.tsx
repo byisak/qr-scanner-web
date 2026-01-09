@@ -102,11 +102,6 @@ export default async function LocaleLayout({
       <head>
         {/* 언어별 폰트 CDN */}
         <link rel="stylesheet" href={getFontCDN()} />
-        {/* 모노스페이스 폰트 - 테이블/QR코드용 */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-        />
       </head>
       <body className={`${geistMono.variable} ${getFontClass()} antialiased`}>
         <NextIntlClientProvider messages={messages}>
