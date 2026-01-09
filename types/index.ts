@@ -50,6 +50,21 @@ export interface ProfileUpdateRequest {
   profileImage?: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 // ============================================
 // 스캔 데이터 타입
 // ============================================

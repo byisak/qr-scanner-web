@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User } from "lucide-react"
+import { QrCode, Plus, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, Key, ChevronUp } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import {
   Sidebar,
@@ -18,6 +19,13 @@ import {
   SidebarMenuButton,
   SidebarMenuAction,
 } from "@/components/ui/sidebar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
@@ -45,6 +53,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const t = useTranslations()
 
   // 세션 목록 가져오기 (로그인한 경우만)
   const fetchSessions = React.useCallback(async () => {
@@ -126,7 +135,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
 
-    if (!confirm('세션을 삭제하시겠습니까?')) return
+    if (!confirm(t('dashboard.confirmDelete'))) return
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -144,15 +153,14 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
         }
       } else {
         const data = await res.json()
-        alert(data.error || '삭제 실패')
+        alert(data.error || t('sidebar.deleteFailed'))
       }
     } catch (error) {
-      console.error('세션 삭제 실패:', error)
-      alert('세션 삭제 중 오류가 발생했습니다.')
+      console.error('Session delete failed:', error)
+      alert(t('sidebar.deleteError'))
     }
   }
 
-  // 복구
   const handleRestoreSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
 
@@ -167,19 +175,18 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       } else {
         const data = await res.json()
-        alert(data.error || '복구 실패')
+        alert(data.error || t('trash.restoreFailed'))
       }
     } catch (error) {
-      console.error('세션 복구 실패:', error)
-      alert('세션 복구 중 오류가 발생했습니다.')
+      console.error('Session restore failed:', error)
+      alert(t('trash.restoreError'))
     }
   }
 
-  // 영구 삭제
   const handlePermanentDelete = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
 
-    if (!confirm('세션을 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+    if (!confirm(t('trash.confirmPermanentDelete'))) return
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
@@ -192,11 +199,11 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       } else {
         const data = await res.json()
-        alert(data.error || '영구 삭제 실패')
+        alert(data.error || t('trash.permanentDeleteFailed'))
       }
     } catch (error) {
-      console.error('세션 영구 삭제 실패:', error)
-      alert('세션 영구 삭제 중 오류가 발생했습니다.')
+      console.error('Session permanent delete failed:', error)
+      alert(t('trash.permanentDeleteError'))
     }
   }
 
@@ -213,8 +220,8 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                   <QrCode className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">QR Scanner</span>
-                  <span className="truncate text-xs">실시간 스캔 모니터</span>
+                  <span className="truncate font-semibold">{t('sidebar.appTitle')}</span>
+                  <span className="truncate text-xs">{t('sidebar.appSubtitle')}</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -224,11 +231,11 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>세션 추가</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.addSession')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <form onSubmit={handleAddSession} className="flex gap-2 px-2 py-2">
               <Input
-                placeholder="세션 ID..."
+                placeholder={t('sidebar.sessionIdPlaceholder')}
                 value={sessionInput}
                 onChange={(e) => setSessionInput(e.target.value)}
                 className="h-8"
@@ -247,14 +254,14 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
               className="flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer"
             >
               <List className="size-4" />
-              세션 목록 {isAuthenticated ? `(${sessions.length})` : ''}
+              {t('sidebar.sessionList')} {isAuthenticated ? `(${sessions.length})` : ''}
             </a>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {!isAuthenticated ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  <p className="mb-2">세션 목록을 보려면</p>
+                  <p className="mb-2">{t('sidebar.loginPrompt')}</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -262,16 +269,16 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                     onClick={() => router.push('/login')}
                   >
                     <LogIn className="size-4 mr-2" />
-                    로그인
+                    {t('sidebar.login')}
                   </Button>
                 </div>
               ) : isLoading ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  로딩 중...
+                  {t('common.loading')}
                 </div>
               ) : sessions.length === 0 ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  세션을 추가하세요
+                  {t('sidebar.noSessions')}
                 </div>
               ) : (
                 sessions.map((session) => (
@@ -289,7 +296,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                       showOnHover
                     >
                       <Trash2 className="size-4" />
-                      <span className="sr-only">삭제</span>
+                      <span className="sr-only">{t('table.delete')}</span>
                     </SidebarMenuAction>
                   </SidebarMenuItem>
                 ))
@@ -306,7 +313,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                 className={`flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer ${isTrashPage ? 'text-foreground font-medium' : ''}`}
               >
                 <Clock className="size-4" />
-                삭제대기 ({deletedSessions.length})
+                {t('sidebar.deletedSessions')} ({deletedSessions.length})
               </a>
             </SidebarGroupLabel>
             {deletedSessions.length > 0 && (
@@ -316,7 +323,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                     <SidebarMenuItem key={session.session_id}>
                       <SidebarMenuButton
                         className="opacity-60"
-                        tooltip={`${session.session_name || session.session_id} (삭제됨)`}
+                        tooltip={`${session.session_name || session.session_id} (${t('sidebar.deleted')})`}
                         onClick={() => router.push('/dashboard/trash')}
                       >
                         <QrCode className="size-4" />
@@ -328,14 +335,14 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                         className="right-8"
                       >
                         <RotateCcw className="size-4" />
-                        <span className="sr-only">복구</span>
+                        <span className="sr-only">{t('sidebar.restore')}</span>
                       </SidebarMenuAction>
                       <SidebarMenuAction
                         onClick={(e) => handlePermanentDelete(session.session_id, e)}
                         showOnHover
                       >
                         <Trash className="size-4 text-destructive" />
-                        <span className="sr-only">영구삭제</span>
+                        <span className="sr-only">{t('sidebar.permanentDelete')}</span>
                       </SidebarMenuAction>
                     </SidebarMenuItem>
                   ))}
@@ -345,7 +352,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                         className="text-muted-foreground"
                         onClick={() => router.push('/dashboard/trash')}
                       >
-                        <span className="text-xs">+{deletedSessions.length - 5}개 더보기...</span>
+                        <span className="text-xs">+{deletedSessions.length - 5} {t('sidebar.moreItems')}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )}
@@ -359,23 +366,47 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       <SidebarFooter>
         <SidebarMenu>
           {isAuthenticated && user ? (
-            <>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={user.email}>
-                  <User className="size-4" />
-                  <span className="truncate">{user.name || user.email}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => logout()}
-                  className="text-muted-foreground hover:text-foreground"
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <User className="size-4" />
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{user.name || t('sidebar.user')}</span>
+                      <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                    <ChevronUp className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="top"
+                  align="end"
+                  sideOffset={4}
                 >
-                  <LogOut className="size-4" />
-                  <span>로그아웃</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
+                    <Settings className="mr-2 size-4" />
+                    {t('sidebar.profileSettings')}
+                  </DropdownMenuItem>
+                  {user.provider === 'email' && (
+                    <DropdownMenuItem onClick={() => router.push('/dashboard/profile/password')}>
+                      <Key className="mr-2 size-4" />
+                      {t('sidebar.changePassword')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 size-4" />
+                    {t('nav.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -383,7 +414,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                 className="text-primary"
               >
                 <LogIn className="size-4" />
-                <span>로그인</span>
+                <span>{t('sidebar.login')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}

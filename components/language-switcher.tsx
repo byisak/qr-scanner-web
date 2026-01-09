@@ -32,7 +32,7 @@ export function LanguageSwitcher() {
         <SelectContent>
           {routing.locales.map((loc) => (
             <SelectItem key={loc} value={loc}>
-              {loc === "ko" ? t("korean") : t("english")}
+              {t(loc)}
             </SelectItem>
           ))}
         </SelectContent>

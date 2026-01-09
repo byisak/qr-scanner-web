@@ -1,0 +1,263 @@
+{
+  "common": {
+    "appName": "QR Scanner Pro",
+    "language": "Idioma",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "es": "Español",
+    "loading": "Cargando..."
+  },
+  "nav": {
+    "features": "Funciones",
+    "useCases": "Casos de Uso",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "openWebApp": "Abrir App Web",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión"
+  },
+  "home": {
+    "heroTitle1": "El Más Rápido y Preciso",
+    "heroTitle2": "Escáner de Códigos QR y Barras",
+    "heroDescription": "Escanea miles de códigos de barras a la vez y transmite a PC en tiempo real. Escáner profesional optimizado para gestión de inventario, logística y operaciones de almacén.",
+    "downloadAppStore": "Descargar en App Store",
+    "downloadGooglePlay": "Descargar en Google Play",
+    "rating": "4.8 estrellas · 1,250+ reseñas",
+    "whyChoose": "¿Por qué QR Scanner Pro?",
+    "whoUses": "Quién lo Usa",
+    "faqTitle": "Preguntas Frecuentes",
+    "ctaTitle": "Comienza Ahora",
+    "ctaDescription": "Mejora la eficiencia de tu gestión de inventario con una descarga gratuita",
+    "appStore": "App Store",
+    "googlePlay": "Google Play"
+  },
+  "features": {
+    "bulkScan": {
+      "title": "Escaneo Masivo Ultrarrápido",
+      "description": "Escanea miles de códigos de barras rápidamente en modo continuo. Reduce el tiempo de inventario en un 90%."
+    },
+    "realtime": {
+      "title": "Transferencia PC en Tiempo Real",
+      "description": "Los datos escaneados aparecen instantáneamente en tu navegador. Sin necesidad de software adicional."
+    },
+    "export": {
+      "title": "Exportación CSV/Excel",
+      "description": "Exporta el historial de escaneo a archivos CSV o Excel. Se integra fácilmente con sistemas ERP y WMS."
+    },
+    "offline": {
+      "title": "Modo Sin Conexión",
+      "description": "Escanea sin internet. Funciona en almacenes, sótanos y áreas con mala conectividad."
+    },
+    "allBarcodes": {
+      "title": "Soporte para Todos los Códigos",
+      "description": "Reconoce más de 30 formatos de código de barras incluyendo QR, EAN-13, Code128, UPC-A, DataMatrix."
+    },
+    "validation": {
+      "title": "Validación de Códigos",
+      "description": "Verificación automática de suma de comprobación para prevenir entradas incorrectas. Mantiene datos de inventario precisos."
+    }
+  },
+  "useCases": {
+    "logistics": {
+      "title": "Centros Logísticos",
+      "description": "Escaneo de códigos de entrada/salida, verificación de inventario, confirmación de listas de picking"
+    },
+    "warehouse": {
+      "title": "Gerentes de Almacén",
+      "description": "Seguimiento de ubicación de inventario, escaneo de códigos de ubicación"
+    },
+    "retail": {
+      "title": "Tiendas Minoristas",
+      "description": "Recepción de productos, verificación de etiquetas de precio, encuestas de inventario"
+    },
+    "manufacturing": {
+      "title": "Manufactura",
+      "description": "Seguimiento de materiales, monitoreo de línea de producción, control de calidad"
+    }
+  },
+  "faq": {
+    "q1": {
+      "question": "¿Es gratis QR Scanner Pro?",
+      "answer": "Sí, QR Scanner Pro es gratis para descargar y usar. Todas las funciones básicas de escaneo son gratuitas, y puedes actualizar a la versión Pro para funciones premium."
+    },
+    "q2": {
+      "question": "¿Cómo puedo usar QR Scanner Pro para gestión de inventario?",
+      "answer": "El modo de escaneo masivo de QR Scanner Pro te permite escanear miles de códigos de barras continuamente y transmitirlos a PC en tiempo real o exportarlos a archivos CSV/Excel. Está optimizado para inventario de almacenes, centros logísticos y tiendas minoristas."
+    },
+    "q3": {
+      "question": "¿Qué hace diferente a QR Scanner Pro de otras apps de escaneo?",
+      "answer": "QR Scanner Pro está diseñado para uso empresarial, ofreciendo funciones profesionales como escaneo masivo, transferencia a PC en tiempo real, soporte para múltiples formatos de código de barras y modo sin conexión. A diferencia de los escáneres QR normales, está optimizado para flujos de trabajo de gestión de inventario."
+    },
+    "q4": {
+      "question": "¿Cómo transfiero datos de escaneo a PC en tiempo real?",
+      "answer": "Habilita el modo de recepción en el sitio web scanview.app, luego ingresa el mismo código de conexión en la app. Los códigos de barras escaneados aparecerán en tu pantalla de PC en tiempo real. Sin necesidad de instalar software adicional - solo un navegador web."
+    },
+    "q5": {
+      "question": "¿Qué formatos de código de barras son compatibles?",
+      "answer": "Soportamos más de 30 formatos de código de barras incluyendo QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417 y Aztec."
+    }
+  },
+  "footer": {
+    "description": "Escáner profesional de códigos QR y barras optimizado para gestión de inventario, logística y operaciones de almacén",
+    "product": "Producto",
+    "support": "Soporte",
+    "legal": "Legal",
+    "webApp": "App Web",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio",
+    "copyright": "© 2024 ScanView. Todos los derechos reservados."
+  },
+  "dashboard": {
+    "title": "Panel",
+    "activeSessions": "Mis Sesiones",
+    "mySessionsDesc": "Solo se muestran las sesiones que has creado",
+    "noSessions": "No hay sesiones activas. Por favor crea una sesión en la app.",
+    "scanCount": "Escaneos",
+    "created": "Creado",
+    "view": "Ver",
+    "recentlyVisited": "Sesiones Visitadas Recientemente",
+    "recentlyVisitedDesc": "Sesiones que visitaste en este navegador",
+    "noVisited": "No hay sesiones visitadas recientemente",
+    "visitedAt": "Visitado",
+    "loginRequired": "Inicio de Sesión Requerido",
+    "loginRequiredDesc": "Inicia sesión para gestionar sesiones y guardar datos de escaneo",
+    "confirmDelete": "¿Estás seguro de que quieres eliminar esta sesión?"
+  },
+  "session": {
+    "title": "Sesión",
+    "sessionCode": "Código de Sesión",
+    "sessionCodeDesc": "Ingresa este código en la app o escanea el código QR",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "scanData": "Datos de Escaneo",
+    "items": "elementos",
+    "exportCsv": "Exportar CSV",
+    "exportExcel": "Exportar Excel",
+    "exporting": "Exportando...",
+    "exportSuccess": "Exportación completada",
+    "exportFailed": "Exportación fallida",
+    "exportError": "Error al exportar datos.",
+    "deleteFailed": "Eliminación fallida",
+    "deleteError": "Error al eliminar datos de escaneo.",
+    "scanDeleted": "Escaneo eliminado",
+    "scansDeleted": "{count} escaneos eliminados",
+    "newScanReceived": "¡Nuevo escaneo recibido!",
+    "newScansCount": "{count} nuevos escaneos recibidos",
+    "copied": "ID de sesión copiado",
+    "copyFailed": "Error al copiar",
+    "urlCopied": "URL copiada al portapapeles",
+    "copyUrl": "Copiar URL",
+    "soundOn": "Activar sonido",
+    "soundOff": "Desactivar sonido",
+    "scanQrOrEnterCode": "Escanea este código QR con la app o ingresa el código de sesión manualmente"
+  },
+  "sidebar": {
+    "appTitle": "QR Scanner",
+    "appSubtitle": "Monitor de Escaneo en Tiempo Real",
+    "addSession": "Agregar Sesión",
+    "sessionIdPlaceholder": "ID de Sesión...",
+    "sessionList": "Lista de Sesiones",
+    "noSessions": "Agrega una sesión",
+    "deletedSessions": "Eliminadas",
+    "deleted": "eliminada",
+    "loginPrompt": "Para ver la lista de sesiones",
+    "login": "Iniciar Sesión",
+    "restore": "Restaurar",
+    "permanentDelete": "Eliminar",
+    "moreItems": "más...",
+    "deleteFailed": "Eliminación fallida",
+    "deleteError": "Error al eliminar sesión.",
+    "user": "Usuario",
+    "profileSettings": "Configuración de Perfil",
+    "changePassword": "Cambiar Contraseña"
+  },
+  "table": {
+    "number": "No.",
+    "qrCode": "Código QR",
+    "scanTime": "Hora de Escaneo",
+    "saveTime": "Hora de Guardado",
+    "actions": "Acciones",
+    "delete": "Eliminar",
+    "deleteSelected": "Eliminar Seleccionados",
+    "deleteSelectedTitle": "Eliminar Datos Seleccionados",
+    "deleteSelectedDesc": "¿Estás seguro de que quieres eliminar {count} escaneos seleccionados?",
+    "deleteWarning": "Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "noData": "Aún no hay datos de escaneo",
+    "noDataDesc": "Los datos escaneados desde tu app móvil aparecerán aquí en tiempo real",
+    "selected": "seleccionados",
+    "searchPlaceholder": "Buscar códigos QR...",
+    "totalScans": "Total de escaneos",
+    "showingOf": "Mostrando {showing} de {total}",
+    "page": "Página",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "loginWithGoogle": "Iniciar Sesión con Google",
+    "loginWithApple": "Iniciar Sesión con Apple",
+    "noAccount": "¿No tienes una cuenta?",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "signUp": "Registrarse",
+    "signIn": "Iniciar Sesión"
+  },
+  "profile": {
+    "title": "Configuración de Perfil",
+    "subtitle": "Gestiona la configuración de tu cuenta",
+    "name": "Nombre",
+    "namePlaceholder": "Ingresa tu nombre",
+    "email": "Correo Electrónico",
+    "emailDesc": "El correo electrónico no se puede cambiar",
+    "provider": "Método de Inicio de Sesión",
+    "providerEmail": "Correo",
+    "providerGoogle": "Google",
+    "providerApple": "Apple",
+    "providerKakao": "Kakao",
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "saveSuccess": "Perfil actualizado correctamente",
+    "saveError": "Error al actualizar el perfil",
+    "changePassword": "Cambiar Contraseña",
+    "changePasswordDesc": "Actualiza tu contraseña",
+    "currentPassword": "Contraseña Actual",
+    "currentPasswordPlaceholder": "Ingresa tu contraseña actual",
+    "newPassword": "Nueva Contraseña",
+    "newPasswordPlaceholder": "Ingresa tu nueva contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "confirmPasswordPlaceholder": "Confirma tu nueva contraseña",
+    "passwordRequirements": "La contraseña debe tener al menos 8 caracteres con letras y números",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "passwordChangeSuccess": "Contraseña cambiada correctamente. Por favor, inicia sesión de nuevo.",
+    "passwordChangeError": "Error al cambiar la contraseña",
+    "socialAccountNote": "Las cuentas de inicio de sesión social no pueden cambiar la contraseña",
+    "back": "Volver"
+  },
+  "trash": {
+    "title": "Sesiones Eliminadas",
+    "autoDeleteInfo": "Las sesiones se eliminarán permanentemente {days} días después de la eliminación.",
+    "noDeletedSessions": "No hay sesiones eliminadas.",
+    "cleanupExpired": "Limpiar expiradas",
+    "restore": "Restaurar",
+    "permanentDelete": "Eliminar",
+    "deletedAt": "Eliminado",
+    "expired": "Expirado",
+    "remainingDaysHours": "{days}d {hours}h restantes",
+    "remainingHours": "{hours}h restantes",
+    "restoreFailed": "Restauración fallida",
+    "restoreError": "Error al restaurar sesión.",
+    "confirmPermanentDelete": "¿Estás seguro de que quieres eliminar permanentemente esta sesión? Esta acción no se puede deshacer.",
+    "permanentDeleteFailed": "Eliminación permanente fallida",
+    "permanentDeleteError": "Error al eliminar permanentemente la sesión.",
+    "confirmDeleteExpired": "¿Estás seguro de que quieres eliminar permanentemente todas las sesiones expiradas?",
+    "expiredDeleted": "{count} sesión(es) expirada(s) eliminada(s).",
+    "cleanupFailed": "Limpieza fallida",
+    "cleanupError": "Error al limpiar sesiones expiradas."
+  }
+}
