@@ -112,6 +112,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* 한국어용 Pretendard 폰트 */
+  .font-pretendard {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
 }
 
 /* Animation keyframes */

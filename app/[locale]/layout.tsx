@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -17,13 +17,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
-});
-
-// 한국어용 - IBM의 프로페셔널한 폰트
-const ibmPlexSansKR = IBM_Plex_Sans_KR({
-  variable: '--font-ibm-plex-kr',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
 });
 
 export const viewport: Viewport = {
@@ -85,15 +78,21 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // Use Korean font for Korean locale
-  const fontVariable =
-    locale === 'ko'
-      ? `${ibmPlexSansKR.variable} ${geistMono.variable}`
-      : `${geistSans.variable} ${geistMono.variable}`;
+  // 폰트 변수 설정
+  const fontVariable = `${geistSans.variable} ${geistMono.variable}`;
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${fontVariable} antialiased`}>
+      <head>
+        {/* 한국어용 Pretendard 폰트 CDN */}
+        {locale === 'ko' && (
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+          />
+        )}
+      </head>
+      <body className={`${fontVariable} ${locale === 'ko' ? 'font-pretendard' : ''} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
