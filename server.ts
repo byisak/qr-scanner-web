@@ -216,7 +216,7 @@ app.prepare().then(() => {
           id: row.id,
           sessionId: row.session_id,
           code: row.code,
-          scan_timestamp: row.scan_timestamp,
+          scan_timestamp: parseInt(row.scan_timestamp, 10) || 0,
           createdAt: row.created_at ? row.created_at.toISOString() : new Date().toISOString(),
           userId: row.user_id || null,
           userName: row.user_name || row.user_email || null,
