@@ -111,7 +111,9 @@ export async function PUT(
 
     // 인증 확인 (선택적)
     const authHeader = request.headers.get('authorization');
+    console.log('🔑 인증 헤더:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
     const user = getUserFromRequest(authHeader);
+    console.log('👤 인증된 사용자:', user ? { userId: user.userId, email: user.email } : null);
 
     client = await getConnection();
 
