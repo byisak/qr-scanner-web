@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -8,11 +8,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -78,21 +73,42 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // 폰트 변수 설정
-  const fontVariable = `${geistSans.variable} ${geistMono.variable}`;
+  // 언어별 폰트 클래스
+  const getFontClass = () => {
+    switch (locale) {
+      case 'ko': return 'font-pretendard';
+      case 'ja': return 'font-noto-jp';
+      case 'zh': return 'font-noto-sc';
+      default: return 'font-inter'; // en, es
+    }
+  };
+
+  // 언어별 CDN URL
+  const getFontCDN = () => {
+    switch (locale) {
+      case 'ko':
+        return 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css';
+      case 'ja':
+        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap';
+      case 'zh':
+        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap';
+      default: // en, es
+        return 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+    }
+  };
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {/* 한국어용 Pretendard 폰트 CDN */}
-        {locale === 'ko' && (
-          <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
-          />
-        )}
+        {/* 언어별 폰트 CDN */}
+        <link rel="stylesheet" href={getFontCDN()} />
+        {/* 모노스페이스 폰트 - 테이블/QR코드용 */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+        />
       </head>
-      <body className={`${fontVariable} ${locale === 'ko' ? 'font-pretendard' : ''} antialiased`}>
+      <body className={`${geistMono.variable} ${getFontClass()} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"

@@ -113,14 +113,29 @@
     @apply bg-background text-foreground;
   }
 
+  /* 영어/스페인어용 Inter 폰트 */
+  .font-inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
   /* 한국어용 Pretendard 폰트 */
   .font-pretendard {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
-  /* 모노스페이스 - QR코드/코드 데이터용 */
-  .font-mono, code, pre {
-    font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* 일본어용 Noto Sans JP 폰트 */
+  .font-noto-jp {
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 중국어용 Noto Sans SC 폰트 */
+  .font-noto-sc {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 모노스페이스 - QR코드/테이블 데이터용 */
+  .font-mono, code, pre, table td.font-mono, [data-table-cell] {
+    font-family: 'JetBrains Mono', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   }
 }
 
