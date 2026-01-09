@@ -5,6 +5,7 @@ import next from 'next';
 import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePool, getConnection } from './lib/db';
+import { hashPassword } from './lib/auth';
 import type { PoolClient } from 'pg';
 
 // .env.local 파일 로드
@@ -55,6 +56,7 @@ app.prepare().then(() => {
       try {
         const sessionId = data?.sessionId || uuidv4();
         const userId = data?.userId || null;
+        const settings = data?.settings || {};
 
         client = await getConnection();
 
@@ -64,7 +66,10 @@ app.prepare().then(() => {
           [sessionId]
         );
 
+        let isNewSession = false;
+
         if (checkResult.rows.length === 0) {
+          isNewSession = true;
           // 세션 생성 (user_id 포함)
           await client.query(
             `INSERT INTO sessions (session_id, socket_id, user_id, created_at, last_activity, status)
@@ -77,6 +82,31 @@ app.prepare().then(() => {
             `UPDATE sessions SET user_id = $1 WHERE session_id = $2 AND user_id IS NULL`,
             [userId, sessionId]
           );
+        }
+
+        // 세션 설정 저장 (새 세션이거나 설정이 있는 경우)
+        if (isNewSession || Object.keys(settings).length > 0) {
+          const passwordHash = settings.password ? hashPassword(settings.password) : null;
+          const isPublic = settings.isPublic !== undefined ? settings.isPublic : true;
+          const maxParticipants = settings.maxParticipants || null;
+          const allowAnonymous = settings.allowAnonymous !== undefined ? settings.allowAnonymous : true;
+          const expiresAt = settings.expiresAt || null;
+
+          await client.query(
+            `INSERT INTO session_settings (session_id, password_hash, is_public, max_participants, allow_anonymous, expires_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+             ON CONFLICT (session_id)
+             DO UPDATE SET
+               password_hash = COALESCE($2, session_settings.password_hash),
+               is_public = $3,
+               max_participants = COALESCE($4, session_settings.max_participants),
+               allow_anonymous = $5,
+               expires_at = COALESCE($6, session_settings.expires_at),
+               updated_at = CURRENT_TIMESTAMP`,
+            [sessionId, passwordHash, isPublic, maxParticipants, allowAnonymous, expiresAt]
+          );
+
+          console.log('세션 설정 저장:', sessionId, '공개:', isPublic, '비밀번호:', passwordHash ? '있음' : '없음');
         }
 
         socket.join(sessionId);
@@ -112,6 +142,16 @@ app.prepare().then(() => {
         }
 
         client = await getConnection();
+
+        // 세션 설정 조회
+        const settingsResult = await client.query(
+          `SELECT is_public,
+                  CASE WHEN password_hash IS NOT NULL THEN true ELSE false END as has_password
+           FROM session_settings WHERE session_id = $1`,
+          [sessionId]
+        );
+
+        const sessionSettings = settingsResult.rows[0] || { is_public: true, has_password: false };
 
         // 세션이 없으면 자동으로 생성
         const checkResult = await client.query(
@@ -185,6 +225,10 @@ app.prepare().then(() => {
         socket.emit('session-joined', {
           sessionId,
           existingData: existingScans,
+          settings: {
+            isPublic: sessionSettings.is_public,
+            hasPassword: sessionSettings.has_password,
+          },
         });
 
         console.log('세션 참가:', sessionId, userId ? `(사용자: ${userId}, 스캔: ${existingScans.length}개)` : '(비로그인)');

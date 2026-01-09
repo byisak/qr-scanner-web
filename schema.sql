@@ -95,3 +95,30 @@ CREATE INDEX IF NOT EXISTS idx_scan_session ON scan_data(session_id);
 CREATE INDEX IF NOT EXISTS idx_scan_user ON scan_data(user_id);
 CREATE INDEX IF NOT EXISTS idx_scan_created ON scan_data(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_activity ON sessions(last_activity DESC);
+
+-- ============================================
+-- 세션 설정 테이블
+-- ============================================
+
+-- 세션 설정 테이블 (비밀번호, 공개여부 등)
+CREATE TABLE IF NOT EXISTS session_settings (
+    id SERIAL PRIMARY KEY,
+    session_id VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255),              -- 비밀번호 (해시)
+    is_public BOOLEAN DEFAULT true,          -- 공개 여부
+    access_code VARCHAR(20),                 -- 짧은 접근 코드 (예: ABC123)
+    max_participants INTEGER DEFAULT NULL,   -- 최대 참가자 수
+    allow_anonymous BOOLEAN DEFAULT true,    -- 비로그인 참가 허용
+    expires_at TIMESTAMP DEFAULT NULL,       -- 만료 시간
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_session_settings
+        FOREIGN KEY (session_id)
+        REFERENCES sessions(session_id)
+        ON DELETE CASCADE
+);
+
+-- 세션 설정 인덱스
+CREATE INDEX IF NOT EXISTS idx_session_settings_session ON session_settings(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_settings_access_code ON session_settings(access_code);
+CREATE INDEX IF NOT EXISTS idx_session_settings_public ON session_settings(is_public);
