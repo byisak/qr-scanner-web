@@ -48,6 +48,7 @@ export async function GET(
 
     if (result.rows.length === 0) {
       // 설정이 없으면 기본값 반환
+      console.log('⚠️ 세션 설정 없음 - 기본값 반환:', sessionId);
       return NextResponse.json({
         sessionId,
         hasPassword: false,
@@ -60,6 +61,12 @@ export async function GET(
     }
 
     const settings = result.rows[0];
+    console.log('📖 세션 설정 조회:', {
+      sessionId,
+      raw: settings,
+      hasPassword: settings.has_password,
+      isPublic: settings.is_public
+    });
     return NextResponse.json({
       sessionId: settings.session_id,
       hasPassword: settings.has_password,
@@ -259,6 +266,12 @@ export async function PUT(
       expiresAt = body.expiresAt || null;
     }
 
+    console.log('📝 세션 설정 업데이트:', {
+      sessionId,
+      body,
+      finalValues: { passwordHash: !!passwordHash, isPublic, accessCode, maxParticipants, allowAnonymous, expiresAt }
+    });
+
     // UPSERT 실행
     const result = await client.query(
       `INSERT INTO session_settings (session_id, password_hash, is_public, access_code, max_participants, allow_anonymous, expires_at, updated_at)
@@ -280,6 +293,11 @@ export async function PUT(
     );
 
     const updated = result.rows[0];
+    console.log('✅ 세션 설정 저장 완료:', {
+      sessionId: updated.session_id,
+      hasPassword: updated.has_password,
+      isPublic: updated.is_public
+    });
     return NextResponse.json({
       success: true,
       settings: {
