@@ -152,7 +152,19 @@
     "copyUrl": "Copiar URL",
     "soundOn": "Activar sonido",
     "soundOff": "Desactivar sonido",
-    "scanQrOrEnterCode": "Escanea este código QR con la app o ingresa el código de sesión manualmente"
+    "scanQrOrEnterCode": "Escanea este código QR con la app o ingresa el código de sesión manualmente",
+    "privateSession": "Sesión Privada",
+    "privateSessionDesc": "Esta sesión es privada y no se puede acceder. Contacta al propietario de la sesión.",
+    "sessionId": "ID de Sesión",
+    "passwordProtected": "Protegido con Contraseña",
+    "passwordProtectedDesc": "Ingresa la contraseña para acceder a esta sesión.",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresa la contraseña",
+    "unlock": "Desbloquear",
+    "passwordRequired": "Por favor ingresa una contraseña",
+    "wrongPassword": "Contraseña incorrecta",
+    "verifyError": "Error al verificar la contraseña",
+    "accessGranted": "Acceso concedido"
   },
   "sidebar": {
     "appTitle": "QR Scanner",

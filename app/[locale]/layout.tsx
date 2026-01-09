@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -8,11 +7,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -103,7 +97,7 @@ export default async function LocaleLayout({
         {/* 언어별 폰트 CDN */}
         <link rel="stylesheet" href={getFontCDN()} />
       </head>
-      <body className={`${geistMono.variable} ${getFontClass()} antialiased`}>
+      <body className={`${getFontClass()} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
