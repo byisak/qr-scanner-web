@@ -86,16 +86,16 @@ const emailTranslations: Record<string, {
     footer: '这是一封自动发送的邮件。',
     textBody: (name, resetUrl) => `您好，${name}\n\n您已请求重置密码。\n请点击下面的链接设置新密码。\n\n${resetUrl}\n\n此链接将在1小时后过期。\n如果您没有请求此操作，请忽略此邮件。`,
   },
-  vi: {
-    subject: '[QR Scanner] Đặt lại mật khẩu',
-    headerTitle: 'Đặt lại mật khẩu',
-    greeting: (name) => `Xin chào, ${name}`,
-    body: 'Bạn đã yêu cầu đặt lại mật khẩu.<br>Nhấp vào nút bên dưới để đặt mật khẩu mới.',
-    buttonText: 'Đặt lại mật khẩu',
-    expiry: 'Liên kết này sẽ hết hạn sau <strong>1 giờ</strong>.<br>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.',
-    copyLink: 'Nếu nút không hoạt động, hãy sao chép liên kết bên dưới:',
-    footer: 'Đây là email tự động.',
-    textBody: (name, resetUrl) => `Xin chào, ${name}\n\nBạn đã yêu cầu đặt lại mật khẩu.\nNhấp vào liên kết bên dưới để đặt mật khẩu mới.\n\n${resetUrl}\n\nLiên kết này sẽ hết hạn sau 1 giờ.\nNếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.`,
+  es: {
+    subject: '[QR Scanner] Restablecer contraseña',
+    headerTitle: 'Restablecer contraseña',
+    greeting: (name) => `Hola, ${name}`,
+    body: 'Ha solicitado restablecer su contraseña.<br>Haga clic en el botón de abajo para establecer una nueva contraseña.',
+    buttonText: 'Restablecer contraseña',
+    expiry: 'Este enlace expirará en <strong>1 hora</strong>.<br>Si no solicitó esto, ignore este correo electrónico.',
+    copyLink: 'Si el botón no funciona, copie el siguiente enlace:',
+    footer: 'Este es un correo electrónico automático.',
+    textBody: (name, resetUrl) => `Hola, ${name}\n\nHa solicitado restablecer su contraseña.\nHaga clic en el siguiente enlace para establecer una nueva contraseña.\n\n${resetUrl}\n\nEste enlace expirará en 1 hora.\nSi no solicitó esto, ignore este correo electrónico.`,
   },
 };
 
