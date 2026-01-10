@@ -1,12 +1,11 @@
 // lib/email.ts - 이메일 발송 유틸리티 (Resend 사용)
 import { Resend } from 'resend';
 
-// Resend API 키
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+// Resend API 키 (RESEND_API_KEY 또는 기존 SMTP_PASS 사용)
+const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.SMTP_PASS || '';
 
-// 발신자 설정 (도메인 검증 완료 후 커스텀 도메인 사용)
-// 도메인 미검증 시 'onboarding@resend.dev' 사용
-const EMAIL_FROM = process.env.EMAIL_FROM || 'QR Scanner <onboarding@resend.dev>';
+// 발신자 설정 (EMAIL_FROM 또는 기존 SMTP_FROM 사용)
+const EMAIL_FROM = process.env.EMAIL_FROM || process.env.SMTP_FROM || 'QR Scanner <onboarding@resend.dev>';
 
 // Resend 클라이언트 (지연 초기화)
 let resendClient: Resend | null = null;
