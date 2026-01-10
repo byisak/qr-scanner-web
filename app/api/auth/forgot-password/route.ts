@@ -9,6 +9,7 @@ import {
   AuthErrorCodes,
   createAuthErrorResponse,
 } from '@/lib/auth';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 // 테이블 생성 여부 (앱 시작 시 한 번만 체크)
 let tableChecked = false;
@@ -110,26 +111,32 @@ export async function POST(request: NextRequest) {
       [tokenId, user.id, token, expiresAt]
     );
 
-    // 실제 서비스에서는 여기서 이메일 발송
-    // 현재는 콘솔에 토큰 출력 (개발용)
+    // 재설정 URL 생성
     const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://scanview.app'}/reset-password?token=${token}`;
-    console.log(`=== Password Reset ===`);
-    console.log(`Email: ${user.email}`);
-    console.log(`Token: ${token}`);
-    console.log(`Reset URL: ${resetUrl}`);
-    console.log(`Expires: ${expiresAt}`);
-    console.log(`======================`);
 
-    // TODO: 이메일 발송 로직 추가
-    // await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    // 이메일 발송
+    const emailResult = await sendPasswordResetEmail(user.email, user.name, resetUrl);
+
+    if (!emailResult.success) {
+      console.error(`Failed to send password reset email to ${user.email}:`, emailResult.error);
+      // 이메일 발송 실패해도 보안상 성공 응답 (토큰은 DB에 저장됨)
+    } else {
+      console.log(`Password reset email sent to ${user.email}`);
+    }
+
+    // 개발 환경에서는 콘솔에도 출력
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`=== Password Reset (DEV) ===`);
+      console.log(`Email: ${user.email}`);
+      console.log(`Token: ${token}`);
+      console.log(`Reset URL: ${resetUrl}`);
+      console.log(`Expires: ${expiresAt}`);
+      console.log(`============================`);
+    }
 
     return NextResponse.json({
       success: true,
       message: '비밀번호 재설정 이메일을 발송했습니다.',
-      // 개발 환경에서만 토큰 반환 (프로덕션에서는 제거)
-      ...(process.env.NODE_ENV === 'development' && {
-        debug: { token, resetUrl }
-      }),
     });
 
   } catch (error) {
