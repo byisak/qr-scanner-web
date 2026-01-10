@@ -30,6 +30,76 @@ interface SendEmailResult {
   error?: string;
 }
 
+// 다국어 이메일 텍스트
+const emailTranslations: Record<string, {
+  subject: string;
+  headerTitle: string;
+  greeting: (name: string) => string;
+  body: string;
+  buttonText: string;
+  expiry: string;
+  ignore: string;
+  copyLink: string;
+  footer: string;
+  textBody: (name: string, resetUrl: string) => string;
+}> = {
+  ko: {
+    subject: '[QR Scanner] 비밀번호 재설정',
+    headerTitle: '비밀번호 재설정',
+    greeting: (name) => `안녕하세요, ${name}님`,
+    body: '비밀번호 재설정을 요청하셨습니다.<br>아래 버튼을 클릭하여 새 비밀번호를 설정해주세요.',
+    buttonText: '비밀번호 재설정하기',
+    expiry: '이 링크는 <strong>1시간</strong> 후에 만료됩니다.<br>본인이 요청하지 않았다면 이 이메일을 무시해주세요.',
+    copyLink: '버튼이 작동하지 않으면 아래 링크를 복사하세요:',
+    footer: '이 이메일은 발신 전용입니다.',
+    textBody: (name, resetUrl) => `안녕하세요, ${name}님\n\n비밀번호 재설정을 요청하셨습니다.\n아래 링크를 클릭하여 새 비밀번호를 설정해주세요.\n\n${resetUrl}\n\n이 링크는 1시간 후에 만료됩니다.\n본인이 요청하지 않았다면 이 이메일을 무시해주세요.`,
+  },
+  en: {
+    subject: '[QR Scanner] Password Reset',
+    headerTitle: 'Password Reset',
+    greeting: (name) => `Hello, ${name}`,
+    body: 'You have requested a password reset.<br>Click the button below to set a new password.',
+    buttonText: 'Reset Password',
+    expiry: 'This link will expire in <strong>1 hour</strong>.<br>If you did not request this, please ignore this email.',
+    copyLink: 'If the button doesn\'t work, copy the link below:',
+    footer: 'This is an automated email.',
+    textBody: (name, resetUrl) => `Hello, ${name}\n\nYou have requested a password reset.\nClick the link below to set a new password.\n\n${resetUrl}\n\nThis link will expire in 1 hour.\nIf you did not request this, please ignore this email.`,
+  },
+  ja: {
+    subject: '[QR Scanner] パスワードリセット',
+    headerTitle: 'パスワードリセット',
+    greeting: (name) => `${name}様、こんにちは`,
+    body: 'パスワードリセットのリクエストを受け付けました。<br>下のボタンをクリックして新しいパスワードを設定してください。',
+    buttonText: 'パスワードをリセット',
+    expiry: 'このリンクは<strong>1時間</strong>後に期限切れになります。<br>リクエストしていない場合は、このメールを無視してください。',
+    copyLink: 'ボタンが機能しない場合は、以下のリンクをコピーしてください：',
+    footer: 'このメールは送信専用です。',
+    textBody: (name, resetUrl) => `${name}様、こんにちは\n\nパスワードリセットのリクエストを受け付けました。\n下のリンクをクリックして新しいパスワードを設定してください。\n\n${resetUrl}\n\nこのリンクは1時間後に期限切れになります。\nリクエストしていない場合は、このメールを無視してください。`,
+  },
+  zh: {
+    subject: '[QR Scanner] 密码重置',
+    headerTitle: '密码重置',
+    greeting: (name) => `您好，${name}`,
+    body: '您已请求重置密码。<br>请点击下面的按钮设置新密码。',
+    buttonText: '重置密码',
+    expiry: '此链接将在<strong>1小时</strong>后过期。<br>如果您没有请求此操作，请忽略此邮件。',
+    copyLink: '如果按钮不起作用，请复制以下链接：',
+    footer: '这是一封自动发送的邮件。',
+    textBody: (name, resetUrl) => `您好，${name}\n\n您已请求重置密码。\n请点击下面的链接设置新密码。\n\n${resetUrl}\n\n此链接将在1小时后过期。\n如果您没有请求此操作，请忽略此邮件。`,
+  },
+  vi: {
+    subject: '[QR Scanner] Đặt lại mật khẩu',
+    headerTitle: 'Đặt lại mật khẩu',
+    greeting: (name) => `Xin chào, ${name}`,
+    body: 'Bạn đã yêu cầu đặt lại mật khẩu.<br>Nhấp vào nút bên dưới để đặt mật khẩu mới.',
+    buttonText: 'Đặt lại mật khẩu',
+    expiry: 'Liên kết này sẽ hết hạn sau <strong>1 giờ</strong>.<br>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.',
+    copyLink: 'Nếu nút không hoạt động, hãy sao chép liên kết bên dưới:',
+    footer: 'Đây là email tự động.',
+    textBody: (name, resetUrl) => `Xin chào, ${name}\n\nBạn đã yêu cầu đặt lại mật khẩu.\nNhấp vào liên kết bên dưới để đặt mật khẩu mới.\n\n${resetUrl}\n\nLiên kết này sẽ hết hạn sau 1 giờ.\nNếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.`,
+  },
+};
+
 /**
  * 이메일 발송
  */
@@ -81,9 +151,11 @@ export async function sendEmail(
 export async function sendPasswordResetEmail(
   email: string,
   name: string,
-  resetUrl: string
+  resetUrl: string,
+  locale: string = 'ko'
 ): Promise<SendEmailResult> {
-  const subject = '[QR Scanner] 비밀번호 재설정';
+  // 지원하지 않는 언어는 영어로 fallback
+  const t = emailTranslations[locale] || emailTranslations['en'];
 
   const html = `
 <!DOCTYPE html>
@@ -91,7 +163,7 @@ export async function sendPasswordResetEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>비밀번호 재설정</title>
+  <title>${t.headerTitle}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
@@ -102,17 +174,16 @@ export async function sendPasswordResetEmail(
           <tr>
             <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">QR Scanner</h1>
-              <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">비밀번호 재설정</p>
+              <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">${t.headerTitle}</p>
             </td>
           </tr>
 
           <!-- 본문 -->
           <tr>
             <td style="padding: 40px 30px;">
-              <h2 style="margin: 0 0 20px; color: #333333; font-size: 20px;">안녕하세요, ${name}님</h2>
+              <h2 style="margin: 0 0 20px; color: #333333; font-size: 20px;">${t.greeting(name)}</h2>
               <p style="margin: 0 0 20px; color: #666666; font-size: 16px; line-height: 1.6;">
-                비밀번호 재설정을 요청하셨습니다.<br>
-                아래 버튼을 클릭하여 새 비밀번호를 설정해주세요.
+                ${t.body}
               </p>
 
               <!-- CTA 버튼 -->
@@ -120,20 +191,19 @@ export async function sendPasswordResetEmail(
                 <tr>
                   <td style="padding: 20px 0;">
                     <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
-                      비밀번호 재설정하기
+                      ${t.buttonText}
                     </a>
                   </td>
                 </tr>
               </table>
 
               <p style="margin: 20px 0 0; color: #999999; font-size: 14px; line-height: 1.6;">
-                이 링크는 <strong>1시간</strong> 후에 만료됩니다.<br>
-                본인이 요청하지 않았다면 이 이메일을 무시해주세요.
+                ${t.expiry}
               </p>
 
               <!-- 링크 복사 영역 -->
               <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; word-break: break-all;">
-                <p style="margin: 0 0 10px; color: #666666; font-size: 12px;">버튼이 작동하지 않으면 아래 링크를 복사하세요:</p>
+                <p style="margin: 0 0 10px; color: #666666; font-size: 12px;">${t.copyLink}</p>
                 <a href="${resetUrl}" style="color: #667eea; font-size: 12px; text-decoration: none;">${resetUrl}</a>
               </div>
             </td>
@@ -146,7 +216,7 @@ export async function sendPasswordResetEmail(
                 © ${new Date().getFullYear()} QR Scanner. All rights reserved.
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                이 이메일은 발신 전용입니다.
+                ${t.footer}
               </p>
             </td>
           </tr>
@@ -158,21 +228,9 @@ export async function sendPasswordResetEmail(
 </html>
 `;
 
-  const text = `
-안녕하세요, ${name}님
+  const text = t.textBody(name, resetUrl) + `\n\n© ${new Date().getFullYear()} QR Scanner`;
 
-비밀번호 재설정을 요청하셨습니다.
-아래 링크를 클릭하여 새 비밀번호를 설정해주세요.
-
-${resetUrl}
-
-이 링크는 1시간 후에 만료됩니다.
-본인이 요청하지 않았다면 이 이메일을 무시해주세요.
-
-© ${new Date().getFullYear()} QR Scanner
-`;
-
-  return sendEmail(email, subject, html, text);
+  return sendEmail(email, t.subject, html, text);
 }
 
 /**

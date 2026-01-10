@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, locale = 'ko' } = body;
 
     // 이메일 유효성 검사
     if (!email) {
@@ -111,11 +111,11 @@ export async function POST(request: NextRequest) {
       [tokenId, user.id, token, expiresAt]
     );
 
-    // 재설정 URL 생성
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://scanview.app'}/reset-password?token=${token}`;
+    // 재설정 URL 생성 (locale 포함)
+    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://scanview.app'}/reset-password?token=${token}&lang=${locale}`;
 
-    // 이메일 발송
-    const emailResult = await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    // 이메일 발송 (locale 전달)
+    const emailResult = await sendPasswordResetEmail(user.email, user.name, resetUrl, locale);
 
     if (!emailResult.success) {
       console.error(`Failed to send password reset email to ${user.email}:`, emailResult.error);
