@@ -172,6 +172,26 @@ export function getUserFromRequest(authHeader: string | null): JWTPayload | null
 }
 
 // ============================================
+// 비밀번호 재설정 토큰
+// ============================================
+
+const PASSWORD_RESET_EXPIRY = 60 * 60 * 1000; // 1시간 (밀리초)
+
+/**
+ * 비밀번호 재설정 토큰 생성
+ */
+export function generatePasswordResetToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * 비밀번호 재설정 토큰 만료 시간 계산
+ */
+export function getPasswordResetExpiry(): Date {
+  return new Date(Date.now() + PASSWORD_RESET_EXPIRY);
+}
+
+// ============================================
 // 에러 코드
 // ============================================
 
@@ -184,6 +204,8 @@ export const AuthErrorCodes = {
   UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
   PROVIDER_ERROR: 'AUTH_PROVIDER_ERROR',
   VALIDATION_ERROR: 'AUTH_VALIDATION_ERROR',
+  RESET_TOKEN_EXPIRED: 'AUTH_RESET_TOKEN_EXPIRED',
+  RESET_TOKEN_INVALID: 'AUTH_RESET_TOKEN_INVALID',
 } as const;
 
 export type AuthErrorCode = typeof AuthErrorCodes[keyof typeof AuthErrorCodes];
