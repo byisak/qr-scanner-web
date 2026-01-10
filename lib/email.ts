@@ -38,7 +38,6 @@ const emailTranslations: Record<string, {
   body: string;
   buttonText: string;
   expiry: string;
-  ignore: string;
   copyLink: string;
   footer: string;
   textBody: (name: string, resetUrl: string) => string;
