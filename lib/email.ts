@@ -1,38 +1,27 @@
-// lib/email.ts - 이메일 발송 유틸리티
-import nodemailer from 'nodemailer';
+// lib/email.ts - 이메일 발송 유틸리티 (Resend 사용)
+import { Resend } from 'resend';
 
-// 환경 변수에서 SMTP 설정 가져오기
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const SMTP_FROM = process.env.SMTP_FROM || 'QR Scanner <noreply@scanview.app>';
+// Resend API 키
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
-// SMTP 설정 여부 확인
-const isEmailConfigured = SMTP_USER && SMTP_PASS;
+// 발신자 설정 (도메인 검증 완료 후 커스텀 도메인 사용)
+// 도메인 미검증 시 'onboarding@resend.dev' 사용
+const EMAIL_FROM = process.env.EMAIL_FROM || 'QR Scanner <onboarding@resend.dev>';
 
-// 트랜스포터 생성 (지연 초기화)
-let transporter: nodemailer.Transporter | null = null;
+// Resend 클라이언트 (지연 초기화)
+let resendClient: Resend | null = null;
 
-function getTransporter(): nodemailer.Transporter | null {
-  if (!isEmailConfigured) {
-    console.log('⚠️ SMTP not configured. Set SMTP_USER and SMTP_PASS environment variables.');
+function getResendClient(): Resend | null {
+  if (!RESEND_API_KEY) {
+    console.log('⚠️ RESEND_API_KEY not configured.');
     return null;
   }
 
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    });
+  if (!resendClient) {
+    resendClient = new Resend(RESEND_API_KEY);
   }
 
-  return transporter;
+  return resendClient;
 }
 
 // 이메일 발송 결과 타입
@@ -51,25 +40,33 @@ export async function sendEmail(
   html: string,
   text?: string
 ): Promise<SendEmailResult> {
-  const transport = getTransporter();
+  const client = getResendClient();
 
-  if (!transport) {
+  if (!client) {
     console.log(`📧 [DEV] Email would be sent to: ${to}`);
     console.log(`📧 [DEV] Subject: ${subject}`);
     return { success: true, messageId: 'dev-mode' };
   }
 
   try {
-    const result = await transport.sendMail({
-      from: SMTP_FROM,
-      to,
+    const result = await client.emails.send({
+      from: EMAIL_FROM,
+      to: [to],
       subject,
       html,
       text: text || html.replace(/<[^>]*>/g, ''),
     });
 
-    console.log(`✅ Email sent to ${to}: ${result.messageId}`);
-    return { success: true, messageId: result.messageId };
+    if (result.error) {
+      console.error('❌ Email send error:', result.error);
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    console.log(`✅ Email sent to ${to}: ${result.data?.id}`);
+    return { success: true, messageId: result.data?.id };
   } catch (error) {
     console.error('❌ Email send error:', error);
     return {
@@ -180,20 +177,22 @@ ${resetUrl}
 }
 
 /**
- * SMTP 연결 테스트
+ * 이메일 설정 테스트
  */
 export async function testEmailConnection(): Promise<boolean> {
-  const transport = getTransporter();
-  if (!transport) {
+  const client = getResendClient();
+  if (!client) {
     return false;
   }
 
   try {
-    await transport.verify();
-    console.log('✅ SMTP connection verified');
+    // API 키 유효성 확인을 위해 도메인 목록 조회
+    const domains = await client.domains.list();
+    console.log('✅ Resend API connection verified');
+    console.log(`📧 Available domains: ${domains.data?.data?.map(d => d.name).join(', ') || 'none'}`);
     return true;
   } catch (error) {
-    console.error('❌ SMTP connection failed:', error);
+    console.error('❌ Resend API connection failed:', error);
     return false;
   }
 }
