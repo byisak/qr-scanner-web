@@ -7,7 +7,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
-import { LocaleSync } from '@/components/locale-sync';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -107,7 +106,6 @@ export default async function LocaleLayout({
             disableTransitionOnChange
           >
             <AuthProvider>
-              <LocaleSync />
               {children}
               <Toaster richColors position="top-right" />
             </AuthProvider>
