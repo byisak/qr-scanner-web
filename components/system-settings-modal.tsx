@@ -9,6 +9,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -22,7 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/contexts/settings-context";
+import { useSettings, SystemSettings } from "@/contexts/settings-context";
 import { routing } from "@/i18n/routing";
 import {
   Globe,
@@ -34,6 +35,7 @@ import {
   Clock,
   Type,
   RotateCcw,
+  Check,
 } from "lucide-react";
 
 interface SystemSettingsModalProps {
@@ -43,28 +45,79 @@ interface SystemSettingsModalProps {
 
 export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalProps) {
   const t = useTranslations();
-  const locale = useLocale();
-  const { theme, setTheme } = useTheme();
+  const currentLocale = useLocale();
+  const { theme: currentTheme, setTheme } = useTheme();
   const { settings, updateSettings, resetSettings } = useSettings();
 
-  // Language change handler
-  const handleLanguageChange = (newLocale: string) => {
-    updateSettings({ language: newLocale });
-    // Set cookie and reload
-    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
-    window.location.reload();
+  // Local state for form values (not applied until button click)
+  const [localSettings, setLocalSettings] = React.useState<SystemSettings>({
+    ...settings,
+    language: currentLocale,
+    theme: (currentTheme as "light" | "dark" | "system") || "system",
+  });
+
+  // Reset local state when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setLocalSettings({
+        ...settings,
+        language: currentLocale,
+        theme: (currentTheme as "light" | "dark" | "system") || "system",
+      });
+    }
+  }, [open, settings, currentLocale, currentTheme]);
+
+  // Update local settings
+  const updateLocalSettings = (newSettings: Partial<SystemSettings>) => {
+    setLocalSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  // Theme change handler
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    updateSettings({ theme: newTheme as "light" | "dark" | "system" });
+  // Apply all settings
+  const handleApplySettings = async () => {
+    // Request browser notification permission if enabled
+    if (localSettings.browserNotification && "Notification" in window) {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setLocalSettings((prev) => ({ ...prev, browserNotification: false }));
+        updateSettings({ ...localSettings, browserNotification: false });
+      } else {
+        updateSettings(localSettings);
+      }
+    } else {
+      updateSettings(localSettings);
+    }
+
+    // Apply theme
+    setTheme(localSettings.theme);
+
+    // Check if language changed
+    const languageChanged = localSettings.language !== currentLocale;
+
+    // Close modal
+    onOpenChange(false);
+
+    // If language changed, set cookie and reload
+    if (languageChanged) {
+      document.cookie = `NEXT_LOCALE=${localSettings.language};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+      window.location.reload();
+    }
   };
 
-  // Reset all settings
+  // Reset all settings to default
   const handleReset = () => {
-    resetSettings();
-    setTheme("system");
+    const defaultSettings: SystemSettings = {
+      language: "en",
+      theme: "system",
+      scanSound: true,
+      browserNotification: false,
+      soundVolume: 50,
+      soundType: "default",
+      tableRowsPerPage: 25,
+      dateFormat: "YYYY-MM-DD",
+      timeFormat: "24h",
+      fontSize: "medium",
+    };
+    setLocalSettings(defaultSettings);
   };
 
   return (
@@ -88,7 +141,10 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
               <Label htmlFor="language" className="text-right text-sm">
                 {t("systemSettings.language")}
               </Label>
-              <Select value={locale} onValueChange={handleLanguageChange}>
+              <Select
+                value={localSettings.language}
+                onValueChange={(value) => updateLocalSettings({ language: value })}
+              >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
                 </SelectTrigger>
@@ -108,7 +164,10 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 <Palette className="h-3 w-3" />
                 {t("systemSettings.theme")}
               </Label>
-              <Select value={theme || "system"} onValueChange={handleThemeChange}>
+              <Select
+                value={localSettings.theme}
+                onValueChange={(value) => updateLocalSettings({ theme: value as "light" | "dark" | "system" })}
+              >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
                 </SelectTrigger>
@@ -138,8 +197,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
               <div className="col-span-2 flex items-center">
                 <Switch
                   id="scanSound"
-                  checked={settings.scanSound}
-                  onCheckedChange={(checked) => updateSettings({ scanSound: checked })}
+                  checked={localSettings.scanSound}
+                  onCheckedChange={(checked) => updateLocalSettings({ scanSound: checked })}
                 />
               </div>
             </div>
@@ -152,16 +211,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
               <div className="col-span-2 flex items-center">
                 <Switch
                   id="browserNotification"
-                  checked={settings.browserNotification}
-                  onCheckedChange={(checked) => {
-                    if (checked && "Notification" in window) {
-                      Notification.requestPermission().then((permission) => {
-                        updateSettings({ browserNotification: permission === "granted" });
-                      });
-                    } else {
-                      updateSettings({ browserNotification: checked });
-                    }
-                  }}
+                  checked={localSettings.browserNotification}
+                  onCheckedChange={(checked) => updateLocalSettings({ browserNotification: checked })}
                 />
               </div>
             </div>
@@ -174,15 +225,15 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
               </Label>
               <div className="col-span-2 flex items-center gap-3">
                 <Slider
-                  value={[settings.soundVolume]}
-                  onValueChange={(value) => updateSettings({ soundVolume: value[0] })}
+                  value={[localSettings.soundVolume]}
+                  onValueChange={(value) => updateLocalSettings({ soundVolume: value[0] })}
                   max={100}
                   step={10}
                   className="flex-1"
-                  disabled={!settings.scanSound}
+                  disabled={!localSettings.scanSound}
                 />
                 <span className="text-sm text-muted-foreground w-10 text-right">
-                  {settings.soundVolume}%
+                  {localSettings.soundVolume}%
                 </span>
               </div>
             </div>
@@ -193,9 +244,9 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 {t("systemSettings.soundType")}
               </Label>
               <Select
-                value={settings.soundType}
-                onValueChange={(value) => updateSettings({ soundType: value as "default" | "beep" | "none" })}
-                disabled={!settings.scanSound}
+                value={localSettings.soundType}
+                onValueChange={(value) => updateLocalSettings({ soundType: value as "default" | "beep" | "none" })}
+                disabled={!localSettings.scanSound}
               >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
@@ -224,8 +275,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 {t("systemSettings.tableRowsPerPage")}
               </Label>
               <Select
-                value={String(settings.tableRowsPerPage)}
-                onValueChange={(value) => updateSettings({ tableRowsPerPage: Number(value) })}
+                value={String(localSettings.tableRowsPerPage)}
+                onValueChange={(value) => updateLocalSettings({ tableRowsPerPage: Number(value) })}
               >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
@@ -246,8 +297,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 {t("systemSettings.dateFormat")}
               </Label>
               <Select
-                value={settings.dateFormat}
-                onValueChange={(value) => updateSettings({ dateFormat: value as SystemSettings["dateFormat"] })}
+                value={localSettings.dateFormat}
+                onValueChange={(value) => updateLocalSettings({ dateFormat: value as SystemSettings["dateFormat"] })}
               >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
@@ -267,8 +318,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 {t("systemSettings.timeFormat")}
               </Label>
               <Select
-                value={settings.timeFormat}
-                onValueChange={(value) => updateSettings({ timeFormat: value as "24h" | "12h" })}
+                value={localSettings.timeFormat}
+                onValueChange={(value) => updateLocalSettings({ timeFormat: value as "24h" | "12h" })}
               >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
@@ -287,8 +338,8 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
                 {t("systemSettings.fontSize")}
               </Label>
               <Select
-                value={settings.fontSize}
-                onValueChange={(value) => updateSettings({ fontSize: value as "small" | "medium" | "large" })}
+                value={localSettings.fontSize}
+                onValueChange={(value) => updateLocalSettings({ fontSize: value as "small" | "medium" | "large" })}
               >
                 <SelectTrigger className="col-span-2">
                   <SelectValue />
@@ -301,21 +352,19 @@ export function SystemSettingsModal({ open, onOpenChange }: SystemSettingsModalP
               </Select>
             </div>
           </div>
-
-          <Separator />
-
-          {/* Reset Button */}
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={handleReset}>
-              <RotateCcw className="h-4 w-4 mr-2" />
-              {t("systemSettings.resetToDefault")}
-            </Button>
-          </div>
         </div>
+
+        <DialogFooter className="flex gap-2 sm:gap-0">
+          <Button variant="outline" size="sm" onClick={handleReset}>
+            <RotateCcw className="h-4 w-4 mr-2" />
+            {t("systemSettings.resetToDefault")}
+          </Button>
+          <Button onClick={handleApplySettings}>
+            <Check className="h-4 w-4 mr-2" />
+            {t("systemSettings.applySettings")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-// Type export for external use
-type SystemSettings = import("@/contexts/settings-context").SystemSettings;

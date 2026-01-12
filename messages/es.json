@@ -308,6 +308,7 @@
     "fontSmall": "Pequeño",
     "fontMedium": "Mediano",
     "fontLarge": "Grande",
-    "resetToDefault": "Restablecer Valores"
+    "resetToDefault": "Restablecer Valores",
+    "applySettings": "Aplicar Configuración"
   }
 }

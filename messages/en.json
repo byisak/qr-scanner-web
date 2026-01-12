@@ -308,6 +308,7 @@
     "fontSmall": "Small",
     "fontMedium": "Medium",
     "fontLarge": "Large",
-    "resetToDefault": "Reset to Default"
+    "resetToDefault": "Reset to Default",
+    "applySettings": "Apply Settings"
   }
 }

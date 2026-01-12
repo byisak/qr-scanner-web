@@ -308,6 +308,7 @@
     "fontSmall": "작게",
     "fontMedium": "보통",
     "fontLarge": "크게",
-    "resetToDefault": "기본값으로 재설정"
+    "resetToDefault": "기본값으로 재설정",
+    "applySettings": "설정 적용"
   }
 }

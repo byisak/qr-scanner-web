@@ -308,6 +308,7 @@
     "fontSmall": "小",
     "fontMedium": "中",
     "fontLarge": "大",
-    "resetToDefault": "恢复默认设置"
+    "resetToDefault": "恢复默认设置",
+    "applySettings": "应用设置"
   }
 }

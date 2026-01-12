@@ -308,6 +308,7 @@
     "fontSmall": "小",
     "fontMedium": "中",
     "fontLarge": "大",
-    "resetToDefault": "デフォルトに戻す"
+    "resetToDefault": "デフォルトに戻す",
+    "applySettings": "設定を適用"
   }
 }
