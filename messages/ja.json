@@ -183,6 +183,7 @@
     "deleteFailed": "削除失敗",
     "deleteError": "セッションの削除に失敗しました。",
     "user": "ユーザー",
+    "systemSettings": "システム設定",
     "profileSettings": "プロフィール設定",
     "changePassword": "パスワード変更"
   },
@@ -219,7 +220,14 @@
     "noAccount": "アカウントをお持ちでないですか？",
     "hasAccount": "すでにアカウントをお持ちですか？",
     "signUp": "新規登録",
-    "signIn": "ログイン"
+    "signIn": "ログイン",
+    "loginDescription": "QR Scanner Webにログイン",
+    "loginFailed": "ログインに失敗しました",
+    "loggingIn": "ログイン中...",
+    "or": "または",
+    "loginWithGoogleComingSoon": "Google でログイン (準備中)",
+    "loginWithAppleComingSoon": "Apple でログイン (準備中)",
+    "backToHome": "ホームに戻る"
   },
   "profile": {
     "title": "プロフィール設定",
@@ -272,5 +280,35 @@
     "expiredDeleted": "{count} 件の期限切れセッションが削除されました。",
     "cleanupFailed": "整理失敗",
     "cleanupError": "期限切れセッションの整理に失敗しました。"
+  },
+  "systemSettings": {
+    "title": "システム設定",
+    "description": "アプリケーションの設定をカスタマイズします",
+    "languageAndTheme": "言語とテーマ",
+    "language": "言語",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSystem": "システム",
+    "notifications": "通知",
+    "scanSound": "スキャン音",
+    "browserNotification": "ブラウザ通知",
+    "soundVolume": "音量",
+    "soundType": "通知音の種類",
+    "soundDefault": "デフォルト",
+    "soundBeep": "ビープ音",
+    "soundNone": "なし",
+    "display": "表示設定",
+    "tableRowsPerPage": "ページあたりの行数",
+    "dateFormat": "日付形式",
+    "timeFormat": "時刻形式",
+    "time24h": "24時間",
+    "time12h": "12時間 (午前/午後)",
+    "fontSize": "フォントサイズ",
+    "fontSmall": "小",
+    "fontMedium": "中",
+    "fontLarge": "大",
+    "resetToDefault": "デフォルトに戻す",
+    "applySettings": "設定を適用"
   }
 }

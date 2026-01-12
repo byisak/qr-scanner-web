@@ -183,6 +183,7 @@
     "deleteFailed": "删除失败",
     "deleteError": "删除会话失败。",
     "user": "用户",
+    "systemSettings": "系统设置",
     "profileSettings": "个人设置",
     "changePassword": "修改密码"
   },
@@ -219,7 +220,14 @@
     "noAccount": "还没有账户？",
     "hasAccount": "已有账户？",
     "signUp": "注册",
-    "signIn": "登录"
+    "signIn": "登录",
+    "loginDescription": "登录 QR Scanner Web",
+    "loginFailed": "登录失败",
+    "loggingIn": "登录中...",
+    "or": "或",
+    "loginWithGoogleComingSoon": "使用 Google 登录 (即将推出)",
+    "loginWithAppleComingSoon": "使用 Apple 登录 (即将推出)",
+    "backToHome": "返回首页"
   },
   "profile": {
     "title": "个人设置",
@@ -272,5 +280,35 @@
     "expiredDeleted": "已删除 {count} 个过期会话。",
     "cleanupFailed": "清理失败",
     "cleanupError": "清理过期会话失败。"
+  },
+  "systemSettings": {
+    "title": "系统设置",
+    "description": "配置您的应用程序偏好设置",
+    "languageAndTheme": "语言和主题",
+    "language": "语言",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统",
+    "notifications": "通知",
+    "scanSound": "扫描提示音",
+    "browserNotification": "浏览器通知",
+    "soundVolume": "音量",
+    "soundType": "提示音类型",
+    "soundDefault": "默认",
+    "soundBeep": "蜂鸣音",
+    "soundNone": "静音",
+    "display": "显示设置",
+    "tableRowsPerPage": "每页行数",
+    "dateFormat": "日期格式",
+    "timeFormat": "时间格式",
+    "time24h": "24小时制",
+    "time12h": "12小时制 (上午/下午)",
+    "fontSize": "字体大小",
+    "fontSmall": "小",
+    "fontMedium": "中",
+    "fontLarge": "大",
+    "resetToDefault": "恢复默认设置",
+    "applySettings": "应用设置"
   }
 }

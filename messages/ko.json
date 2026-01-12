@@ -183,6 +183,7 @@
     "deleteFailed": "삭제 실패",
     "deleteError": "세션 삭제 중 오류가 발생했습니다.",
     "user": "사용자",
+    "systemSettings": "시스템 설정",
     "profileSettings": "프로필 설정",
     "changePassword": "비밀번호 변경"
   },
@@ -219,7 +220,14 @@
     "noAccount": "계정이 없으신가요?",
     "hasAccount": "이미 계정이 있으신가요?",
     "signUp": "회원가입",
-    "signIn": "로그인"
+    "signIn": "로그인",
+    "loginDescription": "QR Scanner Web에 로그인하세요",
+    "loginFailed": "로그인에 실패했습니다",
+    "loggingIn": "로그인 중...",
+    "or": "또는",
+    "loginWithGoogleComingSoon": "Google로 로그인 (준비 중)",
+    "loginWithAppleComingSoon": "Apple로 로그인 (준비 중)",
+    "backToHome": "홈으로 돌아가기"
   },
   "profile": {
     "title": "프로필 설정",
@@ -272,5 +280,35 @@
     "expiredDeleted": "{count}개의 만료된 세션이 삭제되었습니다.",
     "cleanupFailed": "정리 실패",
     "cleanupError": "만료된 세션 정리 중 오류가 발생했습니다."
+  },
+  "systemSettings": {
+    "title": "시스템 설정",
+    "description": "애플리케이션 환경설정을 구성합니다",
+    "languageAndTheme": "언어 및 테마",
+    "language": "언어",
+    "theme": "테마",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeSystem": "시스템",
+    "notifications": "알림",
+    "scanSound": "스캔 알림음",
+    "browserNotification": "브라우저 알림",
+    "soundVolume": "볼륨",
+    "soundType": "알림음 종류",
+    "soundDefault": "기본음",
+    "soundBeep": "비프음",
+    "soundNone": "무음",
+    "display": "표시 설정",
+    "tableRowsPerPage": "페이지당 행 수",
+    "dateFormat": "날짜 형식",
+    "timeFormat": "시간 형식",
+    "time24h": "24시간",
+    "time12h": "12시간 (오전/오후)",
+    "fontSize": "글꼴 크기",
+    "fontSmall": "작게",
+    "fontMedium": "보통",
+    "fontLarge": "크게",
+    "resetToDefault": "기본값으로 재설정",
+    "applySettings": "설정 적용"
   }
 }

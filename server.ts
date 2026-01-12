@@ -56,6 +56,7 @@ app.prepare().then(() => {
       try {
         const sessionId = data?.sessionId || uuidv4();
         const userId = data?.userId || null;
+        const sessionName = data?.sessionName || null;
         const settings = data?.settings || {};
 
         client = await getConnection();
@@ -70,18 +71,23 @@ app.prepare().then(() => {
 
         if (checkResult.rows.length === 0) {
           isNewSession = true;
-          // 세션 생성 (user_id 포함)
+          // 세션 생성 (user_id, session_name 포함)
           await client.query(
-            `INSERT INTO sessions (session_id, socket_id, user_id, created_at, last_activity, status)
-             VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
-            [sessionId, socket.id, userId || null]
+            `INSERT INTO sessions (session_id, socket_id, user_id, session_name, created_at, last_activity, status)
+             VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
+            [sessionId, socket.id, userId || null, sessionName]
           );
-        } else if (userId) {
-          // 기존 세션에 user_id 업데이트 (세션에 user_id가 없는 경우에만)
-          await client.query(
-            `UPDATE sessions SET user_id = $1 WHERE session_id = $2 AND user_id IS NULL`,
-            [userId, sessionId]
-          );
+        } else {
+          // 기존 세션 업데이트 (user_id, session_name)
+          if (userId || sessionName) {
+            await client.query(
+              `UPDATE sessions SET
+                user_id = COALESCE($1, user_id),
+                session_name = COALESCE($2, session_name)
+               WHERE session_id = $3`,
+              [userId || null, sessionName, sessionId]
+            );
+          }
         }
 
         // 세션 설정 저장 (새 세션이거나 설정이 있는 경우)
@@ -113,11 +119,12 @@ app.prepare().then(() => {
 
         socket.emit('session-created', {
           sessionId,
+          sessionName,
           userId: userId || null,
           message: '세션이 생성되었습니다.',
         });
 
-        console.log('새 세션 생성:', sessionId, userId ? `(사용자: ${userId})` : '(비로그인)');
+        console.log('새 세션 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
       } catch (err) {
         console.error('세션 생성 실패:', err);
         socket.emit('error', { message: '세션 생성 실패' });
@@ -132,9 +139,10 @@ app.prepare().then(() => {
     socket.on('join-session', async (data) => {
       let client: PoolClient | null = null;
       try {
-        // sessionId와 userId를 클라이언트에서 직접 받음
+        // sessionId, userId, sessionName을 클라이언트에서 직접 받음
         const sessionId = typeof data === 'string' ? data : data?.sessionId;
         const userId = typeof data === 'object' ? data?.userId : null;
+        const sessionName = typeof data === 'object' ? data?.sessionName : null;
 
         if (!sessionId) {
           socket.emit('error', { message: '세션 ID가 필요합니다.' });
@@ -155,29 +163,36 @@ app.prepare().then(() => {
 
         // 세션이 없으면 자동으로 생성
         const checkResult = await client.query(
-          `SELECT session_id, user_id FROM sessions WHERE session_id = $1`,
+          `SELECT session_id, user_id, session_name FROM sessions WHERE session_id = $1`,
           [sessionId]
         );
 
         if (checkResult.rows.length === 0) {
-          console.log('새 세션 자동 생성:', sessionId, userId ? `(사용자: ${userId})` : '(비로그인)');
+          console.log('새 세션 자동 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
           await client.query(
-            `INSERT INTO sessions (session_id, socket_id, user_id, created_at, last_activity, status)
-             VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
-            [sessionId, socket.id, userId || null]
+            `INSERT INTO sessions (session_id, socket_id, user_id, session_name, created_at, last_activity, status)
+             VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
+            [sessionId, socket.id, userId || null, sessionName]
           );
         } else {
-          // 세션 활동 시간 업데이트, user_id가 없으면 업데이트
+          // 세션 활동 시간 업데이트, user_id/session_name 업데이트
           const existingSession = checkResult.rows[0];
           console.log('기존 세션 발견:', sessionId, '현재 user_id:', existingSession.user_id, '요청 userId:', userId);
 
-          if (userId && !existingSession.user_id) {
-            // 기존 세션에 user_id가 없으면 업데이트
-            console.log('세션 user_id 업데이트:', sessionId, '->', userId);
+          // user_id가 없거나 session_name이 변경된 경우 업데이트
+          const shouldUpdateUserId = userId && !existingSession.user_id;
+          const shouldUpdateName = sessionName && sessionName !== existingSession.session_name;
+
+          if (shouldUpdateUserId || shouldUpdateName) {
+            console.log('세션 업데이트:', sessionId, shouldUpdateUserId ? `user_id: ${userId}` : '', shouldUpdateName ? `이름: ${sessionName}` : '');
             await client.query(
-              `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = $1, user_id = $2
-               WHERE session_id = $3`,
-              [socket.id, userId, sessionId]
+              `UPDATE sessions SET
+                last_activity = CURRENT_TIMESTAMP,
+                socket_id = $1,
+                user_id = COALESCE($2, user_id),
+                session_name = COALESCE($3, session_name)
+               WHERE session_id = $4`,
+              [socket.id, shouldUpdateUserId ? userId : null, shouldUpdateName ? sessionName : null, sessionId]
             );
           } else {
             await client.query(

@@ -183,6 +183,7 @@
     "deleteFailed": "Eliminación fallida",
     "deleteError": "Error al eliminar sesión.",
     "user": "Usuario",
+    "systemSettings": "Configuración del Sistema",
     "profileSettings": "Configuración de Perfil",
     "changePassword": "Cambiar Contraseña"
   },
@@ -219,7 +220,14 @@
     "noAccount": "¿No tienes una cuenta?",
     "hasAccount": "¿Ya tienes una cuenta?",
     "signUp": "Registrarse",
-    "signIn": "Iniciar Sesión"
+    "signIn": "Iniciar Sesión",
+    "loginDescription": "Inicia sesión en QR Scanner Web",
+    "loginFailed": "Error al iniciar sesión",
+    "loggingIn": "Iniciando sesión...",
+    "or": "o",
+    "loginWithGoogleComingSoon": "Iniciar Sesión con Google (Próximamente)",
+    "loginWithAppleComingSoon": "Iniciar Sesión con Apple (Próximamente)",
+    "backToHome": "Volver al Inicio"
   },
   "profile": {
     "title": "Configuración de Perfil",
@@ -272,5 +280,35 @@
     "expiredDeleted": "{count} sesión(es) expirada(s) eliminada(s).",
     "cleanupFailed": "Limpieza fallida",
     "cleanupError": "Error al limpiar sesiones expiradas."
+  },
+  "systemSettings": {
+    "title": "Configuración del Sistema",
+    "description": "Configure las preferencias de su aplicación",
+    "languageAndTheme": "Idioma y Tema",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "notifications": "Notificaciones",
+    "scanSound": "Sonido de Escaneo",
+    "browserNotification": "Notificación del Navegador",
+    "soundVolume": "Volumen",
+    "soundType": "Tipo de Sonido",
+    "soundDefault": "Predeterminado",
+    "soundBeep": "Pitido",
+    "soundNone": "Ninguno",
+    "display": "Visualización",
+    "tableRowsPerPage": "Filas por Página",
+    "dateFormat": "Formato de Fecha",
+    "timeFormat": "Formato de Hora",
+    "time24h": "24 horas",
+    "time12h": "12 horas (AM/PM)",
+    "fontSize": "Tamaño de Fuente",
+    "fontSmall": "Pequeño",
+    "fontMedium": "Mediano",
+    "fontLarge": "Grande",
+    "resetToDefault": "Restablecer Valores",
+    "applySettings": "Aplicar Configuración"
   }
 }

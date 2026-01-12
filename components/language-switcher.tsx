@@ -1,7 +1,6 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 import {
   Select,
@@ -12,14 +11,17 @@ import {
 } from "@/components/ui/select";
 import { Languages } from "lucide-react";
 
+const LOCALE_COOKIE = "NEXT_LOCALE";
+
 export function LanguageSwitcher() {
   const t = useTranslations("common");
   const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
 
   const handleLanguageChange = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale });
+    // Set cookie with proper attributes
+    document.cookie = `${LOCALE_COOKIE}=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+    // Reload page to apply new locale
+    window.location.reload();
   };
 
   return (
