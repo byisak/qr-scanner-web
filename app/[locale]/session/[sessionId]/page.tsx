@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/components/ui/sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, ShieldX } from 'lucide-react';
+import { Lock, ShieldX, Plug, Unplug } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -485,9 +485,16 @@ export default function SessionPage() {
                       <VolumeX className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
-                  <Badge variant={isConnected ? 'default' : 'destructive'}>
-                    {isConnected ? t('session.connected') : t('session.disconnected')}
-                  </Badge>
+                  <div
+                    className="flex items-center gap-1.5"
+                    title={isConnected ? t('session.connected') : t('session.disconnected')}
+                  >
+                    {isConnected ? (
+                      <Plug className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Unplug className="h-5 w-5 text-destructive" />
+                    )}
+                  </div>
                 </div>
               </div>
 
