@@ -22,8 +22,8 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const handleLanguageChange = (newLocale: string) => {
-    // Save to cookie for persistence (1 year expiry)
-    document.cookie = `${LOCALE_COOKIE}=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
+    // Save to cookie for persistence (1 year expiry) with proper attributes
+    document.cookie = `${LOCALE_COOKIE}=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
     // Force page reload to apply new locale (since localePrefix is 'never', URL doesn't change)
     window.location.reload();
   };
