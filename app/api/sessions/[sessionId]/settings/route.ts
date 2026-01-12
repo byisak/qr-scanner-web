@@ -268,6 +268,15 @@ export async function PUT(
       expiresAt = body.expiresAt || null;
     }
 
+    // 세션 이름 업데이트 (sessions 테이블에 저장)
+    if ('sessionName' in body && body.sessionName) {
+      await client.query(
+        `UPDATE sessions SET session_name = $1 WHERE session_id = $2`,
+        [body.sessionName, sessionId]
+      );
+      console.log('📝 세션 이름 업데이트:', sessionId, '->', body.sessionName);
+    }
+
     console.log('📝 세션 설정 업데이트:', {
       sessionId,
       body,
