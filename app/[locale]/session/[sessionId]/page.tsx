@@ -6,6 +6,9 @@ import { useAuth } from '@/contexts/auth-context';
 import { AppSidebar } from '@/components/app-sidebar';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/components/ui/sonner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Lock, ShieldX } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -71,16 +74,117 @@ function playNotificationSound() {
   }
 }
 
+// 세션 설정 타입
+interface SessionSettings {
+  sessionId: string;
+  hasPassword: boolean;
+  isPublic: boolean;
+  accessCode: string | null;
+  maxParticipants: number | null;
+  allowAnonymous: boolean;
+  expiresAt: string | null;
+}
+
 export default function SessionPage() {
   const t = useTranslations();
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { scans, isConnected, error, removeScan, removeScans } = useSocket(sessionId, user?.id, isLoading);
 
   const [copied, setCopied] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // 세션 접근 제어 상태
+  const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
+
+  // 접근 허용 후에만 소켓 연결 (비밀번호 보호 세션 보안)
+  const { scans, isConnected, error, removeScan, removeScans } = useSocket(
+    sessionId,
+    user?.id,
+    isLoading,
+    accessGranted // 접근 허용 전까지 소켓 연결 차단
+  );
+
   const prevScansLengthRef = useRef(scans.length);
+
+  // 세션 설정 로드
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/settings`);
+        if (res.ok) {
+          const settings: SessionSettings = await res.json();
+          setSessionSettings(settings);
+
+          // 접근 권한 확인
+          if (!settings.isPublic) {
+            // 비공개 세션 - 접근 불가
+            setAccessGranted(false);
+          } else if (settings.hasPassword) {
+            // 비밀번호 보호 세션 - 비밀번호 입력 필요
+            setPasswordModalOpen(true);
+            setAccessGranted(false);
+          } else {
+            // 공개 세션 - 접근 허용
+            setAccessGranted(true);
+          }
+        } else {
+          // 설정이 없으면 기본적으로 접근 허용
+          setAccessGranted(true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch session settings:', err);
+        // 오류 시 기본적으로 접근 허용
+        setAccessGranted(true);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    if (sessionId) {
+      fetchSettings();
+    }
+  }, [sessionId]);
+
+  // 비밀번호 검증
+  const handlePasswordSubmit = useCallback(async () => {
+    if (!passwordInput.trim()) {
+      setPasswordError(t('session.passwordRequired'));
+      return;
+    }
+
+    setVerifyingPassword(true);
+    setPasswordError('');
+
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+
+      const data = await res.json();
+
+      if (data.accessGranted) {
+        setAccessGranted(true);
+        setPasswordModalOpen(false);
+        toast.success(t('session.accessGranted'));
+      } else {
+        setPasswordError(t('session.wrongPassword'));
+      }
+    } catch (err) {
+      console.error('Password verification failed:', err);
+      setPasswordError(t('session.verifyError'));
+    } finally {
+      setVerifyingPassword(false);
+    }
+  }, [passwordInput, sessionId, t]);
 
   // 비로그인 사용자: 방문한 세션을 localStorage에 저장
   useEffect(() => {
@@ -203,6 +307,134 @@ export default function SessionPage() {
       toast.error(t('session.exportError'));
     }
   };
+
+  // 비공개 세션 차단 화면
+  if (!settingsLoading && sessionSettings && !sessionSettings.isPublic) {
+    return (
+      <SidebarProvider>
+        <AppSidebar currentSessionId={sessionId} />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 flex-1">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="px-4 flex items-center gap-2">
+              <LanguageSwitcher />
+              <ModeToggle />
+            </div>
+          </header>
+
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
+            <Card className="max-w-md w-full text-center">
+              <CardHeader>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                  <ShieldX className="h-8 w-8 text-destructive" />
+                </div>
+                <CardTitle className="text-xl">{t('session.privateSession')}</CardTitle>
+                <CardDescription className="mt-2">
+                  {t('session.privateSessionDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t('session.sessionId')}: <span className="font-mono font-medium">{sessionId}</span>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
+
+  // 비밀번호 보호 세션 - 비밀번호 입력 화면 (데이터 렌더링하지 않음)
+  if (!settingsLoading && sessionSettings?.hasPassword && !accessGranted) {
+    return (
+      <SidebarProvider>
+        <AppSidebar currentSessionId={sessionId} />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 flex-1">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="px-4 flex items-center gap-2">
+              <LanguageSwitcher />
+              <ModeToggle />
+            </div>
+          </header>
+
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
+            <Card className="max-w-md w-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{t('session.passwordProtected')}</CardTitle>
+                <CardDescription className="mt-2">
+                  {t('session.passwordProtectedDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="session-password">{t('session.password')}</Label>
+                  <Input
+                    id="session-password"
+                    type="password"
+                    placeholder={t('session.passwordPlaceholder')}
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handlePasswordSubmit();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                </div>
+                <Button
+                  onClick={handlePasswordSubmit}
+                  disabled={verifyingPassword}
+                  className="w-full"
+                >
+                  {verifyingPassword ? t('common.loading') : t('session.unlock')}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  {t('session.sessionId')}: <span className="font-mono">{sessionId}</span>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>

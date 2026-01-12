@@ -4,6 +4,7 @@
 
 :root {
   --radius: 0.625rem;
+  --font-mono: 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -111,6 +112,31 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 영어/스페인어용 Inter 폰트 */
+  .font-inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 한국어용 Pretendard 폰트 */
+  .font-pretendard {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 일본어용 Noto Sans JP 폰트 */
+  .font-noto-jp {
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 중국어용 Noto Sans SC 폰트 */
+  .font-noto-sc {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* 모노스페이스 - QR코드/테이블 데이터용 (언어별 폰트 fallback 포함) */
+  .font-mono, code, pre, table td.font-mono, [data-table-cell] {
+    font-family: 'Pretendard', 'Inter', 'Noto Sans JP', 'Noto Sans SC', var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   }
 }
 

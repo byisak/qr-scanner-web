@@ -84,23 +84,34 @@ export function getRefreshTokenExpiry(): Date {
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      console.log('❌ JWT 검증 실패: 잘못된 토큰 형식 (parts:', parts.length, ')');
+      return null;
+    }
 
     const [header, payload, signature] = parts;
 
     // 서명 검증
     const expectedSignature = createSignature(header, payload);
-    if (signature !== expectedSignature) return null;
+    if (signature !== expectedSignature) {
+      console.log('❌ JWT 검증 실패: 서명 불일치');
+      return null;
+    }
 
     // 페이로드 파싱
     const decoded = JSON.parse(base64UrlDecode(payload)) as JWTPayload;
 
     // 만료 시간 확인
     const now = Math.floor(Date.now() / 1000);
-    if (decoded.exp < now) return null;
+    if (decoded.exp < now) {
+      console.log('❌ JWT 검증 실패: 토큰 만료 (exp:', decoded.exp, 'now:', now, ')');
+      return null;
+    }
 
+    console.log('✅ JWT 검증 성공:', { userId: decoded.userId, email: decoded.email });
     return decoded;
-  } catch {
+  } catch (e) {
+    console.log('❌ JWT 검증 실패: 예외 발생', e);
     return null;
   }
 }
@@ -161,6 +172,26 @@ export function getUserFromRequest(authHeader: string | null): JWTPayload | null
 }
 
 // ============================================
+// 비밀번호 재설정 토큰
+// ============================================
+
+const PASSWORD_RESET_EXPIRY = 60 * 60 * 1000; // 1시간 (밀리초)
+
+/**
+ * 비밀번호 재설정 토큰 생성
+ */
+export function generatePasswordResetToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * 비밀번호 재설정 토큰 만료 시간 계산
+ */
+export function getPasswordResetExpiry(): Date {
+  return new Date(Date.now() + PASSWORD_RESET_EXPIRY);
+}
+
+// ============================================
 // 에러 코드
 // ============================================
 
@@ -173,6 +204,8 @@ export const AuthErrorCodes = {
   UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
   PROVIDER_ERROR: 'AUTH_PROVIDER_ERROR',
   VALIDATION_ERROR: 'AUTH_VALIDATION_ERROR',
+  RESET_TOKEN_EXPIRED: 'AUTH_RESET_TOKEN_EXPIRED',
+  RESET_TOKEN_INVALID: 'AUTH_RESET_TOKEN_INVALID',
 } as const;
 
 export type AuthErrorCode = typeof AuthErrorCodes[keyof typeof AuthErrorCodes];

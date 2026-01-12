@@ -7,7 +7,8 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "cancel": "Cancel"
   },
   "nav": {
     "features": "Features",
@@ -151,7 +152,19 @@
     "copyUrl": "Copy URL",
     "soundOn": "Turn on sound",
     "soundOff": "Turn off sound",
-    "scanQrOrEnterCode": "Scan this QR code with the app or enter the session code manually"
+    "scanQrOrEnterCode": "Scan this QR code with the app or enter the session code manually",
+    "privateSession": "Private Session",
+    "privateSessionDesc": "This session is private and cannot be accessed. Please contact the session owner.",
+    "sessionId": "Session ID",
+    "passwordProtected": "Password Protected",
+    "passwordProtectedDesc": "Enter the password to access this session.",
+    "password": "Password",
+    "passwordPlaceholder": "Enter password",
+    "unlock": "Unlock",
+    "passwordRequired": "Please enter a password",
+    "wrongPassword": "Incorrect password",
+    "verifyError": "Failed to verify password",
+    "accessGranted": "Access granted"
   },
   "sidebar": {
     "appTitle": "QR Scanner",

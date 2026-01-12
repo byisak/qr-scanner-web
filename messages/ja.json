@@ -7,7 +7,8 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "cancel": "キャンセル"
   },
   "nav": {
     "features": "機能",
@@ -151,7 +152,19 @@
     "copyUrl": "URLをコピー",
     "soundOn": "通知音オン",
     "soundOff": "通知音オフ",
-    "scanQrOrEnterCode": "アプリでQRコードをスキャンするか、セッションコードを入力してください"
+    "scanQrOrEnterCode": "アプリでQRコードをスキャンするか、セッションコードを入力してください",
+    "privateSession": "非公開セッション",
+    "privateSessionDesc": "このセッションは非公開に設定されており、アクセスできません。セッションの所有者にお問い合わせください。",
+    "sessionId": "セッションID",
+    "passwordProtected": "パスワード保護",
+    "passwordProtectedDesc": "このセッションにアクセスするにはパスワードを入力してください。",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "unlock": "ロック解除",
+    "passwordRequired": "パスワードを入力してください",
+    "wrongPassword": "パスワードが正しくありません",
+    "verifyError": "パスワードの確認に失敗しました",
+    "accessGranted": "アクセスが許可されました"
   },
   "sidebar": {
     "appTitle": "QR Scanner",

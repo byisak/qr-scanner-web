@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -8,22 +7,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
-const notoSansKR = Noto_Sans_KR({
-  variable: '--font-noto-sans-kr',
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -84,15 +67,37 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // Use Korean font for Korean locale
-  const fontVariable =
-    locale === 'ko'
-      ? `${notoSansKR.variable} ${geistMono.variable}`
-      : `${geistSans.variable} ${geistMono.variable}`;
+  // 언어별 폰트 클래스
+  const getFontClass = () => {
+    switch (locale) {
+      case 'ko': return 'font-pretendard';
+      case 'ja': return 'font-noto-jp';
+      case 'zh': return 'font-noto-sc';
+      default: return 'font-inter'; // en, es
+    }
+  };
+
+  // 언어별 CDN URL
+  const getFontCDN = () => {
+    switch (locale) {
+      case 'ko':
+        return 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css';
+      case 'ja':
+        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap';
+      case 'zh':
+        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap';
+      default: // en, es
+        return 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+    }
+  };
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${fontVariable} antialiased`}>
+      <head>
+        {/* 언어별 폰트 CDN */}
+        <link rel="stylesheet" href={getFontCDN()} />
+      </head>
+      <body className={`${getFontClass()} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"

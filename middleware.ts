@@ -9,7 +9,8 @@ export const config = {
   // - _next (Next.js internals)
   // - _vercel (Vercel internals)
   // - Static files (files with extensions)
+  // - reset-password (password reset page - no locale needed)
   matcher: [
-    '/((?!api|_next|_vercel|.*\\..*).*)'
+    '/((?!api|_next|_vercel|reset-password|.*\\..*).*)'
   ]
 };
