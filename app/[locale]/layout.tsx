@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
+import { SettingsProvider } from '@/contexts/settings-context';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -106,8 +107,10 @@ export default async function LocaleLayout({
             disableTransitionOnChange
           >
             <AuthProvider>
-              {children}
-              <Toaster richColors position="top-right" />
+              <SettingsProvider>
+                {children}
+                <Toaster richColors position="top-right" />
+              </SettingsProvider>
             </AuthProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

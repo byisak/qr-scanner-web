@@ -183,6 +183,7 @@
     "deleteFailed": "Delete failed",
     "deleteError": "Failed to delete session.",
     "user": "User",
+    "systemSettings": "System Settings",
     "profileSettings": "Profile Settings",
     "changePassword": "Change Password"
   },
@@ -279,5 +280,34 @@
     "expiredDeleted": "{count} expired session(s) deleted.",
     "cleanupFailed": "Cleanup failed",
     "cleanupError": "Failed to clean up expired sessions."
+  },
+  "systemSettings": {
+    "title": "System Settings",
+    "description": "Configure your application preferences",
+    "languageAndTheme": "Language & Theme",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "notifications": "Notifications",
+    "scanSound": "Scan Sound",
+    "browserNotification": "Browser Notification",
+    "soundVolume": "Volume",
+    "soundType": "Sound Type",
+    "soundDefault": "Default",
+    "soundBeep": "Beep",
+    "soundNone": "None",
+    "display": "Display",
+    "tableRowsPerPage": "Rows per Page",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "time24h": "24-hour",
+    "time12h": "12-hour (AM/PM)",
+    "fontSize": "Font Size",
+    "fontSmall": "Small",
+    "fontMedium": "Medium",
+    "fontLarge": "Large",
+    "resetToDefault": "Reset to Default"
   }
 }
