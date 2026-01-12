@@ -11,9 +11,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Languages } from "lucide-react";
+import { useEffect } from "react";
 
-// Cookie name used by next-intl middleware
+// Storage keys
+const LOCALE_STORAGE_KEY = "preferred_locale";
 const LOCALE_COOKIE = "NEXT_LOCALE";
+
+// Helper to set cookie
+function setCookie(name: string, value: string, days: number) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};path=/;expires=${expires.toUTCString()};SameSite=Lax`;
+}
 
 export function LanguageSwitcher() {
   const t = useTranslations("common");
@@ -21,10 +30,22 @@ export function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // On mount, sync localStorage to cookie if needed
+  useEffect(() => {
+    const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (storedLocale && storedLocale !== locale && routing.locales.includes(storedLocale as any)) {
+      // Sync localStorage value to cookie and reload
+      setCookie(LOCALE_COOKIE, storedLocale, 365);
+      window.location.reload();
+    }
+  }, [locale]);
+
   const handleLanguageChange = (newLocale: string) => {
-    // Save to cookie for persistence (1 year expiry) with proper attributes
-    document.cookie = `${LOCALE_COOKIE}=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
-    // Force page reload to apply new locale (since localePrefix is 'never', URL doesn't change)
+    // Save to localStorage
+    localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
+    // Also set cookie for server-side rendering
+    setCookie(LOCALE_COOKIE, newLocale, 365);
+    // Reload page to apply new locale
     window.location.reload();
   };
 
