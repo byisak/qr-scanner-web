@@ -219,7 +219,14 @@
     "noAccount": "アカウントをお持ちでないですか？",
     "hasAccount": "すでにアカウントをお持ちですか？",
     "signUp": "新規登録",
-    "signIn": "ログイン"
+    "signIn": "ログイン",
+    "loginDescription": "QR Scanner Webにログイン",
+    "loginFailed": "ログインに失敗しました",
+    "loggingIn": "ログイン中...",
+    "or": "または",
+    "loginWithGoogleComingSoon": "Google でログイン (準備中)",
+    "loginWithAppleComingSoon": "Apple でログイン (準備中)",
+    "backToHome": "ホームに戻る"
   },
   "profile": {
     "title": "プロフィール設定",

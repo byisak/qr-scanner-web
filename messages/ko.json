@@ -219,7 +219,14 @@
     "noAccount": "계정이 없으신가요?",
     "hasAccount": "이미 계정이 있으신가요?",
     "signUp": "회원가입",
-    "signIn": "로그인"
+    "signIn": "로그인",
+    "loginDescription": "QR Scanner Web에 로그인하세요",
+    "loginFailed": "로그인에 실패했습니다",
+    "loggingIn": "로그인 중...",
+    "or": "또는",
+    "loginWithGoogleComingSoon": "Google로 로그인 (준비 중)",
+    "loginWithAppleComingSoon": "Apple로 로그인 (준비 중)",
+    "backToHome": "홈으로 돌아가기"
   },
   "profile": {
     "title": "프로필 설정",

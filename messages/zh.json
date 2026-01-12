@@ -219,7 +219,14 @@
     "noAccount": "还没有账户？",
     "hasAccount": "已有账户？",
     "signUp": "注册",
-    "signIn": "登录"
+    "signIn": "登录",
+    "loginDescription": "登录 QR Scanner Web",
+    "loginFailed": "登录失败",
+    "loggingIn": "登录中...",
+    "or": "或",
+    "loginWithGoogleComingSoon": "使用 Google 登录 (即将推出)",
+    "loginWithAppleComingSoon": "使用 Apple 登录 (即将推出)",
+    "backToHome": "返回首页"
   },
   "profile": {
     "title": "个人设置",

@@ -219,7 +219,14 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "signUp": "Sign up",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "loginDescription": "Sign in to QR Scanner Web",
+    "loginFailed": "Login failed",
+    "loggingIn": "Logging in...",
+    "or": "or",
+    "loginWithGoogleComingSoon": "Login with Google (Coming soon)",
+    "loginWithAppleComingSoon": "Login with Apple (Coming soon)",
+    "backToHome": "Back to Home"
   },
   "profile": {
     "title": "Profile Settings",
