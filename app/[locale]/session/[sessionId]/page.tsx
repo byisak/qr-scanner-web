@@ -551,7 +551,7 @@ export default function SessionPage() {
                     <div className="p-4 bg-muted rounded-lg">
                       <div className="flex items-center justify-center sm:justify-start gap-2">
                         <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
-                          {sessionName || sessionId}
+                          {sessionId}
                         </span>
                         <Button
                           variant="ghost"
