@@ -245,7 +245,10 @@ export function NavMain({ currentSessionId }: NavMainProps) {
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
 
       if (res.ok) {

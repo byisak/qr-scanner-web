@@ -119,7 +119,10 @@ export default function Dashboard() {
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
 
       if (res.ok) {
@@ -181,8 +184,16 @@ export default function Dashboard() {
                       <Card key={session.session_id}>
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-mono text-sm font-semibold">{session.session_id}</p>
+                            <div
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => viewSession(session.session_id)}
+                            >
+                              {session.session_name && (
+                                <p className="font-semibold text-base">{session.session_name}</p>
+                              )}
+                              <p className={`font-mono text-sm ${session.session_name ? 'text-muted-foreground' : 'font-semibold'}`}>
+                                {session.session_id}
+                              </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {t('dashboard.scanCount')}: {session.scan_count} | {t('dashboard.created')}: {new Date(session.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                               </p>
