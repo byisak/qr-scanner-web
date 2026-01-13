@@ -20,8 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/types';
-import { ModeToggle } from '@/components/mode-toggle';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { RotateCcw, Trash2, Clock, LogIn } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
@@ -214,10 +212,6 @@ export default function TrashPage() {
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
-            </div>
           </header>
 
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
@@ -265,10 +259,6 @@ export default function TrashPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-          </div>
-          <div className="px-4 flex items-center gap-2">
-            <LanguageSwitcher />
-            <ModeToggle />
           </div>
         </header>
 
