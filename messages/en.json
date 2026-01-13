@@ -183,9 +183,23 @@
     "deleteFailed": "Delete failed",
     "deleteError": "Failed to delete session.",
     "user": "User",
+    "settings": "Settings",
     "systemSettings": "System Settings",
     "profileSettings": "Profile Settings",
     "changePassword": "Change Password"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "general": "General",
+    "notifications": "Notifications",
+    "display": "Display",
+    "loginRequired": "Login required",
+    "themeDescription": "Follow your device theme or choose manually",
+    "notificationsDescription": "Manage your notification preferences",
+    "scanSoundDescription": "Play sound when barcode is scanned",
+    "browserNotificationDescription": "Show browser notification when new scan arrives",
+    "displayDescription": "Configure table and date/time formats"
   },
   "table": {
     "number": "No.",

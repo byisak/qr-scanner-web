@@ -183,9 +183,23 @@
     "deleteFailed": "削除失敗",
     "deleteError": "セッションの削除に失敗しました。",
     "user": "ユーザー",
+    "settings": "設定",
     "systemSettings": "システム設定",
     "profileSettings": "プロフィール設定",
     "changePassword": "パスワード変更"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "general": "一般",
+    "notifications": "通知",
+    "display": "表示",
+    "loginRequired": "ログインが必要です",
+    "themeDescription": "デバイスのテーマに従うか、手動で選択できます",
+    "notificationsDescription": "通知設定を管理します",
+    "scanSoundDescription": "バーコードスキャン時に音を再生します",
+    "browserNotificationDescription": "新しいスキャンが到着したらブラウザ通知を表示します",
+    "displayDescription": "テーブルと日付/時刻形式を設定します"
   },
   "table": {
     "number": "番号",

@@ -183,9 +183,23 @@
     "deleteFailed": "删除失败",
     "deleteError": "删除会话失败。",
     "user": "用户",
+    "settings": "设置",
     "systemSettings": "系统设置",
     "profileSettings": "个人设置",
     "changePassword": "修改密码"
+  },
+  "settings": {
+    "title": "设置",
+    "profile": "个人资料",
+    "general": "通用",
+    "notifications": "通知",
+    "display": "显示",
+    "loginRequired": "需要登录",
+    "themeDescription": "跟随设备主题或手动选择",
+    "notificationsDescription": "管理您的通知偏好",
+    "scanSoundDescription": "扫描条码时播放声音",
+    "browserNotificationDescription": "新扫描到达时显示浏览器通知",
+    "displayDescription": "配置表格和日期/时间格式"
   },
   "table": {
     "number": "序号",

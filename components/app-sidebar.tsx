@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, ChevronUp, Cog } from "lucide-react"
+import { QrCode, Trash2, RotateCcw, Trash, List, Clock, LogIn, LogOut, User, Settings, ChevronUp } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -28,8 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
-import { ProfileModal } from "@/components/profile-modal"
-import { SystemSettingsModal } from "@/components/system-settings-modal"
+import { UnifiedSettingsModal } from "@/components/unified-settings-modal"
 
 interface Session {
   session_id: string;
@@ -53,8 +52,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [profileModalOpen, setProfileModalOpen] = React.useState(false)
-  const [systemSettingsOpen, setSystemSettingsOpen] = React.useState(false)
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
   const t = useTranslations()
 
   // 세션 목록 가져오기 (로그인한 경우만)
@@ -351,13 +349,9 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
                   align="end"
                   sideOffset={4}
                 >
-                  <DropdownMenuItem onClick={() => setSystemSettingsOpen(true)}>
-                    <Cog className="mr-2 size-4" />
-                    {t('sidebar.systemSettings')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setProfileModalOpen(true)}>
+                  <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                     <Settings className="mr-2 size-4" />
-                    {t('sidebar.profileSettings')}
+                    {t('sidebar.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
@@ -383,14 +377,9 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
 
       <SidebarRail />
 
-      <ProfileModal
-        open={profileModalOpen}
-        onOpenChange={setProfileModalOpen}
-      />
-
-      <SystemSettingsModal
-        open={systemSettingsOpen}
-        onOpenChange={setSystemSettingsOpen}
+      <UnifiedSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
     </Sidebar>
   )

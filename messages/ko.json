@@ -183,9 +183,23 @@
     "deleteFailed": "삭제 실패",
     "deleteError": "세션 삭제 중 오류가 발생했습니다.",
     "user": "사용자",
+    "settings": "설정",
     "systemSettings": "시스템 설정",
     "profileSettings": "프로필 설정",
     "changePassword": "비밀번호 변경"
+  },
+  "settings": {
+    "title": "설정",
+    "profile": "프로필",
+    "general": "일반",
+    "notifications": "알림",
+    "display": "디스플레이",
+    "loginRequired": "로그인이 필요합니다",
+    "themeDescription": "기기의 테마 설정을 따르거나 직접 선택할 수 있습니다",
+    "notificationsDescription": "알림 설정을 관리합니다",
+    "scanSoundDescription": "바코드 스캔 시 알림음을 재생합니다",
+    "browserNotificationDescription": "새 스캔이 도착하면 브라우저 알림을 표시합니다",
+    "displayDescription": "테이블 및 날짜/시간 형식을 설정합니다"
   },
   "table": {
     "number": "번호",

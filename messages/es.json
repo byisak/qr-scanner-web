@@ -183,9 +183,23 @@
     "deleteFailed": "Eliminación fallida",
     "deleteError": "Error al eliminar sesión.",
     "user": "Usuario",
+    "settings": "Configuración",
     "systemSettings": "Configuración del Sistema",
     "profileSettings": "Configuración de Perfil",
     "changePassword": "Cambiar Contraseña"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "general": "General",
+    "notifications": "Notificaciones",
+    "display": "Pantalla",
+    "loginRequired": "Inicio de sesión requerido",
+    "themeDescription": "Seguir el tema del dispositivo o elegir manualmente",
+    "notificationsDescription": "Administra tus preferencias de notificación",
+    "scanSoundDescription": "Reproducir sonido al escanear código de barras",
+    "browserNotificationDescription": "Mostrar notificación del navegador cuando llegue un nuevo escaneo",
+    "displayDescription": "Configurar formatos de tabla y fecha/hora"
   },
   "table": {
     "number": "No.",
