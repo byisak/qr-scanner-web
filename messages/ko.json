@@ -182,6 +182,7 @@
     "moreItems": "개 더보기...",
     "deleteFailed": "삭제 실패",
     "deleteError": "세션 삭제 중 오류가 발생했습니다.",
+    "viewSession": "세션 보기",
     "user": "사용자",
     "settings": "설정",
     "systemSettings": "시스템 설정",

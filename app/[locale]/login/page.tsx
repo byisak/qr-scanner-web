@@ -150,7 +150,14 @@ export default function LoginPage() {
 
     try {
       const response = await window.AppleID.auth.signIn()
-      await loginWithApple(response.authorization.id_token, response.user)
+      // Apple user 객체를 loginWithApple 형식으로 변환
+      const appleUser = response.user ? {
+        email: response.user.email,
+        name: response.user.name
+          ? `${response.user.name.firstName || ''} ${response.user.name.lastName || ''}`.trim()
+          : undefined
+      } : undefined
+      await loginWithApple(response.authorization.id_token, appleUser)
       router.push("/dashboard")
     } catch (err) {
       // 사용자가 취소한 경우는 에러 표시하지 않음

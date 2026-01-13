@@ -182,6 +182,7 @@
     "moreItems": "更多...",
     "deleteFailed": "删除失败",
     "deleteError": "删除会话失败。",
+    "viewSession": "查看会话",
     "user": "用户",
     "settings": "设置",
     "systemSettings": "系统设置",

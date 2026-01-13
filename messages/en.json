@@ -182,6 +182,7 @@
     "moreItems": "more...",
     "deleteFailed": "Delete failed",
     "deleteError": "Failed to delete session.",
+    "viewSession": "View Session",
     "user": "User",
     "settings": "Settings",
     "systemSettings": "System Settings",

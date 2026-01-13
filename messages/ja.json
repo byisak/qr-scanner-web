@@ -182,6 +182,7 @@
     "moreItems": "件追加...",
     "deleteFailed": "削除失敗",
     "deleteError": "セッションの削除に失敗しました。",
+    "viewSession": "セッションを表示",
     "user": "ユーザー",
     "settings": "設定",
     "systemSettings": "システム設定",
