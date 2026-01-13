@@ -770,7 +770,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
           </div>
 
           {/* Content */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {/* Close button */}
             <div className="absolute right-4 top-4 z-10">
               <Button
