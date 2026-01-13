@@ -722,7 +722,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1200px] sm:max-w-[1200px] h-[600px] p-0 gap-0 overflow-hidden [&>button]:hidden">
+      <DialogContent className="max-w-[1050px] sm:max-w-[1050px] h-[600px] p-0 gap-0 overflow-hidden [&>button]:hidden">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-[220px] border-r bg-muted/30 flex flex-col">
