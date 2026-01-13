@@ -3,12 +3,13 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { useAuth } from '@/contexts/auth-context';
+import { useSettings } from '@/contexts/settings-context';
 import { AppSidebar } from '@/components/app-sidebar';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/components/ui/sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, ShieldX, Plug, Unplug } from 'lucide-react';
+import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -47,12 +48,12 @@ import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
-import { ModeToggle } from '@/components/mode-toggle';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
-function playNotificationSound() {
+function playNotificationSound(volume: number = 50, soundType: 'default' | 'beep' | 'none' = 'default') {
+  if (soundType === 'none') return;
+
   try {
     const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -61,16 +62,42 @@ function playNotificationSound() {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
+    // 볼륨 설정 (0-100을 0-0.5로 변환)
+    const normalizedVolume = (volume / 100) * 0.5;
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
+    // 사운드 타입에 따른 설정
+    if (soundType === 'beep') {
+      oscillator.frequency.value = 1000;
+      oscillator.type = 'square';
+      gainNode.gain.setValueAtTime(normalizedVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } else {
+      // default sound
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(normalizedVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    }
   } catch {
     // 오디오 재생 실패 무시
+  }
+}
+
+// 브라우저 알림 표시
+async function showBrowserNotification(title: string, body: string) {
+  if (!('Notification' in window)) return;
+
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/icon.png' });
+  } else if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      new Notification(title, { body, icon: '/icon.png' });
+    }
   }
 }
 
@@ -90,9 +117,11 @@ export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { settings, updateSettings } = useSettings();
 
   const [copied, setCopied] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [sessionName, setSessionName] = useState<string | null>(null);
+  const [isSessionInfoCollapsed, setIsSessionInfoCollapsed] = useState(false);
 
   // 세션 접근 제어 상태
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
@@ -113,7 +142,7 @@ export default function SessionPage() {
 
   const prevScansLengthRef = useRef(scans.length);
 
-  // 세션 설정 로드
+  // 세션 설정 및 세션 정보 로드
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -147,8 +176,22 @@ export default function SessionPage() {
       }
     };
 
+    // 세션 이름 가져오기
+    const fetchSessionName = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSessionName(data.session_name || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch session name:', err);
+      }
+    };
+
     if (sessionId) {
       fetchSettings();
+      fetchSessionName();
     }
   }, [sessionId]);
 
@@ -193,23 +236,33 @@ export default function SessionPage() {
     }
   }, [isLoading, isAuthenticated, sessionId]);
 
-  // 새 스캔 도착 시 사운드 재생 및 토스트 표시
+  // 새 스캔 도착 시 사운드 재생 및 알림 표시
   useEffect(() => {
     if (scans.length > prevScansLengthRef.current) {
       const newScansCount = scans.length - prevScansLengthRef.current;
+      // 최신 스캔은 배열의 마지막에 있음
+      const latestScan = scans[scans.length - 1];
+      const scanDescription = newScansCount > 1
+        ? t('session.newScansCount', { count: newScansCount })
+        : latestScan?.code?.substring(0, 50) || '';
 
-      if (soundEnabled) {
-        playNotificationSound();
+      // 사운드 알림
+      if (settings.scanSound) {
+        playNotificationSound(settings.soundVolume, settings.soundType);
       }
 
+      // 브라우저 알림
+      if (settings.browserNotification) {
+        showBrowserNotification(t('session.newScanReceived'), scanDescription);
+      }
+
+      // 토스트 알림
       toast.success(t('session.newScanReceived'), {
-        description: newScansCount > 1
-          ? t('session.newScansCount', { count: newScansCount })
-          : scans[0]?.code?.substring(0, 50) || '',
+        description: scanDescription,
       });
     }
     prevScansLengthRef.current = scans.length;
-  }, [scans.length, soundEnabled, scans, t]);
+  }, [scans.length, settings.scanSound, settings.soundVolume, settings.soundType, settings.browserNotification, scans, t]);
 
   // 세션 ID 복사
   const handleCopySessionId = useCallback(async () => {
@@ -275,9 +328,16 @@ export default function SessionPage() {
     }
   }, [removeScans, t]);
 
+  const formatOptions = useMemo(() => ({
+    dateFormat: settings.dateFormat,
+    timeFormat: settings.timeFormat,
+  }), [settings.dateFormat, settings.timeFormat]);
+
   const columns = useMemo(
-    () => isAuthenticated ? createColumns(handleDeleteScan) : createReadOnlyColumns(),
-    [handleDeleteScan, isAuthenticated]
+    () => isAuthenticated
+      ? createColumns(handleDeleteScan, formatOptions)
+      : createReadOnlyColumns(formatOptions),
+    [handleDeleteScan, isAuthenticated, formatOptions]
   );
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
@@ -325,14 +385,10 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-            </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
             </div>
           </header>
 
@@ -376,14 +432,10 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-            </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
             </div>
           </header>
 
@@ -451,14 +503,10 @@ export default function SessionPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-          </div>
-          <div className="px-4 flex items-center gap-2">
-            <LanguageSwitcher />
-            <ModeToggle />
           </div>
         </header>
 
@@ -466,20 +514,15 @@ export default function SessionPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">{t('session.sessionCode')}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {t('session.sessionCodeDesc')}
-                  </CardDescription>
-                </div>
+                <CardTitle className="text-2xl">{sessionName || sessionId}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                    title={soundEnabled ? t('session.soundOff') : t('session.soundOn')}
+                    onClick={() => updateSettings({ scanSound: !settings.scanSound })}
+                    title={settings.scanSound ? t('session.soundOff') : t('session.soundOn')}
                   >
-                    {soundEnabled ? (
+                    {settings.scanSound ? (
                       <Volume2 className="h-4 w-4" />
                     ) : (
                       <VolumeX className="h-4 w-4 text-muted-foreground" />
@@ -495,53 +538,64 @@ export default function SessionPage() {
                       <Unplug className="h-5 w-5 text-destructive" />
                     )}
                   </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsSessionInfoCollapsed(!isSessionInfoCollapsed)}
+                    className="h-9 w-9"
+                  >
+                    {isSessionInfoCollapsed ? (
+                      <ChevronDown className="h-5 w-5" />
+                    ) : (
+                      <ChevronUp className="h-5 w-5" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
-              {/* QR Code & Session ID */}
-              <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
-                {/* QR Code */}
-                <div className="p-4 bg-white rounded-lg shadow-sm">
-                  <QRCodeSVG
-                    value={`scanview://${sessionId}`}
-                    size={160}
-                    level="M"
-                    includeMargin={true}
-                  />
-                </div>
+              {/* QR Code & Session ID - Collapsible */}
+              {!isSessionInfoCollapsed && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
+                  {/* QR Code */}
+                  <div className="p-4 bg-white rounded-lg shadow-sm">
+                    <QRCodeSVG
+                      value={`https://scanview.app/session/${sessionId}`}
+                      size={160}
+                      level="M"
+                      includeMargin={true}
+                    />
+                  </div>
 
-                {/* Session ID & Actions */}
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="flex items-center justify-center sm:justify-start gap-2">
-                      <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
-                        {sessionId}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCopySessionId}
-                        className="h-8 w-8"
-                      >
-                        {copied ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                  {/* Session ID & Actions */}
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center justify-center sm:justify-start gap-2">
+                        <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
+                          {sessionId}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleCopySessionId}
+                          className="h-8 w-8"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                      <Button variant="outline" size="sm" onClick={handleCopyUrl}>
+                        <Copy className="mr-2 h-3 w-3" />
+                        {t('session.copyUrl')}
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
-                    <Button variant="outline" size="sm" onClick={handleCopyUrl}>
-                      <Copy className="mr-2 h-3 w-3" />
-                      {t('session.copyUrl')}
-                    </Button>
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {t('session.scanQrOrEnterCode')}
-                  </p>
                 </div>
-              </div>
+              )}
 
               {error && (
                 <div className="mt-4 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
@@ -567,7 +621,7 @@ export default function SessionPage() {
               ) : (
                 <>
                   {isAuthenticated && (
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       <Button
                         variant="outline"
                         size="sm"

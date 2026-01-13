@@ -20,12 +20,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/types';
-import { ModeToggle } from '@/components/mode-toggle';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { RotateCcw, Trash2, Clock, LogIn } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
+import { useConfirmDialog } from '@/components/confirm-dialog';
 
 const DELETION_DAYS = 30;
 
@@ -59,6 +58,7 @@ export default function TrashPage() {
   const t = useTranslations();
   const locale = useLocale();
   const { isAuthenticated, isLoading: authLoading, accessToken } = useAuth();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const formatRemainingTime = (days: number, hours: number) => {
     if (days === 0 && hours === 0) return t('trash.expired');
@@ -129,7 +129,13 @@ export default function TrashPage() {
   };
 
   const handlePermanentDelete = async (sessionId: string) => {
-    if (!confirm(t('trash.confirmPermanentDelete'))) return;
+    const confirmed = await confirm({
+      title: t('dialog.permanentDelete'),
+      description: t('trash.confirmPermanentDelete'),
+      confirmText: t('trash.permanentDelete'),
+      variant: "destructive"
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
@@ -153,7 +159,13 @@ export default function TrashPage() {
   };
 
   const handleDeleteExpired = async () => {
-    if (!confirm(t('trash.confirmDeleteExpired'))) return;
+    const confirmed = await confirm({
+      title: t('dialog.cleanupExpired'),
+      description: t('trash.confirmDeleteExpired'),
+      confirmText: t('trash.cleanupExpired'),
+      variant: "destructive"
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch('/api/sessions/cleanup', {
@@ -199,10 +211,6 @@ export default function TrashPage() {
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-            </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
             </div>
           </header>
 
@@ -251,10 +259,6 @@ export default function TrashPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-          </div>
-          <div className="px-4 flex items-center gap-2">
-            <LanguageSwitcher />
-            <ModeToggle />
           </div>
         </header>
 
@@ -341,6 +345,7 @@ export default function TrashPage() {
           </Card>
         </div>
       </SidebarInset>
+      {ConfirmDialog}
     </SidebarProvider>
   );
 }

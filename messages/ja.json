@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "読み込み中...",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "confirm": "確認"
+  },
+  "dialog": {
+    "deleteSession": "セッションを削除",
+    "permanentDelete": "完全に削除",
+    "cleanupExpired": "期限切れのセッションを整理"
   },
   "nav": {
     "features": "機能",
@@ -169,11 +175,15 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "リアルタイムスキャンモニター",
+    "platform": "プラットフォーム",
+    "dashboard": "ダッシュボード",
     "addSession": "セッション追加",
+    "newSession": "新規セッション",
     "sessionIdPlaceholder": "セッションID...",
-    "sessionList": "セッション一覧",
+    "sessionList": "セッション",
     "noSessions": "セッションを追加してください",
     "deletedSessions": "削除済み",
+    "noDeletedSessions": "削除されたセッションなし",
     "deleted": "削除済み",
     "loginPrompt": "セッション一覧を見るには",
     "login": "ログイン",
@@ -182,10 +192,33 @@
     "moreItems": "件追加...",
     "deleteFailed": "削除失敗",
     "deleteError": "セッションの削除に失敗しました。",
+    "viewSession": "セッションを表示",
     "user": "ユーザー",
+    "settings": "設定",
     "systemSettings": "システム設定",
     "profileSettings": "プロフィール設定",
-    "changePassword": "パスワード変更"
+    "changePassword": "パスワード変更",
+    "sort": "並び替え",
+    "sortRecent": "最近の活動順",
+    "sortName": "名前順",
+    "sortScans": "スキャン数",
+    "rename": "名前を変更",
+    "pin": "ピン留め",
+    "unpin": "ピン留め解除",
+    "sessionNamePlaceholder": "セッション名を入力..."
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "general": "一般",
+    "notifications": "通知",
+    "display": "表示",
+    "loginRequired": "ログインが必要です",
+    "themeDescription": "デバイスのテーマに従うか、手動で選択できます",
+    "notificationsDescription": "通知設定を管理します",
+    "scanSoundDescription": "バーコードスキャン時に音を再生します",
+    "browserNotificationDescription": "新しいスキャンが到着したらブラウザ通知を表示します",
+    "displayDescription": "テーブルと日付/時刻形式を設定します"
   },
   "table": {
     "number": "番号",
@@ -227,6 +260,9 @@
     "or": "または",
     "loginWithGoogleComingSoon": "Google でログイン (準備中)",
     "loginWithAppleComingSoon": "Apple でログイン (準備中)",
+    "googleLoginFailed": "Google ログインに失敗しました",
+    "appleLoginFailed": "Apple ログインに失敗しました",
+    "appleNotAvailable": "Apple ログインは利用できません",
     "backToHome": "ホームに戻る"
   },
   "profile": {

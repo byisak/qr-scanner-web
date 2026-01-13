@@ -18,12 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Session } from '@/types';
-import { ModeToggle } from '@/components/mode-toggle';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { Trash2, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
+import { useConfirmDialog } from '@/components/confirm-dialog';
 
 // 방문한 세션을 localStorage에 저장/조회하는 유틸리티
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -65,6 +64,7 @@ export default function Dashboard() {
   const [visitedSessions, setVisitedSessions] = useState<VisitedSession[]>([]);
   const t = useTranslations();
   const locale = useLocale();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const fetchSessions = useCallback(async () => {
     if (!isAuthenticated || !accessToken) return;
@@ -107,11 +107,20 @@ export default function Dashboard() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm(t('dashboard.confirmDelete'))) return;
+    const confirmed = await confirm({
+      title: t('dialog.deleteSession'),
+      description: t('dashboard.confirmDelete'),
+      confirmText: t('table.delete'),
+      variant: "destructive"
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
 
       if (res.ok) {
@@ -143,10 +152,6 @@ export default function Dashboard() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4 flex items-center gap-2">
-            <LanguageSwitcher />
-            <ModeToggle />
-          </div>
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -173,8 +178,16 @@ export default function Dashboard() {
                       <Card key={session.session_id}>
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-mono text-sm font-semibold">{session.session_id}</p>
+                            <div
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => viewSession(session.session_id)}
+                            >
+                              {session.session_name && (
+                                <p className="font-semibold text-base">{session.session_name}</p>
+                              )}
+                              <p className={`font-mono text-sm ${session.session_name ? 'text-muted-foreground' : 'font-semibold'}`}>
+                                {session.session_id}
+                              </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {t('dashboard.scanCount')}: {session.scan_count} | {t('dashboard.created')}: {new Date(session.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                               </p>
@@ -256,6 +269,7 @@ export default function Dashboard() {
           )}
         </div>
       </SidebarInset>
+      {ConfirmDialog}
     </SidebarProvider>
   );
 }

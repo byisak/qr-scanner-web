@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "Loading...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "dialog": {
+    "deleteSession": "Delete Session",
+    "permanentDelete": "Permanent Delete",
+    "cleanupExpired": "Cleanup Expired Sessions"
   },
   "nav": {
     "features": "Features",
@@ -169,11 +175,15 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "Real-time Scan Monitor",
+    "platform": "Platform",
+    "dashboard": "Dashboard",
     "addSession": "Add Session",
+    "newSession": "New Session",
     "sessionIdPlaceholder": "Session ID...",
-    "sessionList": "Session List",
+    "sessionList": "Sessions",
     "noSessions": "Add a session",
     "deletedSessions": "Deleted",
+    "noDeletedSessions": "No deleted sessions",
     "deleted": "deleted",
     "loginPrompt": "To view session list",
     "login": "Login",
@@ -182,10 +192,33 @@
     "moreItems": "more...",
     "deleteFailed": "Delete failed",
     "deleteError": "Failed to delete session.",
+    "viewSession": "View Session",
     "user": "User",
+    "settings": "Settings",
     "systemSettings": "System Settings",
     "profileSettings": "Profile Settings",
-    "changePassword": "Change Password"
+    "changePassword": "Change Password",
+    "sort": "Sort",
+    "sortRecent": "Recent Activity",
+    "sortName": "Name",
+    "sortScans": "Scan Count",
+    "rename": "Rename",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "sessionNamePlaceholder": "Enter session name..."
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "general": "General",
+    "notifications": "Notifications",
+    "display": "Display",
+    "loginRequired": "Login required",
+    "themeDescription": "Follow your device theme or choose manually",
+    "notificationsDescription": "Manage your notification preferences",
+    "scanSoundDescription": "Play sound when barcode is scanned",
+    "browserNotificationDescription": "Show browser notification when new scan arrives",
+    "displayDescription": "Configure table and date/time formats"
   },
   "table": {
     "number": "No.",
@@ -227,6 +260,9 @@
     "or": "or",
     "loginWithGoogleComingSoon": "Login with Google (Coming soon)",
     "loginWithAppleComingSoon": "Login with Apple (Coming soon)",
+    "googleLoginFailed": "Google login failed",
+    "appleLoginFailed": "Apple login failed",
+    "appleNotAvailable": "Apple login is not available",
     "backToHome": "Back to Home"
   },
   "profile": {

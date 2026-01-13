@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "Cargando...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
+  "dialog": {
+    "deleteSession": "Eliminar Sesión",
+    "permanentDelete": "Eliminar Permanentemente",
+    "cleanupExpired": "Limpiar Sesiones Expiradas"
   },
   "nav": {
     "features": "Funciones",
@@ -169,11 +175,15 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "Monitor de Escaneo en Tiempo Real",
+    "platform": "Plataforma",
+    "dashboard": "Panel",
     "addSession": "Agregar Sesión",
+    "newSession": "Nueva Sesión",
     "sessionIdPlaceholder": "ID de Sesión...",
-    "sessionList": "Lista de Sesiones",
+    "sessionList": "Sesiones",
     "noSessions": "Agrega una sesión",
     "deletedSessions": "Eliminadas",
+    "noDeletedSessions": "Sin sesiones eliminadas",
     "deleted": "eliminada",
     "loginPrompt": "Para ver la lista de sesiones",
     "login": "Iniciar Sesión",
@@ -182,10 +192,33 @@
     "moreItems": "más...",
     "deleteFailed": "Eliminación fallida",
     "deleteError": "Error al eliminar sesión.",
+    "viewSession": "Ver Sesión",
     "user": "Usuario",
+    "settings": "Configuración",
     "systemSettings": "Configuración del Sistema",
     "profileSettings": "Configuración de Perfil",
-    "changePassword": "Cambiar Contraseña"
+    "changePassword": "Cambiar Contraseña",
+    "sort": "Ordenar",
+    "sortRecent": "Actividad Reciente",
+    "sortName": "Nombre",
+    "sortScans": "Cantidad de Escaneos",
+    "rename": "Renombrar",
+    "pin": "Fijar",
+    "unpin": "Desfijar",
+    "sessionNamePlaceholder": "Ingrese el nombre de sesión..."
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "general": "General",
+    "notifications": "Notificaciones",
+    "display": "Pantalla",
+    "loginRequired": "Inicio de sesión requerido",
+    "themeDescription": "Seguir el tema del dispositivo o elegir manualmente",
+    "notificationsDescription": "Administra tus preferencias de notificación",
+    "scanSoundDescription": "Reproducir sonido al escanear código de barras",
+    "browserNotificationDescription": "Mostrar notificación del navegador cuando llegue un nuevo escaneo",
+    "displayDescription": "Configurar formatos de tabla y fecha/hora"
   },
   "table": {
     "number": "No.",
@@ -227,6 +260,9 @@
     "or": "o",
     "loginWithGoogleComingSoon": "Iniciar Sesión con Google (Próximamente)",
     "loginWithAppleComingSoon": "Iniciar Sesión con Apple (Próximamente)",
+    "googleLoginFailed": "Error al iniciar sesión con Google",
+    "appleLoginFailed": "Error al iniciar sesión con Apple",
+    "appleNotAvailable": "Inicio de sesión con Apple no disponible",
     "backToHome": "Volver al Inicio"
   },
   "profile": {

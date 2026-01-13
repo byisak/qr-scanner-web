@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "加载中...",
-    "cancel": "取消"
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "dialog": {
+    "deleteSession": "删除会话",
+    "permanentDelete": "永久删除",
+    "cleanupExpired": "清理过期会话"
   },
   "nav": {
     "features": "功能",
@@ -169,11 +175,15 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "实时扫描监控",
+    "platform": "平台",
+    "dashboard": "仪表板",
     "addSession": "添加会话",
+    "newSession": "新会话",
     "sessionIdPlaceholder": "会话ID...",
-    "sessionList": "会话列表",
+    "sessionList": "会话",
     "noSessions": "添加一个会话",
     "deletedSessions": "已删除",
+    "noDeletedSessions": "没有已删除的会话",
     "deleted": "已删除",
     "loginPrompt": "查看会话列表请",
     "login": "登录",
@@ -182,10 +192,33 @@
     "moreItems": "更多...",
     "deleteFailed": "删除失败",
     "deleteError": "删除会话失败。",
+    "viewSession": "查看会话",
     "user": "用户",
+    "settings": "设置",
     "systemSettings": "系统设置",
     "profileSettings": "个人设置",
-    "changePassword": "修改密码"
+    "changePassword": "修改密码",
+    "sort": "排序",
+    "sortRecent": "最近活动",
+    "sortName": "名称",
+    "sortScans": "扫描数量",
+    "rename": "重命名",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "sessionNamePlaceholder": "输入会话名称..."
+  },
+  "settings": {
+    "title": "设置",
+    "profile": "个人资料",
+    "general": "通用",
+    "notifications": "通知",
+    "display": "显示",
+    "loginRequired": "需要登录",
+    "themeDescription": "跟随设备主题或手动选择",
+    "notificationsDescription": "管理您的通知偏好",
+    "scanSoundDescription": "扫描条码时播放声音",
+    "browserNotificationDescription": "新扫描到达时显示浏览器通知",
+    "displayDescription": "配置表格和日期/时间格式"
   },
   "table": {
     "number": "序号",
@@ -227,6 +260,9 @@
     "or": "或",
     "loginWithGoogleComingSoon": "使用 Google 登录 (即将推出)",
     "loginWithAppleComingSoon": "使用 Apple 登录 (即将推出)",
+    "googleLoginFailed": "Google 登录失败",
+    "appleLoginFailed": "Apple 登录失败",
+    "appleNotAvailable": "Apple 登录不可用",
     "backToHome": "返回首页"
   },
   "profile": {
