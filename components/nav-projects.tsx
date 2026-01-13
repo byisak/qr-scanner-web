@@ -113,7 +113,7 @@ export function NavProjects() {
   }
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup>
       <SidebarGroupLabel>
         <Trash2 className="size-4 mr-1" />
         {t('sidebar.deletedSessions')}

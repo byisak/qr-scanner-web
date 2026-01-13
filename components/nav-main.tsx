@@ -14,6 +14,7 @@ import {
   SortAsc,
   Hash,
   Check,
+  Pencil,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -40,10 +41,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/auth-context"
@@ -199,7 +196,9 @@ export function NavMain({ currentSessionId }: NavMainProps) {
   }
 
   // 세션 이름 편집 시작
-  const startEditing = (session: Session) => {
+  const startEditing = (session: Session, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
     setEditingId(session.session_id)
     setEditValue(session.session_name || "")
   }
@@ -263,169 +262,179 @@ export function NavMain({ currentSessionId }: NavMainProps) {
     }
   }
 
-  const menuItems = [
-    {
-      title: t('sidebar.dashboard'),
-      url: "/dashboard",
-      icon: LayoutDashboard,
-      isActive: false,
-    },
-    {
-      title: t('sidebar.sessionList'),
-      url: "/dashboard",
-      icon: FolderOpen,
-      isActive: true,
-      hasSessions: true,
-    },
-  ]
+  // 세션 클릭 핸들러 (더블클릭 감지용)
+  const clickTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const handleSessionClick = (e: React.MouseEvent, session: Session) => {
+    e.preventDefault()
+
+    if (clickTimeoutRef.current) {
+      // 더블클릭: 편집 모드
+      clearTimeout(clickTimeoutRef.current)
+      clickTimeoutRef.current = null
+      startEditing(session)
+    } else {
+      // 싱글클릭: 타임아웃 후 네비게이션
+      clickTimeoutRef.current = setTimeout(() => {
+        clickTimeoutRef.current = null
+        router.push(`/session/${session.session_id}`)
+      }, 250)
+    }
+  }
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t('sidebar.platform')}</SidebarGroupLabel>
       <SidebarMenu>
-        {menuItems.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
+        {/* 대시보드 - 클릭 시 네비게이션 */}
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip={t('sidebar.dashboard')}
+            onClick={() => router.push('/dashboard')}
           >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon className="size-4" />}
-                  <span>{item.title}</span>
-                  {item.hasSessions && (
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  )}
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
+            <LayoutDashboard className="size-4" />
+            <span>{t('sidebar.dashboard')}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
 
-              {/* 세션 목록에 정렬 드롭다운 추가 */}
-              {item.hasSessions && isAuthenticated && sessions.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuAction className="mr-1">
-                      <ArrowUpDown className="size-3.5" />
-                      <span className="sr-only">{t('sidebar.sort')}</span>
-                    </SidebarMenuAction>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => handleSortChange("recent")}>
-                      <Clock className="mr-2 size-4" />
-                      {t('sidebar.sortRecent')}
-                      {sortOrder === "recent" && <Check className="ml-auto size-4" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSortChange("name")}>
-                      <SortAsc className="mr-2 size-4" />
-                      {t('sidebar.sortName')}
-                      {sortOrder === "name" && <Check className="ml-auto size-4" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSortChange("scans")}>
-                      <Hash className="mr-2 size-4" />
-                      {t('sidebar.sortScans')}
-                      {sortOrder === "scans" && <Check className="ml-auto size-4" />}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+        {/* 세션 목록 - 접을 수 있는 메뉴 */}
+        <Collapsible
+          asChild
+          defaultOpen={true}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip={t('sidebar.sessionList')}>
+                <FolderOpen className="size-4" />
+                <span>{t('sidebar.sessionList')}</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
 
-              {item.hasSessions && (
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {isLoading ? (
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>
-                          <span className="text-muted-foreground">{t('common.loading')}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ) : sortedSessions.length === 0 ? (
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>
-                          <span className="text-muted-foreground">{t('sidebar.noSessions')}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ) : (
-                      sortedSessions.map((session) => {
-                        const isPinned = pinnedIds.includes(session.session_id)
-                        const isEditing = editingId === session.session_id
-                        const displayName = session.session_name || session.session_id.slice(0, 8)
+            {/* 정렬 드롭다운 */}
+            {isAuthenticated && sessions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuAction className="mr-1">
+                    <ArrowUpDown className="size-3.5" />
+                    <span className="sr-only">{t('sidebar.sort')}</span>
+                  </SidebarMenuAction>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={() => handleSortChange("recent")}>
+                    <Clock className="mr-2 size-4" />
+                    {t('sidebar.sortRecent')}
+                    {sortOrder === "recent" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSortChange("name")}>
+                    <SortAsc className="mr-2 size-4" />
+                    {t('sidebar.sortName')}
+                    {sortOrder === "name" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSortChange("scans")}>
+                    <Hash className="mr-2 size-4" />
+                    {t('sidebar.sortScans')}
+                    {sortOrder === "scans" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-                        return (
-                          <SidebarMenuSubItem key={session.session_id} className="group/session">
-                            {isEditing ? (
-                              <Input
-                                ref={inputRef}
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onBlur={saveSessionName}
-                                onKeyDown={handleKeyDown}
-                                className="h-7 text-sm px-2"
-                                placeholder={t('sidebar.sessionNamePlaceholder')}
-                              />
-                            ) : (
-                              <>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={currentSessionId === session.session_id}
-                                  onDoubleClick={() => startEditing(session)}
-                                  className="cursor-pointer"
-                                >
-                                  <a href={`/session/${session.session_id}`}>
-                                    {isPinned && <Pin className="size-3 mr-1 text-primary" />}
-                                    <span className="truncate">{displayName}</span>
-                                    {session.scan_count > 0 && (
-                                      <span className="ml-auto text-xs text-muted-foreground">
-                                        {session.scan_count}
-                                      </span>
-                                    )}
-                                  </a>
-                                </SidebarMenuSubButton>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 p-1 hover:bg-accent rounded">
-                                      <MoreHorizontal className="size-3.5" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem onClick={() => startEditing(session)}>
-                                      {t('sidebar.rename')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => togglePin(session.session_id)}>
-                                      {isPinned ? (
-                                        <>
-                                          <PinOff className="mr-2 size-4" />
-                                          {t('sidebar.unpin')}
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Pin className="mr-2 size-4" />
-                                          {t('sidebar.pin')}
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onClick={() => handleDeleteSession(session.session_id)}
-                                      className="text-destructive focus:text-destructive"
-                                    >
-                                      <Trash2 className="mr-2 size-4" />
-                                      {t('table.delete')}
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {isLoading ? (
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>
+                      <span className="text-muted-foreground">{t('common.loading')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ) : sortedSessions.length === 0 ? (
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>
+                      <span className="text-muted-foreground">{t('sidebar.noSessions')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ) : (
+                  sortedSessions.map((session) => {
+                    const isPinned = pinnedIds.includes(session.session_id)
+                    const isEditing = editingId === session.session_id
+                    const displayName = session.session_name || session.session_id.slice(0, 8)
+
+                    return (
+                      <SidebarMenuSubItem key={session.session_id} className="group/session relative">
+                        {isEditing ? (
+                          <Input
+                            ref={inputRef}
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={saveSessionName}
+                            onKeyDown={handleKeyDown}
+                            className="h-7 text-sm px-2"
+                            placeholder={t('sidebar.sessionNamePlaceholder')}
+                          />
+                        ) : (
+                          <>
+                            <SidebarMenuSubButton
+                              isActive={currentSessionId === session.session_id}
+                              onClick={(e) => handleSessionClick(e, session)}
+                              className="cursor-pointer pr-16"
+                            >
+                              {isPinned && <Pin className="size-3 mr-1 text-primary shrink-0" />}
+                              <span className="truncate">{displayName}</span>
+                            </SidebarMenuSubButton>
+
+                            {/* 스캔 수 - 고정 위치 */}
+                            {session.scan_count > 0 && (
+                              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                                {session.scan_count}
+                              </span>
                             )}
-                          </SidebarMenuSubItem>
-                        )
-                      })
-                    )}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              )}
-            </SidebarMenuItem>
-          </Collapsible>
-        ))}
+
+                            {/* 드롭다운 메뉴 */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 p-1 hover:bg-accent rounded z-10">
+                                  <MoreHorizontal className="size-3.5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={(e) => startEditing(session, e)}>
+                                  <Pencil className="mr-2 size-4" />
+                                  {t('sidebar.rename')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => togglePin(session.session_id)}>
+                                  {isPinned ? (
+                                    <>
+                                      <PinOff className="mr-2 size-4" />
+                                      {t('sidebar.unpin')}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Pin className="mr-2 size-4" />
+                                      {t('sidebar.pin')}
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteSession(session.session_id)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="mr-2 size-4" />
+                                  {t('table.delete')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        )}
+                      </SidebarMenuSubItem>
+                    )
+                  })
+                )}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
       </SidebarMenu>
     </SidebarGroup>
   )
