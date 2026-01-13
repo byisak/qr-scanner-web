@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 
 import {
   Collapsible,
@@ -84,17 +85,21 @@ export function NavProjects() {
     e.stopPropagation()
     try {
       const res = await fetch(`/api/sessions/${sessionId}/restore`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
       if (res.ok) {
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
+        toast.success(t('sidebar.restore'))
       } else {
         const data = await res.json()
-        alert(data.error || t('trash.restoreFailed'))
+        toast.error(data.error || t('trash.restoreFailed'))
       }
     } catch (error) {
       console.error('Session restore failed:', error)
-      alert(t('trash.restoreError'))
+      toast.error(t('trash.restoreError'))
     }
   }
 
@@ -110,17 +115,21 @@ export function NavProjects() {
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
       if (res.ok) {
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
+        toast.success(t('sidebar.permanentDelete'))
       } else {
         const data = await res.json()
-        alert(data.error || t('trash.permanentDeleteFailed'))
+        toast.error(data.error || t('trash.permanentDeleteFailed'))
       }
     } catch (error) {
       console.error('Session permanent delete failed:', error)
-      alert(t('trash.permanentDeleteError'))
+      toast.error(t('trash.permanentDeleteError'))
     }
   }
 
