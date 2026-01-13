@@ -722,7 +722,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px] h-[600px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[900px] h-[600px] p-0 gap-0 overflow-hidden [&>button]:hidden">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-[220px] border-r bg-muted/30 flex flex-col">
@@ -732,13 +732,13 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-2">
+            <nav className="flex-1 p-3 space-y-1">
               {sidebarItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    "w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-colors",
                     activeSection === item.id
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
