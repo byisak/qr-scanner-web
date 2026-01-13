@@ -139,10 +139,10 @@ export function NavProjects() {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip={t('sidebar.deletedSessions')}>
+              <SidebarMenuButton tooltip={t('sidebar.deletedSessions')} className="text-destructive hover:text-destructive">
                 <Trash2 className="size-4" />
                 <span>{t('sidebar.deletedSessions')}</span>
-                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                <ChevronRight className="ml-auto mr-7 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
 

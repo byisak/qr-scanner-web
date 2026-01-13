@@ -394,18 +394,18 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                               <span className="truncate">{displayName}</span>
                             </SidebarMenuSubButton>
 
-                            {/* 스캔 수 - 고정 위치 */}
+                            {/* 스캔 수 - 펼침 아이콘 위치와 정렬 */}
                             {session.scan_count > 0 && (
-                              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                                 {session.scan_count}
                               </span>
                             )}
 
-                            {/* 드롭다운 메뉴 */}
+                            {/* 드롭다운 메뉴 - 정렬 아이콘 위치와 정렬 */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1 hover:bg-accent rounded z-10">
-                                  <MoreHorizontal className="size-3.5" />
+                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1.5 hover:bg-accent rounded z-10">
+                                  <MoreHorizontal className="size-4" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
