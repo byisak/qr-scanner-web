@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "読み込み中...",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "confirm": "確認"
+  },
+  "dialog": {
+    "deleteSession": "セッションを削除",
+    "permanentDelete": "完全に削除",
+    "cleanupExpired": "期限切れのセッションを整理"
   },
   "nav": {
     "features": "機能",

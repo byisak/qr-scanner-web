@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "로딩 중...",
-    "cancel": "취소"
+    "cancel": "취소",
+    "confirm": "확인"
+  },
+  "dialog": {
+    "deleteSession": "세션 삭제",
+    "permanentDelete": "영구 삭제",
+    "cleanupExpired": "만료된 세션 정리"
   },
   "nav": {
     "features": "기능",

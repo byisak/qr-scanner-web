@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/auth-context"
+import { useConfirmDialog } from "@/components/confirm-dialog"
 
 interface Session {
   session_id: string
@@ -99,6 +100,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [editValue, setEditValue] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const { confirm, ConfirmDialog } = useConfirmDialog()
 
   // 초기 로드 시 localStorage에서 값 가져오기
   React.useEffect(() => {
@@ -233,7 +235,13 @@ export function NavMain({ currentSessionId }: NavMainProps) {
 
   // 세션 삭제
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm(t('dashboard.confirmDelete'))) return
+    const confirmed = await confirm({
+      title: t('dialog.deleteSession'),
+      description: t('dashboard.confirmDelete'),
+      confirmText: t('table.delete'),
+      variant: "destructive"
+    })
+    if (!confirmed) return
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -436,6 +444,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
+      {ConfirmDialog}
     </SidebarGroup>
   )
 }

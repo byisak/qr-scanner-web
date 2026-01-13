@@ -24,6 +24,7 @@ import { Trash2, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
+import { useConfirmDialog } from '@/components/confirm-dialog';
 
 // 방문한 세션을 localStorage에 저장/조회하는 유틸리티
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -65,6 +66,7 @@ export default function Dashboard() {
   const [visitedSessions, setVisitedSessions] = useState<VisitedSession[]>([]);
   const t = useTranslations();
   const locale = useLocale();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const fetchSessions = useCallback(async () => {
     if (!isAuthenticated || !accessToken) return;
@@ -107,7 +109,13 @@ export default function Dashboard() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm(t('dashboard.confirmDelete'))) return;
+    const confirmed = await confirm({
+      title: t('dialog.deleteSession'),
+      description: t('dashboard.confirmDelete'),
+      confirmText: t('table.delete'),
+      variant: "destructive"
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -256,6 +264,7 @@ export default function Dashboard() {
           )}
         </div>
       </SidebarInset>
+      {ConfirmDialog}
     </SidebarProvider>
   );
 }

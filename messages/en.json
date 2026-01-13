@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "Loading...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "dialog": {
+    "deleteSession": "Delete Session",
+    "permanentDelete": "Permanent Delete",
+    "cleanupExpired": "Cleanup Expired Sessions"
   },
   "nav": {
     "features": "Features",

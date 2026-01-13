@@ -35,6 +35,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/auth-context"
+import { useConfirmDialog } from "@/components/confirm-dialog"
 
 interface Session {
   session_id: string
@@ -48,6 +49,7 @@ export function NavProjects() {
   const t = useTranslations()
   const { isAuthenticated, accessToken } = useAuth()
   const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
+  const { confirm, ConfirmDialog } = useConfirmDialog()
 
   const fetchDeletedSessions = React.useCallback(async () => {
     if (!isAuthenticated || !accessToken) {
@@ -98,7 +100,13 @@ export function NavProjects() {
 
   const handlePermanentDelete = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(t('trash.confirmPermanentDelete'))) return
+    const confirmed = await confirm({
+      title: t('dialog.permanentDelete'),
+      description: t('trash.confirmPermanentDelete'),
+      confirmText: t('sidebar.permanentDelete'),
+      variant: "destructive"
+    })
+    if (!confirmed) return
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
@@ -204,6 +212,7 @@ export function NavProjects() {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
+      {ConfirmDialog}
     </SidebarGroup>
   )
 }

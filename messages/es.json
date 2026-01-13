@@ -8,7 +8,13 @@
     "ja": "日本語",
     "es": "Español",
     "loading": "Cargando...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
+  "dialog": {
+    "deleteSession": "Eliminar Sesión",
+    "permanentDelete": "Eliminar Permanentemente",
+    "cleanupExpired": "Limpiar Sesiones Expiradas"
   },
   "nav": {
     "features": "Funciones",
