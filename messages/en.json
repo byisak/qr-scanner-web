@@ -241,6 +241,9 @@
     "or": "or",
     "loginWithGoogleComingSoon": "Login with Google (Coming soon)",
     "loginWithAppleComingSoon": "Login with Apple (Coming soon)",
+    "googleLoginFailed": "Google login failed",
+    "appleLoginFailed": "Apple login failed",
+    "appleNotAvailable": "Apple login is not available",
     "backToHome": "Back to Home"
   },
   "profile": {

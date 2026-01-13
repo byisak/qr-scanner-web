@@ -241,6 +241,9 @@
     "or": "o",
     "loginWithGoogleComingSoon": "Iniciar Sesión con Google (Próximamente)",
     "loginWithAppleComingSoon": "Iniciar Sesión con Apple (Próximamente)",
+    "googleLoginFailed": "Error al iniciar sesión con Google",
+    "appleLoginFailed": "Error al iniciar sesión con Apple",
+    "appleNotAvailable": "Inicio de sesión con Apple no disponible",
     "backToHome": "Volver al Inicio"
   },
   "profile": {

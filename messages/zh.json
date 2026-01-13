@@ -241,6 +241,9 @@
     "or": "或",
     "loginWithGoogleComingSoon": "使用 Google 登录 (即将推出)",
     "loginWithAppleComingSoon": "使用 Apple 登录 (即将推出)",
+    "googleLoginFailed": "Google 登录失败",
+    "appleLoginFailed": "Apple 登录失败",
+    "appleNotAvailable": "Apple 登录不可用",
     "backToHome": "返回首页"
   },
   "profile": {

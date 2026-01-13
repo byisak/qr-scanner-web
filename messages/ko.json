@@ -241,6 +241,9 @@
     "or": "또는",
     "loginWithGoogleComingSoon": "Google로 로그인 (준비 중)",
     "loginWithAppleComingSoon": "Apple로 로그인 (준비 중)",
+    "googleLoginFailed": "Google 로그인에 실패했습니다",
+    "appleLoginFailed": "Apple 로그인에 실패했습니다",
+    "appleNotAvailable": "Apple 로그인을 사용할 수 없습니다",
     "backToHome": "홈으로 돌아가기"
   },
   "profile": {

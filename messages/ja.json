@@ -241,6 +241,9 @@
     "or": "または",
     "loginWithGoogleComingSoon": "Google でログイン (準備中)",
     "loginWithAppleComingSoon": "Apple でログイン (準備中)",
+    "googleLoginFailed": "Google ログインに失敗しました",
+    "appleLoginFailed": "Apple ログインに失敗しました",
+    "appleNotAvailable": "Apple ログインは利用できません",
     "backToHome": "ホームに戻る"
   },
   "profile": {
