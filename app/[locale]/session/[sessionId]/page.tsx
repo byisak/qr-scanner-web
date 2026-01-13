@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/components/ui/sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, ShieldX, Plug, Unplug } from 'lucide-react';
+import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -93,6 +93,16 @@ export default function SessionPage() {
 
   const [copied, setCopied] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [sessionName, setSessionName] = useState<string | null>(null);
+  const [isSessionInfoCollapsed, setIsSessionInfoCollapsed] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
+
+  // 현재 URL 가져오기 (클라이언트 사이드)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   // 세션 접근 제어 상태
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
@@ -113,7 +123,7 @@ export default function SessionPage() {
 
   const prevScansLengthRef = useRef(scans.length);
 
-  // 세션 설정 로드
+  // 세션 설정 및 세션 정보 로드
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -147,8 +157,22 @@ export default function SessionPage() {
       }
     };
 
+    // 세션 이름 가져오기
+    const fetchSessionName = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSessionName(data.session_name || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch session name:', err);
+      }
+    };
+
     if (sessionId) {
       fetchSettings();
+      fetchSessionName();
     }
   }, [sessionId]);
 
@@ -325,7 +349,7 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -376,7 +400,7 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -451,7 +475,7 @@ export default function SessionPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{t('session.title')}: {sessionId}</BreadcrumbPage>
+                  <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -467,7 +491,7 @@ export default function SessionPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">{t('session.sessionCode')}</CardTitle>
+                  <CardTitle className="text-2xl">{sessionName || sessionId}</CardTitle>
                   <CardDescription className="mt-1">
                     {t('session.sessionCodeDesc')}
                   </CardDescription>
@@ -485,6 +509,17 @@ export default function SessionPage() {
                       <VolumeX className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsSessionInfoCollapsed(!isSessionInfoCollapsed)}
+                  >
+                    {isSessionInfoCollapsed ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronUp className="h-4 w-4" />
+                    )}
+                  </Button>
                   <div
                     className="flex items-center gap-1.5"
                     title={isConnected ? t('session.connected') : t('session.disconnected')}
@@ -498,50 +533,52 @@ export default function SessionPage() {
                 </div>
               </div>
 
-              {/* QR Code & Session ID */}
-              <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
-                {/* QR Code */}
-                <div className="p-4 bg-white rounded-lg shadow-sm">
-                  <QRCodeSVG
-                    value={`scanview://${sessionId}`}
-                    size={160}
-                    level="M"
-                    includeMargin={true}
-                  />
-                </div>
+              {/* QR Code & Session ID - Collapsible */}
+              {!isSessionInfoCollapsed && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
+                  {/* QR Code */}
+                  <div className="p-4 bg-white rounded-lg shadow-sm">
+                    <QRCodeSVG
+                      value={currentUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/session/${sessionId}`}
+                      size={160}
+                      level="M"
+                      includeMargin={true}
+                    />
+                  </div>
 
-                {/* Session ID & Actions */}
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="flex items-center justify-center sm:justify-start gap-2">
-                      <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
-                        {sessionId}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCopySessionId}
-                        className="h-8 w-8"
-                      >
-                        {copied ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                  {/* Session ID & Actions */}
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center justify-center sm:justify-start gap-2">
+                        <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
+                          {sessionName || sessionId}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleCopySessionId}
+                          className="h-8 w-8"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                      <Button variant="outline" size="sm" onClick={handleCopyUrl}>
+                        <Copy className="mr-2 h-3 w-3" />
+                        {t('session.copyUrl')}
                       </Button>
                     </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {t('session.scanQrOrEnterCode')}
+                    </p>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
-                    <Button variant="outline" size="sm" onClick={handleCopyUrl}>
-                      <Copy className="mr-2 h-3 w-3" />
-                      {t('session.copyUrl')}
-                    </Button>
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {t('session.scanQrOrEnterCode')}
-                  </p>
                 </div>
-              </div>
+              )}
 
               {error && (
                 <div className="mt-4 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
