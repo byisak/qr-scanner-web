@@ -191,7 +191,15 @@
     "settings": "设置",
     "systemSettings": "系统设置",
     "profileSettings": "个人设置",
-    "changePassword": "修改密码"
+    "changePassword": "修改密码",
+    "sort": "排序",
+    "sortRecent": "最近活动",
+    "sortName": "名称",
+    "sortScans": "扫描数量",
+    "rename": "重命名",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "sessionNamePlaceholder": "输入会话名称..."
   },
   "settings": {
     "title": "设置",

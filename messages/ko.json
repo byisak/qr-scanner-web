@@ -191,7 +191,15 @@
     "settings": "설정",
     "systemSettings": "시스템 설정",
     "profileSettings": "프로필 설정",
-    "changePassword": "비밀번호 변경"
+    "changePassword": "비밀번호 변경",
+    "sort": "정렬",
+    "sortRecent": "최근 활동순",
+    "sortName": "이름순",
+    "sortScans": "스캔 수",
+    "rename": "이름 변경",
+    "pin": "고정",
+    "unpin": "고정 해제",
+    "sessionNamePlaceholder": "세션 이름 입력..."
   },
   "settings": {
     "title": "설정",

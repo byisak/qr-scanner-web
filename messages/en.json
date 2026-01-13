@@ -191,7 +191,15 @@
     "settings": "Settings",
     "systemSettings": "System Settings",
     "profileSettings": "Profile Settings",
-    "changePassword": "Change Password"
+    "changePassword": "Change Password",
+    "sort": "Sort",
+    "sortRecent": "Recent Activity",
+    "sortName": "Name",
+    "sortScans": "Scan Count",
+    "rename": "Rename",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "sessionNamePlaceholder": "Enter session name..."
   },
   "settings": {
     "title": "Settings",

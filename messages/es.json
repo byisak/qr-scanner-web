@@ -191,7 +191,15 @@
     "settings": "Configuración",
     "systemSettings": "Configuración del Sistema",
     "profileSettings": "Configuración de Perfil",
-    "changePassword": "Cambiar Contraseña"
+    "changePassword": "Cambiar Contraseña",
+    "sort": "Ordenar",
+    "sortRecent": "Actividad Reciente",
+    "sortName": "Nombre",
+    "sortScans": "Cantidad de Escaneos",
+    "rename": "Renombrar",
+    "pin": "Fijar",
+    "unpin": "Desfijar",
+    "sessionNamePlaceholder": "Ingrese el nombre de sesión..."
   },
   "settings": {
     "title": "Configuración",
