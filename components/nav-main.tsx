@@ -396,7 +396,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
 
                             {/* 스캔 수 - 펼침 아이콘 위치와 정렬 */}
                             {session.scan_count > 0 && (
-                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                                 {session.scan_count}
                               </span>
                             )}
@@ -404,7 +404,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                             {/* 드롭다운 메뉴 - 정렬 아이콘 위치와 정렬 */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="absolute -right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1.5 hover:bg-accent rounded z-10">
+                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1.5 hover:bg-accent rounded z-10">
                                   <MoreHorizontal className="size-4" />
                                 </button>
                               </DropdownMenuTrigger>
