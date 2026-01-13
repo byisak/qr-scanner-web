@@ -52,6 +52,15 @@ export async function GET(request: NextRequest) {
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
 
+    // 스캔 카운트 서브쿼리: 인증된 사용자의 경우 자신의 스캔만 카운트
+    let scanCountSubquery: string;
+    if (authUser) {
+      scanCountSubquery = `(SELECT COUNT(*) FROM scan_data sd WHERE sd.session_id = s.session_id AND sd.user_id = $${paramIndex})`;
+      values.push(authUser.userId);
+    } else {
+      scanCountSubquery = `(SELECT COUNT(*) FROM scan_data sd WHERE sd.session_id = s.session_id)`;
+    }
+
     const result = await client.query(
       `SELECT
         s.session_id,
@@ -61,18 +70,15 @@ export async function GET(request: NextRequest) {
         s.last_activity,
         s.status,
         s.deleted_at,
-        COUNT(sd.id) as scan_count,
+        ${scanCountSubquery} as scan_count,
         ss.is_public,
         CASE WHEN ss.password_hash IS NOT NULL THEN true ELSE false END as has_password,
         ss.max_participants,
         ss.allow_anonymous,
         ss.expires_at
        FROM sessions s
-       LEFT JOIN scan_data sd ON s.session_id = sd.session_id
        LEFT JOIN session_settings ss ON s.session_id = ss.session_id
        ${whereClause}
-       GROUP BY s.session_id, s.user_id, s.session_name, s.created_at, s.last_activity, s.status, s.deleted_at,
-                ss.is_public, ss.password_hash, ss.max_participants, ss.allow_anonymous, ss.expires_at
        ORDER BY s.created_at DESC`,
       values
     );
