@@ -98,9 +98,9 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="relative">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t('table.searchPlaceholder')}
@@ -108,7 +108,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
               onChange={(event) =>
                 table.getColumn("code")?.setFilterValue(event.target.value)
               }
-              className="max-w-sm pl-8"
+              className="w-full sm:max-w-sm pl-8"
             />
           </div>
           {selectedCount > 0 && onDeleteSelected && (
@@ -147,8 +147,8 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -206,8 +206,8 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between py-4">
+        <div className="text-sm text-muted-foreground order-2 sm:order-1">
           {selectedCount > 0 && (
             <span className="mr-4 font-medium text-foreground">
               {selectedCount} {t('table.selected')}
@@ -218,26 +218,28 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
             total: table.getFilteredRowModel().rows.length
           })}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2 order-1 sm:order-2">
           <div className="text-sm text-muted-foreground">
             {t('table.page')} {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {t('table.previous')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            {t('table.next')}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {t('table.previous')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              {t('table.next')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

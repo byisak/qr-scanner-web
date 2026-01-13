@@ -393,7 +393,7 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -444,7 +444,7 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -519,7 +519,7 @@ export default function SessionPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{t('session.title')}: {sessionName || sessionId}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -648,7 +648,7 @@ export default function SessionPage() {
               ) : (
                 <>
                   {isAuthenticated && (
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       <Button
                         variant="outline"
                         size="sm"
