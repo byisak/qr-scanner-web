@@ -728,7 +728,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1050px] sm:max-w-[1050px] h-[600px] p-0 gap-0 overflow-hidden [&>button]:hidden">
-        <div className="flex h-full">
+        <div className="flex h-full min-h-0">
           {/* Sidebar */}
           <div className="w-[220px] border-r bg-muted/30 flex flex-col">
             {/* Header */}
@@ -785,7 +785,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
             </div>
 
             {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40">
+            <div className="flex-1 min-h-0 overflow-y-auto p-6">
               {renderContent()}
             </div>
 
