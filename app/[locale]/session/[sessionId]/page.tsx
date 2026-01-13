@@ -240,9 +240,11 @@ export default function SessionPage() {
   useEffect(() => {
     if (scans.length > prevScansLengthRef.current) {
       const newScansCount = scans.length - prevScansLengthRef.current;
+      // 최신 스캔은 배열의 마지막에 있음
+      const latestScan = scans[scans.length - 1];
       const scanDescription = newScansCount > 1
         ? t('session.newScansCount', { count: newScansCount })
-        : scans[0]?.code?.substring(0, 50) || '';
+        : latestScan?.code?.substring(0, 50) || '';
 
       // 사운드 알림
       if (settings.scanSound) {
