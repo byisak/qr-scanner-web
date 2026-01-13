@@ -520,12 +520,7 @@ export default function SessionPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">{sessionName || sessionId}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {t('session.sessionCodeDesc')}
-                  </CardDescription>
-                </div>
+                <CardTitle className="text-2xl">{sessionName || sessionId}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -540,14 +535,15 @@ export default function SessionPage() {
                     )}
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={() => setIsSessionInfoCollapsed(!isSessionInfoCollapsed)}
+                    className="h-9 w-9"
                   >
                     {isSessionInfoCollapsed ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-5 w-5" />
                     ) : (
-                      <ChevronUp className="h-4 w-4" />
+                      <ChevronUp className="h-5 w-5" />
                     )}
                   </Button>
                   <div
