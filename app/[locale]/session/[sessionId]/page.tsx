@@ -3,6 +3,7 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSocket } from '@/hooks/use-socket';
 import { useAuth } from '@/contexts/auth-context';
+import { useSettings } from '@/contexts/settings-context';
 import { AppSidebar } from '@/components/app-sidebar';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/components/ui/sonner';
@@ -52,7 +53,9 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
-function playNotificationSound() {
+function playNotificationSound(volume: number = 50, soundType: 'default' | 'beep' | 'none' = 'default') {
+  if (soundType === 'none') return;
+
   try {
     const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -61,16 +64,42 @@ function playNotificationSound() {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
+    // 볼륨 설정 (0-100을 0-0.5로 변환)
+    const normalizedVolume = (volume / 100) * 0.5;
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
+    // 사운드 타입에 따른 설정
+    if (soundType === 'beep') {
+      oscillator.frequency.value = 1000;
+      oscillator.type = 'square';
+      gainNode.gain.setValueAtTime(normalizedVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } else {
+      // default sound
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(normalizedVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    }
   } catch {
     // 오디오 재생 실패 무시
+  }
+}
+
+// 브라우저 알림 표시
+async function showBrowserNotification(title: string, body: string) {
+  if (!('Notification' in window)) return;
+
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/icon.png' });
+  } else if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      new Notification(title, { body, icon: '/icon.png' });
+    }
   }
 }
 
@@ -90,9 +119,9 @@ export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { settings, updateSettings } = useSettings();
 
   const [copied, setCopied] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [isSessionInfoCollapsed, setIsSessionInfoCollapsed] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
@@ -217,23 +246,31 @@ export default function SessionPage() {
     }
   }, [isLoading, isAuthenticated, sessionId]);
 
-  // 새 스캔 도착 시 사운드 재생 및 토스트 표시
+  // 새 스캔 도착 시 사운드 재생 및 알림 표시
   useEffect(() => {
     if (scans.length > prevScansLengthRef.current) {
       const newScansCount = scans.length - prevScansLengthRef.current;
+      const scanDescription = newScansCount > 1
+        ? t('session.newScansCount', { count: newScansCount })
+        : scans[0]?.code?.substring(0, 50) || '';
 
-      if (soundEnabled) {
-        playNotificationSound();
+      // 사운드 알림
+      if (settings.scanSound) {
+        playNotificationSound(settings.soundVolume, settings.soundType);
       }
 
+      // 브라우저 알림
+      if (settings.browserNotification) {
+        showBrowserNotification(t('session.newScanReceived'), scanDescription);
+      }
+
+      // 토스트 알림
       toast.success(t('session.newScanReceived'), {
-        description: newScansCount > 1
-          ? t('session.newScansCount', { count: newScansCount })
-          : scans[0]?.code?.substring(0, 50) || '',
+        description: scanDescription,
       });
     }
     prevScansLengthRef.current = scans.length;
-  }, [scans.length, soundEnabled, scans, t]);
+  }, [scans.length, settings.scanSound, settings.soundVolume, settings.soundType, settings.browserNotification, scans, t]);
 
   // 세션 ID 복사
   const handleCopySessionId = useCallback(async () => {
@@ -299,9 +336,16 @@ export default function SessionPage() {
     }
   }, [removeScans, t]);
 
+  const formatOptions = useMemo(() => ({
+    dateFormat: settings.dateFormat,
+    timeFormat: settings.timeFormat,
+  }), [settings.dateFormat, settings.timeFormat]);
+
   const columns = useMemo(
-    () => isAuthenticated ? createColumns(handleDeleteScan) : createReadOnlyColumns(),
-    [handleDeleteScan, isAuthenticated]
+    () => isAuthenticated
+      ? createColumns(handleDeleteScan, formatOptions)
+      : createReadOnlyColumns(formatOptions),
+    [handleDeleteScan, isAuthenticated, formatOptions]
   );
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
@@ -500,10 +544,10 @@ export default function SessionPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                    title={soundEnabled ? t('session.soundOff') : t('session.soundOn')}
+                    onClick={() => updateSettings({ scanSound: !settings.scanSound })}
+                    title={settings.scanSound ? t('session.soundOff') : t('session.soundOn')}
                   >
-                    {soundEnabled ? (
+                    {settings.scanSound ? (
                       <Volume2 className="h-4 w-4" />
                     ) : (
                       <VolumeX className="h-4 w-4 text-muted-foreground" />

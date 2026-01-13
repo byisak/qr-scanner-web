@@ -316,3 +316,32 @@
   background-clip: content-box;
 }
 
+/* Font size settings */
+.font-size-small {
+  font-size: 14px;
+}
+
+.font-size-medium {
+  font-size: 16px;
+}
+
+.font-size-large {
+  font-size: 18px;
+}
+
+.font-size-small .text-sm {
+  font-size: 12px;
+}
+
+.font-size-large .text-sm {
+  font-size: 14px;
+}
+
+.font-size-small .text-xs {
+  font-size: 10px;
+}
+
+.font-size-large .text-xs {
+  font-size: 12px;
+}
+

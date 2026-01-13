@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-table"
 import { Trash2, ScanLine, Search } from "lucide-react"
 import { useTranslations } from 'next-intl'
+import { useSettings } from '@/contexts/settings-context'
 
 import {
   Table,
@@ -50,6 +51,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
   onDeleteSelected,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
+  const { settings } = useSettings()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -74,10 +76,15 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
     },
     initialState: {
       pagination: {
-        pageSize: 20,
+        pageSize: settings.tableRowsPerPage,
       },
     },
   })
+
+  // 설정이 변경되면 페이지 크기 업데이트
+  React.useEffect(() => {
+    table.setPageSize(settings.tableRowsPerPage)
+  }, [settings.tableRowsPerPage, table])
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length

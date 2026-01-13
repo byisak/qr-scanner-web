@@ -3,6 +3,7 @@ import '../globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
 import { SettingsProvider } from '@/contexts/settings-context';
+import { FontSizeProvider } from '@/components/font-size-provider';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -108,8 +109,10 @@ export default async function LocaleLayout({
           >
             <AuthProvider>
               <SettingsProvider>
-                {children}
-                <Toaster richColors position="top-right" />
+                <FontSizeProvider>
+                  {children}
+                  <Toaster richColors position="top-right" />
+                </FontSizeProvider>
               </SettingsProvider>
             </AuthProvider>
           </ThemeProvider>
