@@ -48,8 +48,6 @@ import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
-import { ModeToggle } from '@/components/mode-toggle';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
@@ -398,10 +396,6 @@ export default function SessionPage() {
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
-            </div>
           </header>
 
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
@@ -448,10 +442,6 @@ export default function SessionPage() {
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-            </div>
-            <div className="px-4 flex items-center gap-2">
-              <LanguageSwitcher />
-              <ModeToggle />
             </div>
           </header>
 
@@ -523,10 +513,6 @@ export default function SessionPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-          </div>
-          <div className="px-4 flex items-center gap-2">
-            <LanguageSwitcher />
-            <ModeToggle />
           </div>
         </header>
 
