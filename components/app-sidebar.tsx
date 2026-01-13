@@ -4,8 +4,9 @@ import * as React from "react"
 import { QrCode } from "lucide-react"
 import { useTranslations } from "next-intl"
 
+import { NavMain } from "@/components/nav-main"
+import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { NavSessions } from "@/components/nav-sessions"
 import {
   Sidebar,
   SidebarContent,
@@ -48,10 +49,11 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       </SidebarHeader>
 
       <SidebarContent>
-        <NavSessions
+        <NavMain
           currentSessionId={currentSessionId}
-          onSessionChange={onSessionChange}
+          onSettingsClick={() => setSettingsOpen(true)}
         />
+        <NavProjects />
       </SidebarContent>
 
       <SidebarFooter>

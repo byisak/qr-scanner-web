@@ -169,9 +169,12 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "实时扫描监控",
+    "platform": "平台",
+    "dashboard": "仪表板",
     "addSession": "添加会话",
+    "newSession": "新会话",
     "sessionIdPlaceholder": "会话ID...",
-    "sessionList": "会话列表",
+    "sessionList": "会话",
     "noSessions": "添加一个会话",
     "deletedSessions": "已删除",
     "deleted": "已删除",

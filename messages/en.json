@@ -169,9 +169,12 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "Real-time Scan Monitor",
+    "platform": "Platform",
+    "dashboard": "Dashboard",
     "addSession": "Add Session",
+    "newSession": "New Session",
     "sessionIdPlaceholder": "Session ID...",
-    "sessionList": "Session List",
+    "sessionList": "Sessions",
     "noSessions": "Add a session",
     "deletedSessions": "Deleted",
     "deleted": "deleted",

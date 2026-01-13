@@ -169,9 +169,12 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "Monitor de Escaneo en Tiempo Real",
+    "platform": "Plataforma",
+    "dashboard": "Panel",
     "addSession": "Agregar Sesión",
+    "newSession": "Nueva Sesión",
     "sessionIdPlaceholder": "ID de Sesión...",
-    "sessionList": "Lista de Sesiones",
+    "sessionList": "Sesiones",
     "noSessions": "Agrega una sesión",
     "deletedSessions": "Eliminadas",
     "deleted": "eliminada",

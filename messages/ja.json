@@ -169,9 +169,12 @@
   "sidebar": {
     "appTitle": "QR Scanner",
     "appSubtitle": "リアルタイムスキャンモニター",
+    "platform": "プラットフォーム",
+    "dashboard": "ダッシュボード",
     "addSession": "セッション追加",
+    "newSession": "新規セッション",
     "sessionIdPlaceholder": "セッションID...",
-    "sessionList": "セッション一覧",
+    "sessionList": "セッション",
     "noSessions": "セッションを追加してください",
     "deletedSessions": "削除済み",
     "deleted": "削除済み",

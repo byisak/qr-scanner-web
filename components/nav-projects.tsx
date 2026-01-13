@@ -1,12 +1,14 @@
 "use client"
 
+import * as React from "react"
 import {
-  Folder,
-  Forward,
+  QrCode,
+  RotateCcw,
+  Trash,
   MoreHorizontal,
-  Trash2,
-  type LucideIcon,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import {
   DropdownMenu,
@@ -24,29 +26,102 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/auth-context"
 
-export function NavProjects({
-  projects,
-}: {
-  projects: {
-    name: string
-    url: string
-    icon: LucideIcon
-  }[]
-}) {
+interface Session {
+  session_id: string
+  session_name: string | null
+  deleted_at: string | null
+}
+
+export function NavProjects() {
+  const router = useRouter()
   const { isMobile } = useSidebar()
+  const t = useTranslations()
+  const { isAuthenticated, accessToken } = useAuth()
+  const [deletedSessions, setDeletedSessions] = React.useState<Session[]>([])
+
+  const fetchDeletedSessions = React.useCallback(async () => {
+    if (!isAuthenticated || !accessToken) {
+      setDeletedSessions([])
+      return
+    }
+
+    try {
+      const res = await fetch('/api/sessions?status=DELETED&mine=true', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setDeletedSessions(data)
+      }
+    } catch (error) {
+      console.error('삭제된 세션 조회 실패:', error)
+    }
+  }, [isAuthenticated, accessToken])
+
+  React.useEffect(() => {
+    fetchDeletedSessions()
+  }, [fetchDeletedSessions])
+
+  React.useEffect(() => {
+    const handleRefresh = () => fetchDeletedSessions()
+    window.addEventListener('sidebar-refresh', handleRefresh)
+    return () => window.removeEventListener('sidebar-refresh', handleRefresh)
+  }, [fetchDeletedSessions])
+
+  const handleRestoreSession = async (sessionId: string) => {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/restore`, {
+        method: 'POST'
+      })
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'))
+      } else {
+        const data = await res.json()
+        alert(data.error || t('trash.restoreFailed'))
+      }
+    } catch (error) {
+      console.error('Session restore failed:', error)
+      alert(t('trash.restoreError'))
+    }
+  }
+
+  const handlePermanentDelete = async (sessionId: string) => {
+    if (!confirm(t('trash.confirmPermanentDelete'))) return
+
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'))
+      } else {
+        const data = await res.json()
+        alert(data.error || t('trash.permanentDeleteFailed'))
+      }
+    } catch (error) {
+      console.error('Session permanent delete failed:', error)
+      alert(t('trash.permanentDeleteError'))
+    }
+  }
+
+  if (!isAuthenticated || deletedSessions.length === 0) {
+    return null
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>{t('sidebar.deletedSessions')}</SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
-              </a>
+        {deletedSessions.slice(0, 5).map((session) => (
+          <SidebarMenuItem key={session.session_id}>
+            <SidebarMenuButton
+              className="opacity-60"
+              onClick={() => router.push('/dashboard/trash')}
+            >
+              <QrCode className="size-4" />
+              <span className="line-through">{session.session_name || session.session_id.slice(0, 8)}</span>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -60,29 +135,33 @@ export function NavProjects({
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem>
-                  <Folder className="text-muted-foreground" />
-                  <span>View Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Forward className="text-muted-foreground" />
-                  <span>Share Project</span>
+                <DropdownMenuItem onClick={() => handleRestoreSession(session.session_id)}>
+                  <RotateCcw className="mr-2 size-4 text-muted-foreground" />
+                  <span>{t('sidebar.restore')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground" />
-                  <span>Delete Project</span>
+                <DropdownMenuItem
+                  onClick={() => handlePermanentDelete(session.session_id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash className="mr-2 size-4" />
+                  <span>{t('sidebar.permanentDelete')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal className="text-sidebar-foreground/70" />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        {deletedSessions.length > 5 && (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              className="text-muted-foreground"
+              onClick={() => router.push('/dashboard/trash')}
+            >
+              <MoreHorizontal className="size-4" />
+              <span>{t('sidebar.moreItems')}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
       </SidebarMenu>
     </SidebarGroup>
   )
