@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, QrCode, Settings, LayoutDashboard, Plus } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { ChevronRight, LayoutDashboard, FolderOpen } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import {
@@ -31,11 +30,9 @@ interface Session {
 
 interface NavMainProps {
   currentSessionId?: string
-  onSettingsClick?: () => void
 }
 
-export function NavMain({ currentSessionId, onSettingsClick }: NavMainProps) {
-  const router = useRouter()
+export function NavMain({ currentSessionId }: NavMainProps) {
   const t = useTranslations()
   const { isAuthenticated, accessToken } = useAuth()
   const [sessions, setSessions] = React.useState<Session[]>([])
@@ -84,7 +81,7 @@ export function NavMain({ currentSessionId, onSettingsClick }: NavMainProps) {
     {
       title: t('sidebar.sessionList'),
       url: "/dashboard",
-      icon: QrCode,
+      icon: FolderOpen,
       isActive: true,
       items: isAuthenticated
         ? sessions.map(session => ({
@@ -94,14 +91,6 @@ export function NavMain({ currentSessionId, onSettingsClick }: NavMainProps) {
             isActive: currentSessionId === session.session_id,
           }))
         : [],
-      showAdd: isAuthenticated,
-    },
-    {
-      title: t('sidebar.settings'),
-      url: "#",
-      icon: Settings,
-      isActive: false,
-      onClick: onSettingsClick,
     },
   ]
 
@@ -118,10 +107,7 @@ export function NavMain({ currentSessionId, onSettingsClick }: NavMainProps) {
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  onClick={item.onClick ? (e) => { e.preventDefault(); item.onClick?.() } : undefined}
-                >
+                <SidebarMenuButton tooltip={item.title}>
                   {item.icon && <item.icon className="size-4" />}
                   <span>{item.title}</span>
                   {item.items && (
@@ -157,17 +143,6 @@ export function NavMain({ currentSessionId, onSettingsClick }: NavMainProps) {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))
-                    )}
-                    {item.showAdd && (
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          onClick={() => router.push('/dashboard')}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <Plus className="size-3 mr-1" />
-                          <span>{t('sidebar.newSession')}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
                     )}
                   </SidebarMenuSub>
                 </CollapsibleContent>

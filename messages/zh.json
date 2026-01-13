@@ -177,6 +177,7 @@
     "sessionList": "会话",
     "noSessions": "添加一个会话",
     "deletedSessions": "已删除",
+    "noDeletedSessions": "没有已删除的会话",
     "deleted": "已删除",
     "loginPrompt": "查看会话列表请",
     "login": "登录",

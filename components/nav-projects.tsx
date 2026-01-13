@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import {
-  QrCode,
+  FileX,
   RotateCcw,
   Trash,
   MoreHorizontal,
@@ -106,7 +106,8 @@ export function NavProjects() {
     }
   }
 
-  if (!isAuthenticated || deletedSessions.length === 0) {
+  // 비로그인 시 표시 안함
+  if (!isAuthenticated) {
     return null
   }
 
@@ -114,53 +115,63 @@ export function NavProjects() {
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>{t('sidebar.deletedSessions')}</SidebarGroupLabel>
       <SidebarMenu>
-        {deletedSessions.slice(0, 5).map((session) => (
-          <SidebarMenuItem key={session.session_id}>
-            <SidebarMenuButton
-              className="opacity-60"
-              onClick={() => router.push('/dashboard/trash')}
-            >
-              <QrCode className="size-4" />
-              <span className="line-through">{session.session_name || session.session_id.slice(0, 8)}</span>
-            </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuAction showOnHover>
-                  <MoreHorizontal />
-                  <span className="sr-only">More</span>
-                </SidebarMenuAction>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-48 rounded-lg"
-                side={isMobile ? "bottom" : "right"}
-                align={isMobile ? "end" : "start"}
-              >
-                <DropdownMenuItem onClick={() => handleRestoreSession(session.session_id)}>
-                  <RotateCcw className="mr-2 size-4 text-muted-foreground" />
-                  <span>{t('sidebar.restore')}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => handlePermanentDelete(session.session_id)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash className="mr-2 size-4" />
-                  <span>{t('sidebar.permanentDelete')}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        ))}
-        {deletedSessions.length > 5 && (
+        {deletedSessions.length === 0 ? (
           <SidebarMenuItem>
-            <SidebarMenuButton
-              className="text-muted-foreground"
-              onClick={() => router.push('/dashboard/trash')}
-            >
-              <MoreHorizontal className="size-4" />
-              <span>{t('sidebar.moreItems')}</span>
+            <SidebarMenuButton className="text-muted-foreground text-xs" disabled>
+              <span>{t('sidebar.noDeletedSessions')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+        ) : (
+          <>
+            {deletedSessions.slice(0, 5).map((session) => (
+              <SidebarMenuItem key={session.session_id}>
+                <SidebarMenuButton
+                  className="opacity-60"
+                  onClick={() => router.push('/dashboard/trash')}
+                >
+                  <FileX className="size-4" />
+                  <span className="line-through">{session.session_name || session.session_id.slice(0, 8)}</span>
+                </SidebarMenuButton>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuAction showOnHover>
+                      <MoreHorizontal />
+                      <span className="sr-only">More</span>
+                    </SidebarMenuAction>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-48 rounded-lg"
+                    side={isMobile ? "bottom" : "right"}
+                    align={isMobile ? "end" : "start"}
+                  >
+                    <DropdownMenuItem onClick={() => handleRestoreSession(session.session_id)}>
+                      <RotateCcw className="mr-2 size-4 text-muted-foreground" />
+                      <span>{t('sidebar.restore')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handlePermanentDelete(session.session_id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash className="mr-2 size-4" />
+                      <span>{t('sidebar.permanentDelete')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
+            ))}
+            {deletedSessions.length > 5 && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="text-muted-foreground"
+                  onClick={() => router.push('/dashboard/trash')}
+                >
+                  <MoreHorizontal className="size-4" />
+                  <span>{t('sidebar.moreItems')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+          </>
         )}
       </SidebarMenu>
     </SidebarGroup>

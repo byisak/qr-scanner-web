@@ -177,6 +177,7 @@
     "sessionList": "Sessions",
     "noSessions": "Add a session",
     "deletedSessions": "Deleted",
+    "noDeletedSessions": "No deleted sessions",
     "deleted": "deleted",
     "loginPrompt": "To view session list",
     "login": "Login",

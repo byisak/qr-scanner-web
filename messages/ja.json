@@ -177,6 +177,7 @@
     "sessionList": "セッション",
     "noSessions": "セッションを追加してください",
     "deletedSessions": "削除済み",
+    "noDeletedSessions": "削除されたセッションなし",
     "deleted": "削除済み",
     "loginPrompt": "セッション一覧を見るには",
     "login": "ログイン",

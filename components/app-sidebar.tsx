@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { QrCode } from "lucide-react"
+import { ScanLine } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { NavMain } from "@/components/nav-main"
@@ -24,7 +24,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onSessionChange?: () => void
 }
 
-export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppSidebarProps) {
+export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const t = useTranslations()
 
@@ -36,7 +36,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
             <SidebarMenuButton size="lg" asChild>
               <a href="/dashboard">
                 <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <QrCode className="size-4" />
+                  <ScanLine className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{t('sidebar.appTitle')}</span>
@@ -49,10 +49,7 @@ export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppS
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain
-          currentSessionId={currentSessionId}
-          onSettingsClick={() => setSettingsOpen(true)}
-        />
+        <NavMain currentSessionId={currentSessionId} />
         <NavProjects />
       </SidebarContent>
 
