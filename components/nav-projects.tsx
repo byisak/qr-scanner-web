@@ -5,6 +5,7 @@ import {
   FileX,
   RotateCcw,
   Trash,
+  Trash2,
   MoreHorizontal,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -113,7 +114,10 @@ export function NavProjects() {
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>{t('sidebar.deletedSessions')}</SidebarGroupLabel>
+      <SidebarGroupLabel>
+        <Trash2 className="size-4 mr-1" />
+        {t('sidebar.deletedSessions')}
+      </SidebarGroupLabel>
       <SidebarMenu>
         {deletedSessions.length === 0 ? (
           <SidebarMenuItem>

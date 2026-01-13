@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   Dialog,
@@ -57,6 +58,8 @@ type SettingsSection = "profile" | "general" | "notifications" | "display";
 export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModalProps) {
   const t = useTranslations();
   const currentLocale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
   const { theme: currentTheme, setTheme } = useTheme();
   const { settings, updateSettings } = useSettings();
   const { user, accessToken, refreshUser, logout } = useAuth();
@@ -133,10 +136,12 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
     // Close modal
     onOpenChange(false);
 
-    // If language changed, set cookie and reload
+    // If language changed, navigate to new locale path without reload
     if (languageChanged) {
       document.cookie = `NEXT_LOCALE=${localSettings.language};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
-      window.location.reload();
+      // Replace current locale in path with new locale
+      const newPathname = pathname.replace(`/${currentLocale}`, `/${localSettings.language}`);
+      router.replace(newPathname);
     }
   };
 
