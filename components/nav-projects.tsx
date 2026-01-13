@@ -7,10 +7,16 @@ import {
   Trash,
   Trash2,
   MoreHorizontal,
+  ChevronRight,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,11 +26,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/auth-context"
@@ -71,7 +78,8 @@ export function NavProjects() {
     return () => window.removeEventListener('sidebar-refresh', handleRefresh)
   }, [fetchDeletedSessions])
 
-  const handleRestoreSession = async (sessionId: string) => {
+  const handleRestoreSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     try {
       const res = await fetch(`/api/sessions/${sessionId}/restore`, {
         method: 'POST'
@@ -88,7 +96,8 @@ export function NavProjects() {
     }
   }
 
-  const handlePermanentDelete = async (sessionId: string) => {
+  const handlePermanentDelete = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (!confirm(t('trash.confirmPermanentDelete'))) return
 
     try {
@@ -114,69 +123,86 @@ export function NavProjects() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>
-        <Trash2 className="size-4 mr-1" />
-        {t('sidebar.deletedSessions')}
-      </SidebarGroupLabel>
       <SidebarMenu>
-        {deletedSessions.length === 0 ? (
+        <Collapsible
+          asChild
+          defaultOpen={false}
+          className="group/collapsible"
+        >
           <SidebarMenuItem>
-            <SidebarMenuButton className="text-muted-foreground text-xs" disabled>
-              <span>{t('sidebar.noDeletedSessions')}</span>
-            </SidebarMenuButton>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip={t('sidebar.deletedSessions')}>
+                <Trash2 className="size-4" />
+                <span>{t('sidebar.deletedSessions')}</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {deletedSessions.length === 0 ? (
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>
+                      <span className="text-muted-foreground">{t('sidebar.noDeletedSessions')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ) : (
+                  <>
+                    {deletedSessions.slice(0, 5).map((session) => (
+                      <SidebarMenuSubItem key={session.session_id} className="group/session relative">
+                        <SidebarMenuSubButton
+                          className="opacity-60 cursor-pointer pr-16"
+                          onClick={() => router.push('/dashboard/trash')}
+                        >
+                          <span className="line-through truncate">
+                            {session.session_name || session.session_id.slice(0, 8)}
+                          </span>
+                        </SidebarMenuSubButton>
+
+                        {/* 드롭다운 메뉴 */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 p-1 hover:bg-accent rounded z-10">
+                              <MoreHorizontal className="size-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="w-48 rounded-lg"
+                            side={isMobile ? "bottom" : "right"}
+                            align={isMobile ? "end" : "start"}
+                          >
+                            <DropdownMenuItem onClick={(e) => handleRestoreSession(session.session_id, e)}>
+                              <RotateCcw className="mr-2 size-4 text-muted-foreground" />
+                              <span>{t('sidebar.restore')}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={(e) => handlePermanentDelete(session.session_id, e)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash className="mr-2 size-4" />
+                              <span>{t('sidebar.permanentDelete')}</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </SidebarMenuSubItem>
+                    ))}
+                    {deletedSessions.length > 5 && (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          className="text-muted-foreground"
+                          onClick={() => router.push('/dashboard/trash')}
+                        >
+                          <span>+{deletedSessions.length - 5} {t('sidebar.moreItems')}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
+                  </>
+                )}
+              </SidebarMenuSub>
+            </CollapsibleContent>
           </SidebarMenuItem>
-        ) : (
-          <>
-            {deletedSessions.slice(0, 5).map((session) => (
-              <SidebarMenuItem key={session.session_id}>
-                <SidebarMenuButton
-                  className="opacity-60"
-                  onClick={() => router.push('/dashboard/trash')}
-                >
-                  <FileX className="size-4" />
-                  <span className="line-through">{session.session_name || session.session_id.slice(0, 8)}</span>
-                </SidebarMenuButton>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuAction showOnHover>
-                      <MoreHorizontal />
-                      <span className="sr-only">More</span>
-                    </SidebarMenuAction>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    className="w-48 rounded-lg"
-                    side={isMobile ? "bottom" : "right"}
-                    align={isMobile ? "end" : "start"}
-                  >
-                    <DropdownMenuItem onClick={() => handleRestoreSession(session.session_id)}>
-                      <RotateCcw className="mr-2 size-4 text-muted-foreground" />
-                      <span>{t('sidebar.restore')}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => handlePermanentDelete(session.session_id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash className="mr-2 size-4" />
-                      <span>{t('sidebar.permanentDelete')}</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            ))}
-            {deletedSessions.length > 5 && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="text-muted-foreground"
-                  onClick={() => router.push('/dashboard/trash')}
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span>{t('sidebar.moreItems')}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-          </>
-        )}
+        </Collapsible>
       </SidebarMenu>
     </SidebarGroup>
   )
