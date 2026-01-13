@@ -122,14 +122,6 @@ export default function SessionPage() {
   const [copied, setCopied] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [isSessionInfoCollapsed, setIsSessionInfoCollapsed] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState('');
-
-  // 현재 URL 가져오기 (클라이언트 사이드)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentUrl(window.location.href);
-    }
-  }, []);
 
   // 세션 접근 제어 상태
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
@@ -565,7 +557,7 @@ export default function SessionPage() {
                   {/* QR Code */}
                   <div className="p-4 bg-white rounded-lg shadow-sm">
                     <QRCodeSVG
-                      value={currentUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/session/${sessionId}`}
+                      value={`https://scanview.app/session/${sessionId}`}
                       size={160}
                       level="M"
                       includeMargin={true}
@@ -599,9 +591,6 @@ export default function SessionPage() {
                         {t('session.copyUrl')}
                       </Button>
                     </div>
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      {t('session.scanQrOrEnterCode')}
-                    </p>
                   </div>
                 </div>
               )}
