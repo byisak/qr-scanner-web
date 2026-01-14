@@ -120,7 +120,7 @@ export default function LoginPage() {
         size: 'large',
         type: 'standard',
         text: 'signin_with',
-        width: 400,
+        width: 320,
         logo_alignment: 'left',
       })
     }
@@ -296,7 +296,7 @@ export default function LoginPage() {
           <div className="grid gap-2">
             {/* Google Sign-In Button */}
             {googleClientId ? (
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 {isGoogleLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-lg">
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -304,7 +304,7 @@ export default function LoginPage() {
                 )}
                 <div
                   ref={googleButtonRef}
-                  className="flex justify-center [&>div]:w-full"
+                  className="flex justify-center [&>div]:w-full [&>div>div]:!w-full"
                 />
               </div>
             ) : (

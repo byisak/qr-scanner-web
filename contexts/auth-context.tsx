@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await fetch("/api/auth/social/apple", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identityToken, user: appleUser }),
+      body: JSON.stringify({ idToken: identityToken, user: appleUser }),
     })
 
     const data = await res.json()
