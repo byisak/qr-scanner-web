@@ -115,11 +115,14 @@ export default function LoginPage() {
         callback: handleGoogleCallback,
       })
 
+      // 컨테이너 너비에 맞게 버튼 렌더링
+      const containerWidth = googleButtonRef.current.parentElement?.clientWidth || 400
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'outline',
         size: 'large',
         type: 'standard',
         text: 'signin_with',
+        width: Math.min(containerWidth, 400),
         logo_alignment: 'left',
       })
     }
