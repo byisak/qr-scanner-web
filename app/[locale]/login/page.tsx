@@ -120,7 +120,6 @@ export default function LoginPage() {
         size: 'large',
         type: 'standard',
         text: 'signin_with',
-        width: 320,
         logo_alignment: 'left',
       })
     }
@@ -232,7 +231,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 overflow-hidden">
           {error && (
             <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 rounded-lg">
               {error}
@@ -293,7 +292,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 overflow-hidden">
             {/* Google Sign-In Button */}
             {googleClientId ? (
               <div className="relative overflow-hidden">
@@ -304,7 +303,7 @@ export default function LoginPage() {
                 )}
                 <div
                   ref={googleButtonRef}
-                  className="flex justify-center [&>div]:w-full [&>div>div]:!w-full"
+                  className="flex justify-center [&>div]:!max-w-full [&>div>div]:!max-w-full [&_iframe]:!max-w-full"
                 />
               </div>
             ) : (
