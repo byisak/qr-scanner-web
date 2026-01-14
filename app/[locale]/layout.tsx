@@ -83,7 +83,8 @@ export default async function LocaleLayout({
   const getFontCDN = () => {
     switch (locale) {
       case 'ko':
-        return 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css';
+        // npm 버전 사용 (CORS 이슈 해결)
+        return 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css';
       case 'ja':
         return 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap';
       case 'zh':
