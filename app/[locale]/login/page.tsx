@@ -90,6 +90,16 @@ export default function LoginPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  // 이미 로드된 스크립트 확인 (클라이언트 사이드 라우팅 대응)
+  React.useEffect(() => {
+    if (window.google && googleClientId) {
+      setGoogleScriptLoaded(true)
+    }
+    if (window.AppleID && appleClientId) {
+      setAppleScriptLoaded(true)
+    }
+  }, [googleClientId, appleClientId])
+
   // Google 로그인 콜백
   const handleGoogleCallback = React.useCallback(async (response: { credential: string }) => {
     setError("")
