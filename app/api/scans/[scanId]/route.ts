@@ -22,7 +22,7 @@ export async function DELETE(
       return NextResponse.json({ error: '스캔 데이터를 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    console.log('스캔 데이터 삭제 완료:', scanId);
+    // console.log('스캔 데이터 삭제 완료:', scanId);
 
     return NextResponse.json({
       success: true,
@@ -30,7 +30,7 @@ export async function DELETE(
       scanId,
     });
   } catch (err: any) {
-    console.error('스캔 데이터 삭제 실패:', err);
+    // console.error('스캔 데이터 삭제 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

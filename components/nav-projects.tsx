@@ -67,7 +67,7 @@ export function NavProjects() {
         setDeletedSessions(data)
       }
     } catch (error) {
-      console.error('삭제된 세션 조회 실패:', error)
+      // console.error('삭제된 세션 조회 실패:', error)
     }
   }, [isAuthenticated, accessToken])
 
@@ -98,7 +98,7 @@ export function NavProjects() {
         toast.error(data.error || t('trash.restoreFailed'))
       }
     } catch (error) {
-      console.error('Session restore failed:', error)
+      // console.error('Session restore failed:', error)
       toast.error(t('trash.restoreError'))
     }
   }
@@ -128,7 +128,7 @@ export function NavProjects() {
         toast.error(data.error || t('trash.permanentDeleteFailed'))
       }
     } catch (error) {
-      console.error('Session permanent delete failed:', error)
+      // console.error('Session permanent delete failed:', error)
       toast.error(t('trash.permanentDeleteError'))
     }
   }

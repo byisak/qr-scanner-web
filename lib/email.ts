@@ -12,7 +12,7 @@ let resendClient: Resend | null = null;
 
 function getResendClient(): Resend | null {
   if (!RESEND_API_KEY) {
-    console.log('⚠️ RESEND_API_KEY not configured.');
+    // console.log('⚠️ RESEND_API_KEY not configured.');
     return null;
   }
 
@@ -111,8 +111,8 @@ export async function sendEmail(
   const client = getResendClient();
 
   if (!client) {
-    console.log(`📧 [DEV] Email would be sent to: ${to}`);
-    console.log(`📧 [DEV] Subject: ${subject}`);
+    // console.log(`📧 [DEV] Email would be sent to: ${to}`);
+    // console.log(`📧 [DEV] Subject: ${subject}`);
     return { success: true, messageId: 'dev-mode' };
   }
 
@@ -126,17 +126,17 @@ export async function sendEmail(
     });
 
     if (result.error) {
-      console.error('❌ Email send error:', result.error);
+      // console.error('❌ Email send error:', result.error);
       return {
         success: false,
         error: result.error.message,
       };
     }
 
-    console.log(`✅ Email sent to ${to}: ${result.data?.id}`);
+    // console.log(`✅ Email sent to ${to}: ${result.data?.id}`);
     return { success: true, messageId: result.data?.id };
   } catch (error) {
-    console.error('❌ Email send error:', error);
+    // console.error('❌ Email send error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -244,11 +244,11 @@ export async function testEmailConnection(): Promise<boolean> {
   try {
     // API 키 유효성 확인을 위해 도메인 목록 조회
     const domains = await client.domains.list();
-    console.log('✅ Resend API connection verified');
-    console.log(`📧 Available domains: ${domains.data?.data?.map(d => d.name).join(', ') || 'none'}`);
+    // console.log('✅ Resend API connection verified');
+    // console.log(`📧 Available domains: ${domains.data?.data?.map(d => d.name).join(', ') || 'none'}`);
     return true;
   } catch (error) {
-    console.error('❌ Resend API connection failed:', error);
+    // console.error('❌ Resend API connection failed:', error);
     return false;
   }
 }

@@ -28,9 +28,9 @@ export async function initializePool(): Promise<Pool | null> {
   };
 
   if (!config.password) {
-    console.warn('⚠️  PostgreSQL database credentials not configured.');
-    console.warn('⚠️  Running in MEMORY MODE - data will be lost on restart!');
-    console.warn('⚠️  Please configure POSTGRES_PASSWORD in .env.local');
+    // console.warn('⚠️  PostgreSQL database credentials not configured.');
+    // console.warn('⚠️  Running in MEMORY MODE - data will be lost on restart!');
+    // console.warn('⚠️  Please configure POSTGRES_PASSWORD in .env.local');
     return null;
   }
 
@@ -50,10 +50,10 @@ export async function initializePool(): Promise<Pool | null> {
     const client = await pool.connect();
     client.release();
 
-    console.log('✅ PostgreSQL DB 연결 풀 생성 성공');
+    // console.log('✅ PostgreSQL DB 연결 풀 생성 성공');
     return pool;
   } catch (err) {
-    console.error('❌ PostgreSQL DB 연결 실패:', err);
+    // console.error('❌ PostgreSQL DB 연결 실패:', err);
     throw err;
   }
 }
@@ -85,7 +85,7 @@ export async function closePool(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
-    console.log('🔌 PostgreSQL DB 연결 풀 종료');
+    // console.log('🔌 PostgreSQL DB 연결 풀 종료');
   }
 }
 

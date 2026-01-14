@@ -65,7 +65,7 @@ export async function DELETE(
     );
 
     const deletedScanCount = scanDeleteResult.rowCount || 0;
-    console.log('세션 영구 삭제 완료:', sessionId, '(스캔 데이터:', deletedScanCount, '개 삭제)');
+    // console.log('세션 영구 삭제 완료:', sessionId, '(스캔 데이터:', deletedScanCount, '개 삭제)');
 
     return NextResponse.json({
       success: true,
@@ -74,7 +74,7 @@ export async function DELETE(
       deletedScanCount,
     });
   } catch (err: any) {
-    console.error('세션 영구 삭제 실패:', err);
+    // console.error('세션 영구 삭제 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

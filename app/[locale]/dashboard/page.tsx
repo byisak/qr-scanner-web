@@ -78,7 +78,7 @@ export default function Dashboard() {
       const data = await res.json();
       setSessions(data);
     } catch (err) {
-      console.error('세션 목록 로드 실패:', err);
+      // console.error('세션 목록 로드 실패:', err);
     }
   }, [isAuthenticated, accessToken]);
 
@@ -131,7 +131,7 @@ export default function Dashboard() {
         alert(data.error || '삭제 실패');
       }
     } catch (error) {
-      console.error('세션 삭제 실패:', error);
+      // console.error('세션 삭제 실패:', error);
       alert('세션 삭제 중 오류가 발생했습니다.');
     }
   };

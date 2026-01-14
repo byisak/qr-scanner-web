@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       message: exists ? '이미 사용 중인 이메일입니다.' : '사용 가능한 이메일입니다.',
     });
   } catch (error) {
-    console.error('Check email error:', error);
+    // console.error('Check email error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       isNewUser,
     });
   } catch (error) {
-    console.error('Kakao login error:', error);
+    // console.error('Kakao login error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.PROVIDER_ERROR,

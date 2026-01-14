@@ -97,7 +97,7 @@ export default function ChangePasswordPage() {
         setError(data.error?.message || t("profile.passwordChangeError"))
       }
     } catch (error) {
-      console.error("Password change error:", error)
+      // console.error("Password change error:", error)
       setError(t("profile.passwordChangeError"))
     } finally {
       setIsSaving(false)

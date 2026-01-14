@@ -73,7 +73,7 @@ export default function ProfilePage() {
         toast.error(data.error?.message || t("profile.saveError"))
       }
     } catch (error) {
-      console.error("Profile update error:", error)
+      // console.error("Profile update error:", error)
       toast.error(t("profile.saveError"))
     } finally {
       setIsSaving(false)

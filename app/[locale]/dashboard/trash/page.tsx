@@ -82,7 +82,7 @@ export default function TrashPage() {
         setDeletedSessions(data);
       }
     } catch (err) {
-      console.error('삭제된 세션 목록 로드 실패:', err);
+      // console.error('삭제된 세션 목록 로드 실패:', err);
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +123,7 @@ export default function TrashPage() {
         alert(data.error || t('trash.restoreFailed'));
       }
     } catch (error) {
-      console.error('Session restore failed:', error);
+      // console.error('Session restore failed:', error);
       alert(t('trash.restoreError'));
     }
   };
@@ -153,7 +153,7 @@ export default function TrashPage() {
         alert(data.error || t('trash.permanentDeleteFailed'));
       }
     } catch (error) {
-      console.error('Session permanent delete failed:', error);
+      // console.error('Session permanent delete failed:', error);
       alert(t('trash.permanentDeleteError'));
     }
   };
@@ -185,7 +185,7 @@ export default function TrashPage() {
         alert(data.error || t('trash.cleanupFailed'));
       }
     } catch (error) {
-      console.error('Expired sessions cleanup failed:', error);
+      // console.error('Expired sessions cleanup failed:', error);
       alert(t('trash.cleanupError'));
     }
   };

@@ -47,7 +47,7 @@ export async function POST() {
       );
     }
 
-    console.log(`만료된 세션 정리 완료: ${expiredSessions.length}개 세션, ${totalDeletedScans}개 스캔 데이터 삭제`);
+    // console.log(`만료된 세션 정리 완료: ${expiredSessions.length}개 세션, ${totalDeletedScans}개 스캔 데이터 삭제`);
 
     return NextResponse.json({
       success: true,
@@ -56,7 +56,7 @@ export async function POST() {
       deletedScanCount: totalDeletedScans,
     });
   } catch (err: any) {
-    console.error('만료된 세션 정리 실패:', err);
+    // console.error('만료된 세션 정리 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {
@@ -85,7 +85,7 @@ export async function GET() {
       deletionDays: DELETION_DAYS,
     });
   } catch (err: any) {
-    console.error('만료된 세션 수 조회 실패:', err);
+    // console.error('만료된 세션 수 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

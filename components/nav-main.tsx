@@ -125,7 +125,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         setSessions(data)
       }
     } catch (error) {
-      console.error('세션 목록 조회 실패:', error)
+      // console.error('세션 목록 조회 실패:', error)
     } finally {
       setIsLoading(false)
     }
@@ -226,7 +226,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       }
     } catch (error) {
-      console.error('세션 이름 변경 실패:', error)
+      // console.error('세션 이름 변경 실패:', error)
     } finally {
       setEditingId(null)
       setEditValue("")
@@ -259,7 +259,7 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         }
       }
     } catch (error) {
-      console.error('Session delete failed:', error)
+      // console.error('Session delete failed:', error)
     }
   }
 
