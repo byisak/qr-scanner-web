@@ -22,7 +22,7 @@ const handle = app.getRequestHandler();
 
 // PostgreSQL DB 초기화
 initializePool().catch((err) => {
-  console.error('❌ Database initialization failed:', err);
+  // console.error('❌ Database initialization failed:', err);
   process.exit(1);
 });
 
@@ -32,7 +32,7 @@ app.prepare().then(() => {
       const parsedUrl = parse(req.url!, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
-      console.error('Error occurred handling', req.url, err);
+      // console.error('Error occurred handling', req.url, err);
       res.statusCode = 500;
       res.end('internal server error');
     }
@@ -48,7 +48,7 @@ app.prepare().then(() => {
   });
 
   io.on('connection', (socket) => {
-    console.log('클라이언트 연결:', socket.id);
+    // console.log('클라이언트 연결:', socket.id);
 
     // 세션 생성
     socket.on('create-session', async (data) => {
@@ -112,7 +112,7 @@ app.prepare().then(() => {
             [sessionId, passwordHash, isPublic, maxParticipants, allowAnonymous, expiresAt]
           );
 
-          console.log('세션 설정 저장:', sessionId, '공개:', isPublic, '비밀번호:', passwordHash ? '있음' : '없음');
+          // console.log('세션 설정 저장:', sessionId, '공개:', isPublic, '비밀번호:', passwordHash ? '있음' : '없음');
         }
 
         socket.join(sessionId);
@@ -124,9 +124,9 @@ app.prepare().then(() => {
           message: '세션이 생성되었습니다.',
         });
 
-        console.log('새 세션 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
+        // console.log('새 세션 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
       } catch (err) {
-        console.error('세션 생성 실패:', err);
+        // console.error('세션 생성 실패:', err);
         socket.emit('error', { message: '세션 생성 실패' });
       } finally {
         if (client) {
@@ -168,7 +168,7 @@ app.prepare().then(() => {
         );
 
         if (checkResult.rows.length === 0) {
-          console.log('새 세션 자동 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
+          // console.log('새 세션 자동 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
           await client.query(
             `INSERT INTO sessions (session_id, socket_id, user_id, session_name, created_at, last_activity, status)
              VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
@@ -177,14 +177,14 @@ app.prepare().then(() => {
         } else {
           // 세션 활동 시간 업데이트, user_id/session_name 업데이트
           const existingSession = checkResult.rows[0];
-          console.log('기존 세션 발견:', sessionId, '현재 user_id:', existingSession.user_id, '요청 userId:', userId);
+          // console.log('기존 세션 발견:', sessionId, '현재 user_id:', existingSession.user_id, '요청 userId:', userId);
 
           // user_id가 없거나 session_name이 변경된 경우 업데이트
           const shouldUpdateUserId = userId && !existingSession.user_id;
           const shouldUpdateName = sessionName && sessionName !== existingSession.session_name;
 
           if (shouldUpdateUserId || shouldUpdateName) {
-            console.log('세션 업데이트:', sessionId, shouldUpdateUserId ? `user_id: ${userId}` : '', shouldUpdateName ? `이름: ${sessionName}` : '');
+            // console.log('세션 업데이트:', sessionId, shouldUpdateUserId ? `user_id: ${userId}` : '', shouldUpdateName ? `이름: ${sessionName}` : '');
             await client.query(
               `UPDATE sessions SET
                 last_activity = CURRENT_TIMESTAMP,
@@ -246,9 +246,9 @@ app.prepare().then(() => {
           },
         });
 
-        console.log('세션 참가:', sessionId, userId ? `(사용자: ${userId}, 스캔: ${existingScans.length}개)` : '(비로그인)');
+        // console.log('세션 참가:', sessionId, userId ? `(사용자: ${userId}, 스캔: ${existingScans.length}개)` : '(비로그인)');
       } catch (err) {
-        console.error('세션 참가 실패:', err);
+        // console.error('세션 참가 실패:', err);
         socket.emit('error', { message: '세션 참가 실패' });
       } finally {
         if (client) {
@@ -292,7 +292,7 @@ app.prepare().then(() => {
             validUserId = userResult.rows[0].id;
             userName = userResult.rows[0].name || userResult.rows[0].email;
           } else {
-            console.log('⚠️ 사용자 ID가 DB에 없음:', scanUserId, '- user_id를 null로 저장');
+            // console.log('⚠️ 사용자 ID가 DB에 없음:', scanUserId, '- user_id를 null로 저장');
           }
         }
 
@@ -325,9 +325,9 @@ app.prepare().then(() => {
         const dateObject = new Date(timestamp);
         const kstDate = dateObject.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
-        console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate, validUserId ? `사용자: ${userName}` : '(사용자 미확인)');
+        // console.log('새 스캔 데이터:', '스캔값:', code, '세션ID:', sessionId, '스캔시간:', kstDate, validUserId ? `사용자: ${userName}` : '(사용자 미확인)');
       } catch (err) {
-        console.error('스캔 데이터 저장 실패:', err);
+        // console.error('스캔 데이터 저장 실패:', err);
         socket.emit('error', { message: '데이터 저장 실패' });
       } finally {
         if (client) {
@@ -337,16 +337,16 @@ app.prepare().then(() => {
     });
 
     socket.on('disconnect', () => {
-      console.log('클라이언트 연결 해제:', socket.id);
+      // console.log('클라이언트 연결 해제:', socket.id);
     });
   });
 
   httpServer
     .once('error', (err) => {
-      console.error(err);
+      // console.error(err);
       process.exit(1);
     })
     .listen(port, hostname, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+      // console.log(`> Ready on http://${hostname}:${port}`);
     });
 });

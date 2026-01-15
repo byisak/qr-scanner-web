@@ -85,7 +85,7 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
         setDeletedSessions(deleted)
       }
     } catch (error) {
-      console.error('세션 목록 조회 실패:', error)
+      // console.error('세션 목록 조회 실패:', error)
     } finally {
       setIsLoading(false)
     }
@@ -129,7 +129,7 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
         alert(data.error || t('sidebar.deleteFailed'))
       }
     } catch (error) {
-      console.error('Session delete failed:', error)
+      // console.error('Session delete failed:', error)
       alert(t('sidebar.deleteError'))
     }
   }
@@ -149,7 +149,7 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
         alert(data.error || t('trash.restoreFailed'))
       }
     } catch (error) {
-      console.error('Session restore failed:', error)
+      // console.error('Session restore failed:', error)
       alert(t('trash.restoreError'))
     }
   }
@@ -171,7 +171,7 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
         alert(data.error || t('trash.permanentDeleteFailed'))
       }
     } catch (error) {
-      console.error('Session permanent delete failed:', error)
+      // console.error('Session permanent delete failed:', error)
       alert(t('trash.permanentDeleteError'))
     }
   }

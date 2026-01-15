@@ -42,7 +42,7 @@ export async function GET(
 
     return NextResponse.json(scans);
   } catch (err: any) {
-    console.error('스캔 데이터 조회 실패:', err);
+    // console.error('스캔 데이터 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

@@ -57,7 +57,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSettings({ ...defaultSettings, ...parsed });
       }
     } catch (error) {
-      console.warn("Failed to load settings:", error);
+      // console.warn("Failed to load settings:", error);
     }
     setIsLoaded(true);
   }, []);
@@ -68,7 +68,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
       } catch (error) {
-        console.warn("Failed to save settings:", error);
+        // console.warn("Failed to save settings:", error);
       }
     }
   }, [settings, isLoaded]);

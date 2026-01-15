@@ -37,7 +37,7 @@ export async function GET(
 
     return NextResponse.json(session);
   } catch (err: any) {
-    console.error('세션 조회 실패:', err);
+    // console.error('세션 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {
@@ -97,7 +97,7 @@ export async function DELETE(
       [sessionId]
     );
 
-    console.log('세션 Soft Delete 완료:', sessionId);
+    // console.log('세션 Soft Delete 완료:', sessionId);
 
     return NextResponse.json({
       success: true,
@@ -105,7 +105,7 @@ export async function DELETE(
       sessionId,
     });
   } catch (err: any) {
-    console.error('세션 Soft Delete 실패:', err);
+    // console.error('세션 Soft Delete 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

@@ -168,7 +168,7 @@ export default function SessionPage() {
           setAccessGranted(true);
         }
       } catch (err) {
-        console.error('Failed to fetch session settings:', err);
+        // console.error('Failed to fetch session settings:', err);
         // 오류 시 기본적으로 접근 허용
         setAccessGranted(true);
       } finally {
@@ -185,7 +185,7 @@ export default function SessionPage() {
           setSessionName(data.session_name || null);
         }
       } catch (err) {
-        console.error('Failed to fetch session name:', err);
+        // console.error('Failed to fetch session name:', err);
       }
     };
 
@@ -222,7 +222,7 @@ export default function SessionPage() {
         setPasswordError(t('session.wrongPassword'));
       }
     } catch (err) {
-      console.error('Password verification failed:', err);
+      // console.error('Password verification failed:', err);
       setPasswordError(t('session.verifyError'));
     } finally {
       setVerifyingPassword(false);
@@ -300,7 +300,7 @@ export default function SessionPage() {
         toast.error(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
-      console.error('Scan data delete failed:', error);
+      // console.error('Scan data delete failed:', error);
       toast.error(t('session.deleteError'));
     }
   }, [removeScan, t]);
@@ -323,7 +323,7 @@ export default function SessionPage() {
         toast.error(data.error || t('session.deleteFailed'));
       }
     } catch (error) {
-      console.error('Bulk scan data delete failed:', error);
+      // console.error('Bulk scan data delete failed:', error);
       toast.error(t('session.deleteError'));
     }
   }, [removeScans, t]);
@@ -362,7 +362,7 @@ export default function SessionPage() {
       toast.dismiss(loadingToast);
       toast.success(t('session.exportSuccess'));
     } catch (err) {
-      console.error('Export error:', err);
+      // console.error('Export error:', err);
       toast.dismiss(loadingToast);
       toast.error(t('session.exportError'));
     }

@@ -78,8 +78,6 @@ export default function LoginPage() {
   const [googleScriptLoaded, setGoogleScriptLoaded] = React.useState(false)
   const [appleScriptLoaded, setAppleScriptLoaded] = React.useState(false)
 
-  const googleButtonRef = React.useRef<HTMLDivElement>(null)
-
   // Google Client ID
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
   // Apple Client ID (Service ID)
@@ -91,6 +89,16 @@ export default function LoginPage() {
       router.push("/dashboard")
     }
   }, [authLoading, isAuthenticated, router])
+
+  // 이미 로드된 스크립트 확인 (클라이언트 사이드 라우팅 대응)
+  React.useEffect(() => {
+    if (window.google && googleClientId) {
+      setGoogleScriptLoaded(true)
+    }
+    if (window.AppleID && appleClientId) {
+      setAppleScriptLoaded(true)
+    }
+  }, [googleClientId, appleClientId])
 
   // Google 로그인 콜백
   const handleGoogleCallback = React.useCallback(async (response: { credential: string }) => {
@@ -109,22 +117,31 @@ export default function LoginPage() {
 
   // Google Sign-In 초기화
   React.useEffect(() => {
-    if (googleScriptLoaded && window.google && googleClientId && googleButtonRef.current) {
+    if (googleScriptLoaded && window.google && googleClientId) {
       window.google.accounts.id.initialize({
         client_id: googleClientId,
         callback: handleGoogleCallback,
       })
-
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        type: 'standard',
-        text: 'signin_with',
-        width: 400,
-        logo_alignment: 'left',
-      })
     }
   }, [googleScriptLoaded, googleClientId, handleGoogleCallback])
+
+  // Google 로그인 핸들러 (커스텀 버튼용)
+  const handleGoogleLogin = () => {
+    if (!window.google) {
+      setError(t("auth.googleLoginFailed"))
+      return
+    }
+    setError("")
+    setIsGoogleLoading(true)
+    // Google One Tap 프롬프트 표시
+    // @ts-ignore - Google API 타입 정의 문제
+    window.google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        setIsGoogleLoading(false)
+        setError(t("auth.googleLoginFailed"))
+      }
+    })
+  }
 
   // Apple Sign-In 초기화
   React.useEffect(() => {
@@ -294,21 +311,16 @@ export default function LoginPage() {
           </div>
 
           <div className="grid gap-2">
-            {/* Google Sign-In Button */}
-            {googleClientId ? (
-              <div className="relative">
-                {isGoogleLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-lg">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                )}
-                <div
-                  ref={googleButtonRef}
-                  className="flex justify-center [&>div]:w-full"
-                />
-              </div>
-            ) : (
-              <Button variant="outline" className="w-full" disabled>
+            {/* Google Sign-In Button - 커스텀 버튼 */}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading || !googleScriptLoaded || !googleClientId}
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -327,9 +339,9 @@ export default function LoginPage() {
                     fill="#EA4335"
                   />
                 </svg>
-                {t("auth.loginWithGoogle")}
-              </Button>
-            )}
+              )}
+              {t("auth.loginWithGoogle")}
+            </Button>
 
             {/* Apple Sign-In Button */}
             {appleClientId ? (

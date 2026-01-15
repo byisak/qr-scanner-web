@@ -18,13 +18,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Session } from '@/types';
-import { Trash2, LogIn } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useConfirmDialog } from '@/components/confirm-dialog';
 
-// 방문한 세션을 localStorage에 저장/조회하는 유틸리티
+// 방문한 세션을 localStorage에 저장하는 유틸리티
 const VISITED_SESSIONS_KEY = 'visitedSessions';
 
 interface VisitedSession {
@@ -61,7 +60,6 @@ export default function Dashboard() {
   const router = useRouter();
   const { isAuthenticated, isLoading, accessToken } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [visitedSessions, setVisitedSessions] = useState<VisitedSession[]>([]);
   const t = useTranslations();
   const locale = useLocale();
   const { confirm, ConfirmDialog } = useConfirmDialog();
@@ -78,9 +76,16 @@ export default function Dashboard() {
       const data = await res.json();
       setSessions(data);
     } catch (err) {
-      console.error('세션 목록 로드 실패:', err);
+      // console.error('세션 목록 로드 실패:', err);
     }
   }, [isAuthenticated, accessToken]);
+
+  // 비로그인 시 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -96,9 +101,6 @@ export default function Dashboard() {
         clearInterval(interval);
         window.removeEventListener('sidebar-refresh', handleRefresh);
       };
-    } else {
-      // 비로그인 사용자: localStorage에서 방문한 세션 조회
-      setVisitedSessions(getVisitedSessions());
     }
   }, [isAuthenticated, fetchSessions]);
 
@@ -131,7 +133,7 @@ export default function Dashboard() {
         alert(data.error || '삭제 실패');
       }
     } catch (error) {
-      console.error('세션 삭제 실패:', error);
+      // console.error('세션 삭제 실패:', error);
       alert('세션 삭제 중 오류가 발생했습니다.');
     }
   };
@@ -155,13 +157,13 @@ export default function Dashboard() {
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {isLoading ? (
+          {isLoading || !isAuthenticated ? (
             <Card>
               <CardContent className="py-8">
                 <p className="text-center text-muted-foreground">{t('common.loading')}</p>
               </CardContent>
             </Card>
-          ) : isAuthenticated ? (
+          ) : (
             <Card>
               <CardHeader>
                 <CardTitle className="text-2xl">{t('dashboard.activeSessions')}</CardTitle>
@@ -212,60 +214,6 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-          ) : (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">{t('dashboard.loginRequired')}</CardTitle>
-                  <CardDescription>
-                    {t('dashboard.loginRequiredDesc')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Link href="/login">
-                      <Button>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        {t('auth.login')}
-                      </Button>
-                    </Link>
-                    <Link href="/register">
-                      <Button variant="outline">{t('auth.register')}</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {visitedSessions.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('dashboard.recentlyVisited')}</CardTitle>
-                    <CardDescription>{t('dashboard.recentlyVisitedDesc')}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4">
-                      {visitedSessions.map((visited) => (
-                        <Card key={visited.sessionId}>
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-mono text-sm font-semibold">{visited.sessionId}</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {t('dashboard.visitedAt')}: {new Date(visited.visitedAt).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
-                                </p>
-                              </div>
-                              <Button onClick={() => viewSession(visited.sessionId)}>
-                                {t('dashboard.view')}
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
           )}
         </div>
       </SidebarInset>

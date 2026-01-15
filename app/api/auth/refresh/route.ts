@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       refreshToken: newRefreshToken,
     });
   } catch (error) {
-    console.error('Refresh token error:', error);
+    // console.error('Refresh token error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.TOKEN_INVALID,

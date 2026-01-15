@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    // console.error('Login error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.INVALID_CREDENTIALS,

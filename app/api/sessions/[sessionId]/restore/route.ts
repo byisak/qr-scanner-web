@@ -58,7 +58,7 @@ export async function POST(
       [sessionId]
     );
 
-    console.log('세션 복구 완료:', sessionId);
+    // console.log('세션 복구 완료:', sessionId);
 
     return NextResponse.json({
       success: true,
@@ -66,7 +66,7 @@ export async function POST(
       sessionId,
     });
   } catch (err: any) {
-    console.error('세션 복구 실패:', err);
+    // console.error('세션 복구 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

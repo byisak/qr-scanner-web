@@ -167,7 +167,7 @@ export async function PUT(request: NextRequest) {
       message: '비밀번호가 변경되었습니다. 다시 로그인해주세요.',
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    // console.error('Change password error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

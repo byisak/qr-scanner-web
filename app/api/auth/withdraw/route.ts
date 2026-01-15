@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
       message: '회원 탈퇴가 완료되었습니다.',
     });
   } catch (error) {
-    console.error('Withdraw error:', error);
+    // console.error('Withdraw error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

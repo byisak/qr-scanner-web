@@ -84,7 +84,7 @@ export async function GET(
       });
     }
   } catch (err: any) {
-    console.error('데이터 내보내기 실패:', err);
+    // console.error('데이터 내보내기 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

@@ -36,7 +36,7 @@ async function ensureTableExists(client: PoolClient) {
   await client.query(`CREATE INDEX IF NOT EXISTS idx_reset_user ON password_reset_tokens(user_id)`);
 
   tableChecked = true;
-  console.log('✅ password_reset_tokens table ready');
+  // console.log('✅ password_reset_tokens table ready');
 }
 
 export async function POST(request: NextRequest) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     // 보안: 사용자 존재 여부와 관계없이 동일한 응답 반환
     // 사용자가 없어도 성공 응답을 보내 이메일 존재 여부를 노출하지 않음
     if (userResult.rows.length === 0) {
-      console.log(`Password reset requested for non-existent email: ${email}`);
+      // console.log(`Password reset requested for non-existent email: ${email}`);
       return NextResponse.json({
         success: true,
         message: '비밀번호 재설정 이메일을 발송했습니다.',
@@ -118,20 +118,20 @@ export async function POST(request: NextRequest) {
     const emailResult = await sendPasswordResetEmail(user.email, user.name, resetUrl, locale);
 
     if (!emailResult.success) {
-      console.error(`Failed to send password reset email to ${user.email}:`, emailResult.error);
+      // console.error(`Failed to send password reset email to ${user.email}:`, emailResult.error);
       // 이메일 발송 실패해도 보안상 성공 응답 (토큰은 DB에 저장됨)
     } else {
-      console.log(`Password reset email sent to ${user.email}`);
+      // console.log(`Password reset email sent to ${user.email}`);
     }
 
     // 개발 환경에서는 콘솔에도 출력
     if (process.env.NODE_ENV === 'development') {
-      console.log(`=== Password Reset (DEV) ===`);
-      console.log(`Email: ${user.email}`);
-      console.log(`Token: ${token}`);
-      console.log(`Reset URL: ${resetUrl}`);
-      console.log(`Expires: ${expiresAt}`);
-      console.log(`============================`);
+      // console.log(`=== Password Reset (DEV) ===`);
+      // console.log(`Email: ${user.email}`);
+      // console.log(`Token: ${token}`);
+      // console.log(`Reset URL: ${resetUrl}`);
+      // console.log(`Expires: ${expiresAt}`);
+      // console.log(`============================`);
     }
 
     return NextResponse.json({
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    // console.error('Forgot password error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

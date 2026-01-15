@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       values
     );
 
-    console.log(`다중 스캔 데이터 삭제 완료: ${result.rowCount}개`);
+    // console.log(`다중 스캔 데이터 삭제 완료: ${result.rowCount}개`);
 
     return NextResponse.json({
       success: true,
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       ids,
     });
   } catch (err: any) {
-    console.error('다중 스캔 데이터 삭제 실패:', err);
+    // console.error('다중 스캔 데이터 삭제 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       [resetToken.user_id]
     );
 
-    console.log(`Password reset successful for user: ${resetToken.email}`);
+    // console.log(`Password reset successful for user: ${resetToken.email}`);
 
     return NextResponse.json({
       success: true,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    // console.error('Reset password error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

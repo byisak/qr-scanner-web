@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sessions);
   } catch (err: any) {
-    console.error('세션 목록 조회 실패:', err);
+    // console.error('세션 목록 조회 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

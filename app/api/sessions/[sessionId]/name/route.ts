@@ -35,7 +35,7 @@ export async function PUT(
       [name || null, sessionId]
     );
 
-    console.log('세션 이름 변경 완료:', sessionId, '->', name);
+    // console.log('세션 이름 변경 완료:', sessionId, '->', name);
 
     return NextResponse.json({
       success: true,
@@ -44,7 +44,7 @@ export async function PUT(
       name,
     });
   } catch (err: any) {
-    console.error('세션 이름 변경 실패:', err);
+    // console.error('세션 이름 변경 실패:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   } finally {
     if (client) {

@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
       message: '프로필이 수정되었습니다.',
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    // console.error('Update profile error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,

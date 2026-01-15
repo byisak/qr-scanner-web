@@ -48,7 +48,7 @@ export async function GET(
 
     if (result.rows.length === 0) {
       // 설정이 없으면 기본값 반환
-      console.log('⚠️ 세션 설정 없음 - 기본값 반환:', sessionId);
+      // console.log('⚠️ 세션 설정 없음 - 기본값 반환:', sessionId);
       return NextResponse.json({
         sessionId,
         hasPassword: false,
@@ -61,12 +61,12 @@ export async function GET(
     }
 
     const settings = result.rows[0];
-    console.log('📖 세션 설정 조회:', {
-      sessionId,
-      raw: settings,
-      hasPassword: settings.has_password,
-      isPublic: settings.is_public
-    });
+    // console.log('📖 세션 설정 조회:', {
+    //   sessionId,
+    //   raw: settings,
+    //   hasPassword: settings.has_password,
+    //   isPublic: settings.is_public
+    // });
     return NextResponse.json({
       sessionId: settings.session_id,
       hasPassword: settings.has_password,
@@ -79,7 +79,7 @@ export async function GET(
       updatedAt: settings.updated_at,
     });
   } catch (error) {
-    console.error('세션 설정 조회 오류:', error);
+    // console.error('세션 설정 조회 오류:', error);
     return NextResponse.json(
       { error: '세션 설정 조회에 실패했습니다.' },
       { status: 500 }
@@ -111,9 +111,9 @@ export async function PUT(
 
     // 인증 확인 (선택적)
     const authHeader = request.headers.get('authorization');
-    console.log('🔑 인증 헤더:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
+    // console.log('🔑 인증 헤더:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
     const user = getUserFromRequest(authHeader);
-    console.log('👤 인증된 사용자:', user ? { userId: user.userId, email: user.email } : null);
+    // console.log('👤 인증된 사용자:', user ? { userId: user.userId, email: user.email } : null);
 
     client = await getConnection();
 
@@ -274,14 +274,14 @@ export async function PUT(
         `UPDATE sessions SET session_name = $1 WHERE session_id = $2`,
         [body.sessionName, sessionId]
       );
-      console.log('📝 세션 이름 업데이트:', sessionId, '->', body.sessionName);
+      // console.log('📝 세션 이름 업데이트:', sessionId, '->', body.sessionName);
     }
 
-    console.log('📝 세션 설정 업데이트:', {
-      sessionId,
-      body,
-      finalValues: { passwordHash: !!passwordHash, isPublic, accessCode, maxParticipants, allowAnonymous, expiresAt }
-    });
+    // console.log('📝 세션 설정 업데이트:', {
+    //   sessionId,
+    //   body,
+    //   finalValues: { passwordHash: !!passwordHash, isPublic, accessCode, maxParticipants, allowAnonymous, expiresAt }
+    // });
 
     // UPSERT 실행
     const result = await client.query(
@@ -304,11 +304,11 @@ export async function PUT(
     );
 
     const updated = result.rows[0];
-    console.log('✅ 세션 설정 저장 완료:', {
-      sessionId: updated.session_id,
-      hasPassword: updated.has_password,
-      isPublic: updated.is_public
-    });
+    // console.log('✅ 세션 설정 저장 완료:', {
+    //   sessionId: updated.session_id,
+    //   hasPassword: updated.has_password,
+    //   isPublic: updated.is_public
+    // });
     return NextResponse.json({
       success: true,
       settings: {
@@ -322,7 +322,7 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error('세션 설정 업데이트 오류:', error);
+    // console.error('세션 설정 업데이트 오류:', error);
     return NextResponse.json(
       { error: '세션 설정 업데이트에 실패했습니다.' },
       { status: 500 }
@@ -379,7 +379,7 @@ export async function POST(
     }
 
     // 비밀번호가 있으면 검증 필요 (공개/비공개 상관없이)
-    console.log('🔐 비밀번호 검증 시작:', { sessionId, hasPasswordHash: !!settings.password_hash, inputPassword: password ? '***' : null });
+    // console.log('🔐 비밀번호 검증 시작:', { sessionId, hasPasswordHash: !!settings.password_hash, inputPassword: password ? '***' : null });
 
     // 비밀번호 검증
     if (!password) {
@@ -390,20 +390,20 @@ export async function POST(
     }
 
     const isValid = verifyPassword(password, settings.password_hash);
-    console.log('🔐 비밀번호 검증 결과:', { isValid });
+    // console.log('🔐 비밀번호 검증 결과:', { isValid });
 
     if (!isValid) {
-      console.log('❌ 비밀번호 불일치');
+      // console.log('❌ 비밀번호 불일치');
       return NextResponse.json(
         { success: false, accessGranted: false, error: '비밀번호가 올바르지 않습니다.' },
         { status: 401 }
       );
     }
 
-    console.log('✅ 비밀번호 검증 성공');
+    // console.log('✅ 비밀번호 검증 성공');
     return NextResponse.json({ success: true, accessGranted: true });
   } catch (error) {
-    console.error('비밀번호 검증 오류:', error);
+    // console.error('비밀번호 검증 오류:', error);
     return NextResponse.json(
       { error: '비밀번호 검증에 실패했습니다.' },
       { status: 500 }

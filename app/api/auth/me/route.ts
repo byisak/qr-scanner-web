@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       user,
     });
   } catch (error) {
-    console.error('Get me error:', error);
+    // console.error('Get me error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
         AuthErrorCodes.VALIDATION_ERROR,
