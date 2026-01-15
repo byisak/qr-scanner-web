@@ -52,7 +52,9 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const { settings } = useSettings()
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "scan_timestamp", desc: true }
+  ])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
