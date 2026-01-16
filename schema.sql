@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS user_ad_records (
     unlocked_features JSONB DEFAULT '[]'::jsonb,     -- 해제된 기능 ID 배열 ["qrTypeWebsite", "batchScan", ...]
     ad_watch_counts JSONB DEFAULT '{}'::jsonb,       -- 기능별 광고 시청 횟수 {"qrTypeWebsite": 2, "batchScan": 1, ...}
     banner_settings JSONB DEFAULT '{}'::jsonb,       -- 화면별 배너 광고 설정 {"scanner": true, "history": true, "generator": true, ...}
+    admin_removed_features JSONB DEFAULT '[]'::jsonb, -- 관리자가 명시적으로 제거한 기능 ID 배열
     last_synced_at TIMESTAMP,                        -- 마지막 동기화 시간
     admin_modified_at TIMESTAMP,                     -- 관리자가 마지막으로 수정한 시간 (이 시간 이후 동기화는 서버 우선)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -166,6 +167,9 @@ CREATE TABLE IF NOT EXISTS user_ad_records (
 
 -- 마이그레이션용 ALTER (admin_modified_at 컬럼 추가)
 -- ALTER TABLE user_ad_records ADD COLUMN IF NOT EXISTS admin_modified_at TIMESTAMP;
+
+-- 마이그레이션용 ALTER (admin_removed_features 컬럼 추가)
+-- ALTER TABLE user_ad_records ADD COLUMN IF NOT EXISTS admin_removed_features JSONB DEFAULT '[]'::jsonb;
 
 -- 광고 기록 인덱스
 CREATE INDEX IF NOT EXISTS idx_ad_records_user ON user_ad_records(user_id);

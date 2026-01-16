@@ -17,6 +17,7 @@ interface AdRecordRow {
   unlocked_features: string[];
   ad_watch_counts: Record<string, number>;
   banner_settings: Record<string, boolean>;
+  admin_removed_features: string[];
   last_synced_at: Date | null;
   admin_modified_at: Date | null;
   created_at: Date;
@@ -68,7 +69,6 @@ export async function POST(
       unlockedFeatures: localUnlocked,
       adWatchCounts: localCounts,
       bannerSettings: localBannerSettings,
-      lastSyncedAt: localLastSyncedAt,
     } = body;
 
     client = await getConnection();
@@ -76,7 +76,7 @@ export async function POST(
     // 서버의 현재 데이터 조회
     const existingResult = await client.query<AdRecordRow>(
       `SELECT id, user_id, unlocked_features, ad_watch_counts, banner_settings,
-              last_synced_at, admin_modified_at, created_at, updated_at
+              admin_removed_features, last_synced_at, admin_modified_at, created_at, updated_at
        FROM user_ad_records
        WHERE user_id = $1`,
       [userId]
@@ -86,7 +86,8 @@ export async function POST(
     let mergedUnlocked: string[];
     let mergedCounts: Record<string, number>;
     let mergedBannerSettings: Record<string, boolean>;
-    let adminOverride = false;
+    let adminRemovedFeatures: string[] = [];
+    let featuresRemovedByAdmin: string[] = [];
 
     if (existingResult.rows.length === 0) {
       // 서버에 데이터 없음 - 로컬 데이터 그대로 사용
@@ -99,60 +100,46 @@ export async function POST(
       const serverUnlocked = serverData.unlocked_features || [];
       const serverCounts = serverData.ad_watch_counts || {};
       const serverBannerSettings = serverData.banner_settings || {};
-      const adminModifiedAt = serverData.admin_modified_at;
+      adminRemovedFeatures = serverData.admin_removed_features || [];
 
-      // 관리자가 수정한 기록이 있는 경우 특별 처리
-      if (adminModifiedAt) {
-        // 앱이 서버에 없는 기능을 가지고 있는지 확인
-        // (관리자가 제거한 기능을 앱이 다시 추가하려는 경우)
-        const appHasExtraFeatures = (localUnlocked || []).some(
-          (f: string) => !serverUnlocked.includes(f)
-        );
+      // 새로운 병합 로직:
+      // merged = (앱_기능 - admin_removed) ∪ 서버_기능
+      // 이렇게 하면:
+      // - 관리자가 명시적으로 제거한 기능은 앱에서 가져와도 제외됨
+      // - 앱에서 새로 해제한 기능(광고 시청)은 유지됨
+      // - 서버에만 있는 기능도 유지됨
 
-        if (appHasExtraFeatures) {
-          // 관리자가 제거한 기능이 있으므로 서버 데이터 우선
-          console.log('[AdSync] Admin override - app has features removed by admin');
-          mergedUnlocked = serverUnlocked;
-          mergedCounts = serverCounts;
-          mergedBannerSettings = serverBannerSettings;
-          adminOverride = true;
-        } else {
-          // 앱이 서버의 subset이거나 동일 - 정상 병합 허용
-          mergedUnlocked = [...new Set([...serverUnlocked, ...(localUnlocked || [])])];
-          mergedCounts = { ...serverCounts };
-          for (const [featureId, count] of Object.entries(localCounts || {})) {
-            mergedCounts[featureId] = Math.max(mergedCounts[featureId] || 0, count);
-          }
-          mergedBannerSettings = { ...localBannerSettings, ...serverBannerSettings };
-        }
-      } else {
-        // 관리자 수정 기록 없음 - 일반 병합 로직
-        // 해제된 기능: 합집합 (서버 또는 로컬 중 하나라도 해제되어 있으면 해제)
-        mergedUnlocked = [...new Set([...serverUnlocked, ...(localUnlocked || [])])];
+      const appFeaturesFiltered = (localUnlocked || []).filter(
+        f => !adminRemovedFeatures.includes(f)
+      );
+      mergedUnlocked = [...new Set([...serverUnlocked, ...appFeaturesFiltered])];
 
-        // 광고 시청 횟수: 더 큰 값 사용 (각 기능별로)
-        mergedCounts = { ...serverCounts };
-        for (const [featureId, count] of Object.entries(localCounts || {})) {
-          mergedCounts[featureId] = Math.max(mergedCounts[featureId] || 0, count);
-        }
+      // 앱이 가지고 있었지만 admin_removed로 인해 제거된 기능 추적
+      featuresRemovedByAdmin = (localUnlocked || []).filter(
+        f => adminRemovedFeatures.includes(f)
+      );
 
-        // 배너 설정: 서버 값 우선 (관리자가 설정할 수 있으므로)
-        // 로컬에만 있는 키는 로컬 값 사용
-        mergedBannerSettings = { ...localBannerSettings, ...serverBannerSettings };
+      // 광고 시청 횟수: 더 큰 값 사용 (각 기능별로)
+      mergedCounts = { ...serverCounts };
+      for (const [featureId, count] of Object.entries(localCounts || {})) {
+        mergedCounts[featureId] = Math.max(mergedCounts[featureId] || 0, count);
       }
+
+      // 배너 설정: 서버 값 우선 (관리자가 설정할 수 있으므로)
+      mergedBannerSettings = { ...localBannerSettings, ...serverBannerSettings };
     }
 
-    // 병합된 데이터 저장 (admin_modified_at은 유지, 변경하지 않음)
+    // 병합된 데이터 저장 (admin_modified_at, admin_removed_features는 유지)
     const result = await client.query<AdRecordRow>(
-      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $5, $5)
+      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, admin_removed_features, last_synced_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, '[]'::jsonb, $5, $5, $5)
        ON CONFLICT (user_id) DO UPDATE SET
          unlocked_features = $2,
          ad_watch_counts = $3,
          banner_settings = $4,
          last_synced_at = $5,
          updated_at = $5
-       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, admin_modified_at, created_at, updated_at`,
+       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, admin_removed_features, last_synced_at, admin_modified_at, created_at, updated_at`,
       [
         userId,
         JSON.stringify(mergedUnlocked),
@@ -169,25 +156,26 @@ export async function POST(
       unlockedFeatures: row.unlocked_features || [],
       adWatchCounts: row.ad_watch_counts || {},
       bannerSettings: row.banner_settings || {},
+      adminRemovedFeatures: row.admin_removed_features || [],
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
       adminModifiedAt: row.admin_modified_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
     };
 
+    const hasAdminRemovals = featuresRemovedByAdmin.length > 0;
+
     return NextResponse.json({
       success: true,
       data,
-      message: adminOverride
-        ? '관리자가 설정한 데이터로 동기화되었습니다.'
+      message: hasAdminRemovals
+        ? '관리자가 제거한 기능이 반영되었습니다.'
         : '광고 기록이 동기화되었습니다.',
-      adminOverride,  // 앱에 관리자 오버라이드 여부 알림
+      adminOverride: hasAdminRemovals,
       merged: {
         // 앱에서 업데이트해야 할 데이터가 있는지 알려줌
         unlockedFeaturesAdded: mergedUnlocked.filter(f => !(localUnlocked || []).includes(f)),
-        unlockedFeaturesRemoved: adminOverride
-          ? (localUnlocked || []).filter(f => !mergedUnlocked.includes(f))
-          : [],
+        unlockedFeaturesRemoved: featuresRemovedByAdmin,
         countsUpdated: Object.entries(mergedCounts).filter(
           ([k, v]) => (localCounts?.[k] || 0) !== v
         ).length > 0,
