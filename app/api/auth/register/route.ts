@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as RegisterRequest;
-    const { email, password, name } = body;
+    const { email, password, name, deviceId = 'web' } = body;
 
     // 유효성 검사
     if (!email || !password || !name) {
@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
     const expiresAt = getRefreshTokenExpiry();
 
     await client.query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [refreshTokenId, userId, refreshToken, expiresAt, now]
+      `INSERT INTO refresh_tokens (id, user_id, token, device_id, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [refreshTokenId, userId, refreshToken, deviceId, expiresAt, now]
     );
 
     // 액세스 토큰 생성

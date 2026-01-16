@@ -75,20 +75,24 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface SocialLoginRequest {
   accessToken: string;
   idToken?: string; // Apple 로그인용
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface ProfileUpdateRequest {

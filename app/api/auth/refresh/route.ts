@@ -14,6 +14,7 @@ import type { RefreshTokenRequest } from '@/types';
 
 interface TokenRow {
   user_id: string;
+  device_id: string;
   expires_at: Date;
 }
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // 리프레시 토큰 조회
     const tokenResult = await client.query<TokenRow>(
-      `SELECT user_id, expires_at FROM refresh_tokens WHERE token = $1`,
+      `SELECT user_id, device_id, expires_at FROM refresh_tokens WHERE token = $1`,
       [refreshToken]
     );
 
@@ -94,22 +95,23 @@ export async function POST(request: NextRequest) {
 
     const userRow = userResult.rows[0];
 
-    // 기존 리프레시 토큰 삭제
+    // 해당 기기의 기존 리프레시 토큰만 삭제 (다중 기기 지원)
+    const deviceId = tokenRow.device_id || 'web';
     await client.query(
-      `DELETE FROM refresh_tokens WHERE user_id = $1`,
-      [userRow.id]
+      `DELETE FROM refresh_tokens WHERE user_id = $1 AND device_id = $2`,
+      [userRow.id, deviceId]
     );
 
-    // 새 리프레시 토큰 생성 및 저장
+    // 새 리프레시 토큰 생성 및 저장 (같은 기기 ID 유지)
     const newRefreshToken = generateRefreshToken();
     const refreshTokenId = uuidv4();
     const expiresAt = getRefreshTokenExpiry();
     const now = new Date();
 
     await client.query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [refreshTokenId, userRow.id, newRefreshToken, expiresAt, now]
+      `INSERT INTO refresh_tokens (id, user_id, token, device_id, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [refreshTokenId, userRow.id, newRefreshToken, deviceId, expiresAt, now]
     );
 
     // 새 액세스 토큰 생성

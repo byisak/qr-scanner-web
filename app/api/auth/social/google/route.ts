@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as SocialLoginRequest;
-    const { accessToken: googleAccessToken, idToken } = body;
+    const { accessToken: googleAccessToken, idToken, deviceId = 'web' } = body;
 
     // ID 토큰 또는 액세스 토큰 중 하나가 필요
     if (!googleAccessToken && !idToken) {
@@ -174,10 +174,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 기존 리프레시 토큰 삭제
+    // 해당 기기의 기존 리프레시 토큰만 삭제 (다중 기기 지원)
     await client.query(
-      `DELETE FROM refresh_tokens WHERE user_id = $1`,
-      [userRow.id]
+      `DELETE FROM refresh_tokens WHERE user_id = $1 AND device_id = $2`,
+      [userRow.id, deviceId]
     );
 
     // 새 리프레시 토큰 생성 및 저장
@@ -187,9 +187,9 @@ export async function POST(request: NextRequest) {
     const now = new Date();
 
     await client.query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [refreshTokenId, userRow.id, refreshToken, expiresAt, now]
+      `INSERT INTO refresh_tokens (id, user_id, token, device_id, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [refreshTokenId, userRow.id, refreshToken, deviceId, expiresAt, now]
     );
 
     // 액세스 토큰 생성

@@ -8,6 +8,10 @@ import {
   createAuthErrorResponse,
 } from '@/lib/auth';
 
+interface LogoutRequest {
+  deviceId?: string;  // 특정 기기만 로그아웃, 없으면 모든 기기 로그아웃
+}
+
 export async function POST(request: NextRequest) {
   let client: PoolClient | null = null;
 
@@ -25,13 +29,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // body에서 deviceId 추출 (선택적)
+    let deviceId: string | undefined;
+    try {
+      const body = (await request.json()) as LogoutRequest;
+      deviceId = body.deviceId;
+    } catch {
+      // body가 없거나 파싱 실패 시 무시 (모든 기기 로그아웃)
+    }
+
     client = await getConnection();
 
-    // 사용자의 모든 리프레시 토큰 삭제
-    await client.query(
-      `DELETE FROM refresh_tokens WHERE user_id = $1`,
-      [user.userId]
-    );
+    if (deviceId) {
+      // 특정 기기의 리프레시 토큰만 삭제
+      await client.query(
+        `DELETE FROM refresh_tokens WHERE user_id = $1 AND device_id = $2`,
+        [user.userId, deviceId]
+      );
+    } else {
+      // 사용자의 모든 리프레시 토큰 삭제 (모든 기기 로그아웃)
+      await client.query(
+        `DELETE FROM refresh_tokens WHERE user_id = $1`,
+        [user.userId]
+      );
+    }
 
     return NextResponse.json({
       success: true,
