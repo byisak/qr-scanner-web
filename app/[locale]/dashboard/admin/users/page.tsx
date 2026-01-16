@@ -21,7 +21,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useConfirmDialog } from '@/components/confirm-dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 import { UserManagementTable } from '@/components/admin/user-management-table';
 import { UserDetailModal } from '@/components/admin/user-detail-modal';
@@ -60,7 +60,6 @@ export default function AdminUsersPage() {
   const t = useTranslations();
   const { isAuthenticated, isLoading: authLoading, isAdmin, isSuperAdmin, accessToken } = useAuth();
   const { confirm, ConfirmDialog } = useConfirmDialog();
-  const { toast } = useToast();
 
   // 상태
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -190,25 +189,20 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast({
-          title: t('admin.users.deleteSuccess'),
+        toast.success(t('admin.users.deleteSuccess'), {
           description: t('admin.users.deleteSuccessDesc'),
         });
         fetchUsers();
         fetchStats();
       } else {
         const data = await res.json();
-        toast({
-          title: t('admin.users.deleteError'),
+        toast.error(t('admin.users.deleteError'), {
           description: data.error?.message || t('admin.users.deleteErrorDesc'),
-          variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({
-        title: t('admin.users.deleteError'),
+      toast.error(t('admin.users.deleteError'), {
         description: t('admin.users.deleteErrorDesc'),
-        variant: 'destructive',
       });
     }
   };
@@ -221,25 +215,20 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast({
-          title: t('admin.users.restoreSuccess'),
+        toast.success(t('admin.users.restoreSuccess'), {
           description: t('admin.users.restoreSuccessDesc'),
         });
         fetchUsers();
         fetchStats();
       } else {
         const data = await res.json();
-        toast({
-          title: t('admin.users.restoreError'),
+        toast.error(t('admin.users.restoreError'), {
           description: data.error?.message || t('admin.users.restoreErrorDesc'),
-          variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({
-        title: t('admin.users.restoreError'),
+      toast.error(t('admin.users.restoreError'), {
         description: t('admin.users.restoreErrorDesc'),
-        variant: 'destructive',
       });
     }
   };
@@ -256,23 +245,16 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast({
-          title: user.isActive ? t('admin.users.deactivateSuccess') : t('admin.users.activateSuccess'),
-        });
+        toast.success(user.isActive ? t('admin.users.deactivateSuccess') : t('admin.users.activateSuccess'));
         fetchUsers();
       } else {
         const data = await res.json();
-        toast({
-          title: t('admin.users.updateError'),
+        toast.error(t('admin.users.updateError'), {
           description: data.error?.message,
-          variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({
-        title: t('admin.users.updateError'),
-        variant: 'destructive',
-      });
+      toast.error(t('admin.users.updateError'));
     }
   };
 
@@ -294,22 +276,16 @@ export default function AdminUsersPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast({
-          title: t('admin.users.resetPasswordSuccess'),
+        toast.success(t('admin.users.resetPasswordSuccess'), {
           description: t('admin.users.resetPasswordSuccessDesc'),
         });
       } else {
-        toast({
-          title: t('admin.users.resetPasswordError'),
+        toast.error(t('admin.users.resetPasswordError'), {
           description: data.error?.message,
-          variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({
-        title: t('admin.users.resetPasswordError'),
-        variant: 'destructive',
-      });
+      toast.error(t('admin.users.resetPasswordError'));
     }
   };
 
@@ -340,8 +316,7 @@ export default function AdminUsersPage() {
       }
     }
 
-    toast({
-      title: t('admin.users.bulkDeleteSuccess'),
+    toast.success(t('admin.users.bulkDeleteSuccess'), {
       description: t('admin.users.bulkDeleteSuccessDesc', { count: successCount }),
     });
 

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/sonner"
 import type { AdminUser } from "@/types"
 
 interface UserEditModalProps {
@@ -44,7 +44,6 @@ export function UserEditModal({
   onSuccess,
 }: UserEditModalProps) {
   const t = useTranslations()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = React.useState(false)
   const [name, setName] = React.useState("")
   const [role, setRole] = React.useState("")
@@ -84,18 +83,15 @@ export function UserEditModal({
         throw new Error(data.error?.message || 'Failed to update user')
       }
 
-      toast({
-        title: t('admin.users.updateSuccess'),
+      toast.success(t('admin.users.updateSuccess'), {
         description: t('admin.users.updateSuccessDesc'),
       })
 
       onSuccess()
       onOpenChange(false)
     } catch (err) {
-      toast({
-        title: t('admin.users.updateError'),
+      toast.error(t('admin.users.updateError'), {
         description: err instanceof Error ? err.message : t('admin.users.updateErrorDesc'),
-        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
