@@ -6,7 +6,6 @@ import {
   LogOut,
   Settings,
   User,
-  Tv,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -116,10 +115,6 @@ export function NavUser({ onSettingsClick }: NavUserProps) {
               <DropdownMenuItem onClick={onSettingsClick}>
                 <Settings className="mr-2 size-4" />
                 {t('sidebar.settings')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/dashboard/ad-records')}>
-                <Tv className="mr-2 size-4" />
-                {t('adRecords.title')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
