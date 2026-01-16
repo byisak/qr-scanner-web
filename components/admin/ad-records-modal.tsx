@@ -35,6 +35,16 @@ const FEATURE_CONFIG: Record<string, { name: string; type: string; adCount: numb
   qrTypePhone: { name: "Phone", type: "qrType", adCount: 2 },
   qrTypeEvent: { name: "Event", type: "qrType", adCount: 2 },
   qrTypeLocation: { name: "Location", type: "qrType", adCount: 2 },
+  // Barcode Types
+  barcodeEAN13: { name: "EAN-13", type: "barcode", adCount: 2 },
+  barcodeEAN8: { name: "EAN-8", type: "barcode", adCount: 2 },
+  barcodeUPCA: { name: "UPC-A", type: "barcode", adCount: 2 },
+  barcodeUPCE: { name: "UPC-E", type: "barcode", adCount: 2 },
+  barcodeCode128: { name: "Code 128", type: "barcode", adCount: 2 },
+  barcodeCode39: { name: "Code 39", type: "barcode", adCount: 2 },
+  barcodeCode93: { name: "Code 93", type: "barcode", adCount: 2 },
+  barcodeCodabar: { name: "Codabar", type: "barcode", adCount: 2 },
+  barcodeITF: { name: "ITF", type: "barcode", adCount: 2 },
   // QR Styles
   qrStyleRounded: { name: "Rounded", type: "qrStyle", adCount: 3 },
   qrStyleDots: { name: "Dots", type: "qrStyle", adCount: 3 },
@@ -266,7 +276,7 @@ export function AdRecordsModal({
                       </Button>
                     </div>
 
-                    {["qrType", "qrStyle", "settings", "backup"].map((type) => (
+                    {["qrType", "barcode", "qrStyle", "settings", "backup"].map((type) => (
                       <div key={type} className="space-y-2">
                         <h4 className="font-medium text-sm text-muted-foreground">
                           {t(`adRecords.featureTypes.${type}`)}
@@ -301,7 +311,7 @@ export function AdRecordsModal({
                       {t('admin.adRecords.resetCounts')}
                     </Button>
 
-                    {["qrType", "qrStyle", "settings", "backup"].map((type) => (
+                    {["qrType", "barcode", "qrStyle", "settings", "backup"].map((type) => (
                       <div key={type} className="space-y-2">
                         <h4 className="font-medium text-sm text-muted-foreground">
                           {t(`adRecords.featureTypes.${type}`)}
