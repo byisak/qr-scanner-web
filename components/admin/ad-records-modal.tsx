@@ -23,9 +23,9 @@ import { toast } from "@/components/ui/sonner"
 import { useConfirmDialog } from "@/components/confirm-dialog"
 import type { AdminUser, UserAdRecords } from "@/types"
 
-// 잠금 가능한 기능 목록 (모바일 앱과 동일)
+// 잠금 가능한 기능 목록 (모바일 앱과 동일 - lockedFeatures.js)
 const FEATURE_CONFIG: Record<string, { name: string; type: string; adCount: number }> = {
-  // QR Types
+  // ===== QR Types =====
   qrTypeWebsite: { name: "Website", type: "qrType", adCount: 2 },
   qrTypeContact: { name: "Contact", type: "qrType", adCount: 2 },
   qrTypeWifi: { name: "WiFi", type: "qrType", adCount: 2 },
@@ -35,17 +35,8 @@ const FEATURE_CONFIG: Record<string, { name: string; type: string; adCount: numb
   qrTypePhone: { name: "Phone", type: "qrType", adCount: 2 },
   qrTypeEvent: { name: "Event", type: "qrType", adCount: 2 },
   qrTypeLocation: { name: "Location", type: "qrType", adCount: 2 },
-  // Barcode Types
-  barcodeEAN13: { name: "EAN-13", type: "barcode", adCount: 2 },
-  barcodeEAN8: { name: "EAN-8", type: "barcode", adCount: 2 },
-  barcodeUPCA: { name: "UPC-A", type: "barcode", adCount: 2 },
-  barcodeUPCE: { name: "UPC-E", type: "barcode", adCount: 2 },
-  barcodeCode128: { name: "Code 128", type: "barcode", adCount: 2 },
-  barcodeCode39: { name: "Code 39", type: "barcode", adCount: 2 },
-  barcodeCode93: { name: "Code 93", type: "barcode", adCount: 2 },
-  barcodeCodabar: { name: "Codabar", type: "barcode", adCount: 2 },
-  barcodeITF: { name: "ITF", type: "barcode", adCount: 2 },
-  // QR Styles
+
+  // ===== QR Styles =====
   qrStyleRounded: { name: "Rounded", type: "qrStyle", adCount: 3 },
   qrStyleDots: { name: "Dots", type: "qrStyle", adCount: 3 },
   qrStyleClassy: { name: "Classy", type: "qrStyle", adCount: 3 },
@@ -53,16 +44,131 @@ const FEATURE_CONFIG: Record<string, { name: string; type: string; adCount: numb
   qrStyleSunset: { name: "Sunset", type: "qrStyle", adCount: 3 },
   qrStyleDarkMode: { name: "Dark Mode", type: "qrStyle", adCount: 3 },
   qrStyleNeon: { name: "Neon", type: "qrStyle", adCount: 3 },
-  // Settings
+
+  // ===== Settings =====
   batchScan: { name: "Batch Scan", type: "settings", adCount: 3 },
   realtimeSync: { name: "Realtime Sync", type: "settings", adCount: 4 },
   scanUrlIntegration: { name: "URL Integration", type: "settings", adCount: 3 },
   productSearch: { name: "Product Search", type: "settings", adCount: 2 },
   photoSave: { name: "Photo Save", type: "settings", adCount: 3 },
   lotteryScan: { name: "Lottery Scan", type: "settings", adCount: 2 },
-  // Backup
+
+  // ===== Backup =====
   icloudBackup: { name: "iCloud Backup", type: "backup", adCount: 3 },
   googleDriveBackup: { name: "Google Drive Backup", type: "backup", adCount: 3 },
+
+  // ===== Barcode Types (97 types) =====
+  // --- 1D Industrial/Logistics ---
+  barcodeCode39: { name: "Code 39", type: "barcode", adCount: 2 },
+  barcodeCode39ext: { name: "Code 39 Extended", type: "barcode", adCount: 2 },
+  barcodeCode93: { name: "Code 93", type: "barcode", adCount: 2 },
+  barcodeCode93ext: { name: "Code 93 Extended", type: "barcode", adCount: 2 },
+  barcodeCode11: { name: "Code 11", type: "barcode", adCount: 2 },
+  barcodeIndustrial2of5: { name: "Industrial 2 of 5", type: "barcode", adCount: 2 },
+  barcodeInterleaved2of5: { name: "Interleaved 2 of 5", type: "barcode", adCount: 2 },
+  barcodeItf14: { name: "ITF-14", type: "barcode", adCount: 2 },
+  barcodeMatrix2of5: { name: "Matrix 2 of 5", type: "barcode", adCount: 2 },
+  barcodeCoop2of5: { name: "COOP 2 of 5", type: "barcode", adCount: 2 },
+  barcodeIata2of5: { name: "IATA 2 of 5", type: "barcode", adCount: 2 },
+  barcodeDatalogic2of5: { name: "Datalogic 2 of 5", type: "barcode", adCount: 2 },
+
+  // --- Retail ---
+  barcodeEan13: { name: "EAN-13", type: "barcode", adCount: 2 },
+  barcodeEan8: { name: "EAN-8", type: "barcode", adCount: 2 },
+  barcodeEan5: { name: "EAN-5", type: "barcode", adCount: 2 },
+  barcodeEan2: { name: "EAN-2", type: "barcode", adCount: 2 },
+  barcodeUpca: { name: "UPC-A", type: "barcode", adCount: 2 },
+  barcodeUpce: { name: "UPC-E", type: "barcode", adCount: 2 },
+  barcodeIsbn: { name: "ISBN", type: "barcode", adCount: 2 },
+  barcodeIsmn: { name: "ISMN", type: "barcode", adCount: 2 },
+  barcodeIssn: { name: "ISSN", type: "barcode", adCount: 2 },
+  barcodeEan13composite: { name: "EAN-13 Composite", type: "barcode", adCount: 2 },
+  barcodeEan8composite: { name: "EAN-8 Composite", type: "barcode", adCount: 2 },
+  barcodeUpcacomposite: { name: "UPC-A Composite", type: "barcode", adCount: 2 },
+  barcodeUpcecomposite: { name: "UPC-E Composite", type: "barcode", adCount: 2 },
+
+  // --- GS1 / Logistics ---
+  barcodeGs1128: { name: "GS1-128", type: "barcode", adCount: 2 },
+  barcodeGs1cc: { name: "GS1 Composite", type: "barcode", adCount: 2 },
+  barcodeGs1databar: { name: "GS1 DataBar Omnidirectional", type: "barcode", adCount: 2 },
+  barcodeGs1databarstacked: { name: "GS1 DataBar Stacked", type: "barcode", adCount: 2 },
+  barcodeGs1databarstackedomni: { name: "GS1 DataBar Stacked Omni", type: "barcode", adCount: 2 },
+  barcodeGs1databartruncated: { name: "GS1 DataBar Truncated", type: "barcode", adCount: 2 },
+  barcodeGs1databarlimited: { name: "GS1 DataBar Limited", type: "barcode", adCount: 2 },
+  barcodeGs1databarexpanded: { name: "GS1 DataBar Expanded", type: "barcode", adCount: 2 },
+  barcodeGs1databarexpandedstacked: { name: "GS1 DataBar Expanded Stacked", type: "barcode", adCount: 2 },
+  barcodeGs1northamericancoupon: { name: "GS1 North American Coupon", type: "barcode", adCount: 2 },
+  barcodeGs1qrcode: { name: "GS1 QR Code", type: "barcode", adCount: 2 },
+  barcodeGs1dotcode: { name: "GS1 DotCode", type: "barcode", adCount: 2 },
+  barcodeSscc18: { name: "SSCC-18", type: "barcode", adCount: 2 },
+  barcodeEan14: { name: "EAN-14", type: "barcode", adCount: 2 },
+
+  // --- Medical/Pharmaceutical ---
+  barcodePharmacode: { name: "Pharmacode", type: "barcode", adCount: 2 },
+  barcodePharmacode2: { name: "Pharmacode Two-Track", type: "barcode", adCount: 2 },
+  barcodeCode32: { name: "Code 32 (Italian Pharma)", type: "barcode", adCount: 2 },
+  barcodePzn: { name: "PZN", type: "barcode", adCount: 2 },
+  barcodeHibc39: { name: "HIBC Code 39", type: "barcode", adCount: 2 },
+  barcodeHibc128: { name: "HIBC Code 128", type: "barcode", adCount: 2 },
+  barcodeHibcdatamatrix: { name: "HIBC Data Matrix", type: "barcode", adCount: 2 },
+  barcodeHibcpdf417: { name: "HIBC PDF417", type: "barcode", adCount: 2 },
+  barcodeHibcqrcode: { name: "HIBC QR Code", type: "barcode", adCount: 2 },
+  barcodeHibcazteccode: { name: "HIBC Aztec Code", type: "barcode", adCount: 2 },
+  barcodeHibccodablockf: { name: "HIBC Codablock F", type: "barcode", adCount: 2 },
+  barcodeHibcmicropdf417: { name: "HIBC MicroPDF417", type: "barcode", adCount: 2 },
+
+  // --- Library/Special ---
+  barcodeCodabar: { name: "Codabar", type: "barcode", adCount: 2 },
+  barcodeBc412: { name: "BC412", type: "barcode", adCount: 2 },
+  barcodeMsi: { name: "MSI", type: "barcode", adCount: 2 },
+  barcodePlessey: { name: "Plessey", type: "barcode", adCount: 2 },
+  barcodeTelepen: { name: "Telepen", type: "barcode", adCount: 2 },
+  barcodeTelepennumeric: { name: "Telepen Numeric", type: "barcode", adCount: 2 },
+  barcodeChannelcode: { name: "Channel Code", type: "barcode", adCount: 2 },
+  barcodePosicode: { name: "PosiCode", type: "barcode", adCount: 2 },
+
+  // --- Postal ---
+  barcodePostnet: { name: "POSTNET", type: "barcode", adCount: 2 },
+  barcodePlanet: { name: "PLANET", type: "barcode", adCount: 2 },
+  barcodeUspsintellligentmail: { name: "USPS Intelligent Mail", type: "barcode", adCount: 2 },
+  barcodeOnecode: { name: "OneCode", type: "barcode", adCount: 2 },
+  barcodeRoyalmail: { name: "Royal Mail 4-State", type: "barcode", adCount: 2 },
+  barcodeKix: { name: "KIX (Dutch)", type: "barcode", adCount: 2 },
+  barcodeJapanpost: { name: "Japan Post", type: "barcode", adCount: 2 },
+  barcodeAuspost: { name: "Australia Post", type: "barcode", adCount: 2 },
+  barcodeDeutschepost: { name: "Deutsche Post Leitcode", type: "barcode", adCount: 2 },
+  barcodeDeutschepostidentcode: { name: "Deutsche Post Identcode", type: "barcode", adCount: 2 },
+  barcodeCepnet: { name: "CEPNet", type: "barcode", adCount: 2 },
+  barcodeFlattermarken: { name: "Flattermarken", type: "barcode", adCount: 2 },
+  barcodeLeitcode: { name: "Leitcode", type: "barcode", adCount: 2 },
+  barcodeIdentcode: { name: "Identcode", type: "barcode", adCount: 2 },
+
+  // --- 2D Barcodes ---
+  barcodeQrcode: { name: "QR Code", type: "barcode", adCount: 2 },
+  barcodeMicroqrcode: { name: "Micro QR Code", type: "barcode", adCount: 2 },
+  barcodeRectangularmicroqrcode: { name: "Rectangular Micro QR", type: "barcode", adCount: 2 },
+  barcodeDatamatrix: { name: "Data Matrix", type: "barcode", adCount: 2 },
+  barcodeDatamatrixrectangular: { name: "Data Matrix Rectangular", type: "barcode", adCount: 2 },
+  barcodeDatamatrixrectangularextension: { name: "Data Matrix Rectangular Ext", type: "barcode", adCount: 2 },
+  barcodePdf417: { name: "PDF417", type: "barcode", adCount: 2 },
+  barcodePdf417compact: { name: "Compact PDF417", type: "barcode", adCount: 2 },
+  barcodeMicropdf417: { name: "MicroPDF417", type: "barcode", adCount: 2 },
+  barcodeAzteccode: { name: "Aztec Code", type: "barcode", adCount: 2 },
+  barcodeAzteccodecompact: { name: "Compact Aztec Code", type: "barcode", adCount: 2 },
+  barcodeAztecrune: { name: "Aztec Runes", type: "barcode", adCount: 2 },
+  barcodeMaxicode: { name: "MaxiCode", type: "barcode", adCount: 2 },
+  barcodeDotcode: { name: "DotCode", type: "barcode", adCount: 2 },
+  barcodeHanxin: { name: "Han Xin Code", type: "barcode", adCount: 2 },
+  barcodeCodeone: { name: "Code One", type: "barcode", adCount: 2 },
+  barcodeUltracode: { name: "Ultracode", type: "barcode", adCount: 2 },
+
+  // --- Stacked Barcodes ---
+  barcodeCodablockf: { name: "Codablock F", type: "barcode", adCount: 2 },
+  barcodeCode16k: { name: "Code 16K", type: "barcode", adCount: 2 },
+  barcodeCode49: { name: "Code 49", type: "barcode", adCount: 2 },
+
+  // --- Automotive ---
+  barcodeVin: { name: "VIN (Vehicle ID)", type: "barcode", adCount: 2 },
 }
 
 // 배너 광고가 표시되는 화면 목록
