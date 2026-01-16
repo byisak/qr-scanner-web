@@ -346,5 +346,39 @@
     "fontLarge": "Large",
     "resetToDefault": "Reset to Default",
     "applySettings": "Apply Settings"
+  },
+  "adRecords": {
+    "title": "Ad Records Management",
+    "subtitle": "Manage mobile app ad watch history and feature unlock status",
+    "unlockedFeatures": "Unlocked Features",
+    "unlockedFeaturesDesc": "List of premium features unlocked by watching ads",
+    "adWatchCounts": "Ad Watch Counts",
+    "adWatchCountsDesc": "Number of ad views per feature",
+    "bannerDisabled": "Banner Ads Disabled",
+    "bannerDisabledDesc": "Configure whether banner ads are displayed",
+    "lastSynced": "Last Synced",
+    "neverSynced": "Never synced",
+    "noUnlockedFeatures": "No features unlocked",
+    "noAdWatchHistory": "No ad watch history",
+    "reset": "Reset",
+    "resetConfirm": "Are you sure you want to reset all ad records? This action cannot be undone.",
+    "resetSuccess": "Ad records have been reset",
+    "resetError": "Failed to reset ad records",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Ad records saved successfully",
+    "saveError": "Failed to save ad records",
+    "loadError": "Failed to load ad records",
+    "featureTypes": {
+      "qrType": "QR Type",
+      "qrStyle": "QR Style",
+      "barcode": "Barcode",
+      "settings": "Settings",
+      "backup": "Backup"
+    },
+    "times": "times",
+    "addFeature": "Add Feature",
+    "removeFeature": "Remove Feature",
+    "editCount": "Edit Count"
   }
 }

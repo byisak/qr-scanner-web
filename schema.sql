@@ -139,3 +139,31 @@ CREATE TABLE IF NOT EXISTS session_settings (
 CREATE INDEX IF NOT EXISTS idx_session_settings_session ON session_settings(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_settings_access_code ON session_settings(access_code);
 CREATE INDEX IF NOT EXISTS idx_session_settings_public ON session_settings(is_public);
+
+-- ============================================
+-- 사용자 광고 기록 테이블 (모바일 앱 동기화용)
+-- ============================================
+
+-- 사용자별 광고 시청 기록 및 기능 해제 상태
+CREATE TABLE IF NOT EXISTS user_ad_records (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE,
+    unlocked_features JSONB DEFAULT '[]'::jsonb,     -- 해제된 기능 ID 배열 ["qrTypeWebsite", "batchScan", ...]
+    ad_watch_counts JSONB DEFAULT '{}'::jsonb,       -- 기능별 광고 시청 횟수 {"qrTypeWebsite": 2, "batchScan": 1, ...}
+    banner_disabled BOOLEAN DEFAULT false,           -- 배너 광고 비활성화 여부
+    last_synced_at TIMESTAMP,                        -- 마지막 동기화 시간
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ad_records_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+-- 광고 기록 인덱스
+CREATE INDEX IF NOT EXISTS idx_ad_records_user ON user_ad_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_ad_records_synced ON user_ad_records(last_synced_at);
+
+-- 마이그레이션용 ALTER (기존 테이블에 추가 시)
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS unlocked_features JSONB DEFAULT '[]'::jsonb;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS ad_watch_counts JSONB DEFAULT '{}'::jsonb;
