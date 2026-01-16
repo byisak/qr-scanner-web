@@ -23,6 +23,9 @@ export interface AdminUser extends User {
   sessionCount: number;
   scanCount: number;
   deletedAt?: string;
+  // 광고 기록 요약
+  adWatchedCount: number;      // 총 광고 시청 횟수
+  adUnlockedCount: number;     // 해제된 기능 수
 }
 
 // 감사 로그

@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown, Shield, ShieldCheck, User, Mail, Check, X } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Shield, ShieldCheck, User, Mail, Check, X, Tv } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -23,6 +23,7 @@ interface ColumnProps {
   onRestoreUser: (user: AdminUser) => void
   onToggleActive: (user: AdminUser) => void
   onResetPassword: (user: AdminUser) => void
+  onManageAdRecords: (user: AdminUser) => void
   t: (key: string) => string
   dateFormat: string
   timeFormat: string
@@ -112,6 +113,7 @@ export function createUserColumns({
   onRestoreUser,
   onToggleActive,
   onResetPassword,
+  onManageAdRecords,
   t,
   dateFormat,
   timeFormat,
@@ -255,6 +257,24 @@ export function createUserColumns({
             : '-'}
         </span>
       ),
+    },
+    {
+      id: "adRecords",
+      header: t('admin.users.adRecords'),
+      cell: ({ row }) => {
+        const user = row.original
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 text-sm font-medium hover:bg-primary/10"
+            onClick={() => onManageAdRecords(user)}
+          >
+            <Tv className="h-3 w-3" />
+            <span>{user.adWatchedCount}/{user.adUnlockedCount}</span>
+          </Button>
+        )
+      },
     },
     {
       id: "actions",

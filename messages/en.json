@@ -473,6 +473,16 @@
       "totalScans": "Total Scans",
       "scansToday": "{count} today",
       "usersByProvider": "Users by Provider"
+    },
+    "adRecords": {
+      "title": "Ad Records Management",
+      "unlocked": "Unlocked Features",
+      "watchCounts": "Watch Counts",
+      "banner": "Banner Settings",
+      "unlockAll": "Unlock All",
+      "lockAll": "Lock All",
+      "resetCounts": "Reset Counts",
+      "bannerDesc": "Banner ad display settings by screen (ON = show, OFF = hide)"
     }
   }
 }

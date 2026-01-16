@@ -26,6 +26,7 @@ import { toast } from '@/components/ui/sonner';
 import { UserManagementTable } from '@/components/admin/user-management-table';
 import { UserDetailModal } from '@/components/admin/user-detail-modal';
 import { UserEditModal } from '@/components/admin/user-edit-modal';
+import { AdRecordsModal } from '@/components/admin/ad-records-modal';
 import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
 import type { AdminUser } from '@/types';
 
@@ -82,6 +83,7 @@ export default function AdminUsersPage() {
   // 모달 상태
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [adRecordsModalOpen, setAdRecordsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
@@ -170,6 +172,11 @@ export default function AdminUsersPage() {
   const handleEditUser = (user: AdminUser) => {
     setSelectedUser(user);
     setEditModalOpen(true);
+  };
+
+  const handleManageAdRecords = (user: AdminUser) => {
+    setSelectedUser(user);
+    setAdRecordsModalOpen(true);
   };
 
   const handleDeleteUser = async (user: AdminUser) => {
@@ -325,24 +332,26 @@ export default function AdminUsersPage() {
   };
 
   const handleExport = () => {
-    // CSV 내보내기
+    // CSV 내보내기 (UTF-8 BOM 추가로 한글 깨짐 방지)
     const csvContent = [
-      ['ID', 'Email', 'Name', 'Role', 'Provider', 'Active', 'Created At', 'Last Login'].join(','),
+      ['ID', t('admin.users.email'), t('admin.users.name'), t('admin.users.role'), t('admin.users.provider'), t('admin.users.status'), t('admin.users.createdAt'), t('admin.users.lastLogin')].join(','),
       ...users.map((user) =>
         [
           user.id,
-          user.email,
-          user.name,
+          `"${user.email}"`,
+          `"${user.name}"`,
           user.role,
           user.provider,
-          user.isActive ? 'Yes' : 'No',
+          user.isActive ? t('admin.users.active') : t('admin.users.inactive'),
           user.createdAt,
           user.lastLoginAt || '',
         ].join(',')
       ),
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // UTF-8 BOM 추가
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
@@ -406,6 +415,7 @@ export default function AdminUsersPage() {
                   onRestoreUser={handleRestoreUser}
                   onToggleActive={handleToggleActive}
                   onResetPassword={handleResetPassword}
+                  onManageAdRecords={handleManageAdRecords}
                   onBulkDelete={handleBulkDelete}
                   onExport={handleExport}
                   isSuperAdmin={isSuperAdmin}
@@ -433,6 +443,14 @@ export default function AdminUsersPage() {
             fetchUsers();
             fetchStats();
           }}
+        />
+
+        <AdRecordsModal
+          open={adRecordsModalOpen}
+          onOpenChange={setAdRecordsModalOpen}
+          user={selectedUser}
+          accessToken={accessToken}
+          onSuccess={fetchUsers}
         />
 
         {ConfirmDialog}

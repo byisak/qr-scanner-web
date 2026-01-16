@@ -44,18 +44,27 @@ export async function GET(
       );
     }
 
-    // 본인 또는 관리자만 조회 가능 (현재는 본인만)
-    if (tokenUser.userId !== userId) {
-      return NextResponse.json(
-        createAuthErrorResponse(
-          AuthErrorCodes.UNAUTHORIZED,
-          '다른 사용자의 데이터에 접근할 수 없습니다.'
-        ),
-        { status: 403 }
-      );
-    }
-
     client = await getConnection();
+
+    // 본인 또는 관리자만 조회 가능
+    if (tokenUser.userId !== userId) {
+      // 관리자 권한 확인
+      const roleCheck = await client.query(
+        'SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL',
+        [tokenUser.userId]
+      );
+      const userRole = roleCheck.rows[0]?.role;
+      if (userRole !== 'admin' && userRole !== 'super_admin') {
+        client.release();
+        return NextResponse.json(
+          createAuthErrorResponse(
+            AuthErrorCodes.UNAUTHORIZED,
+            '다른 사용자의 데이터에 접근할 수 없습니다.'
+          ),
+          { status: 403 }
+        );
+      }
+    }
 
     // 광고 기록 조회
     const result = await client.query<AdRecordRow>(
@@ -136,21 +145,31 @@ export async function PUT(
       );
     }
 
-    // 본인만 수정 가능 (추후 관리자 권한 추가 가능)
+    client = await getConnection();
+
+    // 본인 또는 관리자만 수정 가능
     if (tokenUser.userId !== userId) {
-      return NextResponse.json(
-        createAuthErrorResponse(
-          AuthErrorCodes.UNAUTHORIZED,
-          '다른 사용자의 데이터를 수정할 수 없습니다.'
-        ),
-        { status: 403 }
+      // 관리자 권한 확인
+      const roleCheck = await client.query(
+        'SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL',
+        [tokenUser.userId]
       );
+      const userRole = roleCheck.rows[0]?.role;
+      if (userRole !== 'admin' && userRole !== 'super_admin') {
+        client.release();
+        return NextResponse.json(
+          createAuthErrorResponse(
+            AuthErrorCodes.UNAUTHORIZED,
+            '다른 사용자의 데이터를 수정할 수 없습니다.'
+          ),
+          { status: 403 }
+        );
+      }
     }
 
     const body = (await request.json()) as AdRecordsSyncRequest;
     const { unlockedFeatures, adWatchCounts, bannerSettings } = body;
 
-    client = await getConnection();
     const now = new Date();
 
     // UPSERT: 기록이 있으면 업데이트, 없으면 삽입

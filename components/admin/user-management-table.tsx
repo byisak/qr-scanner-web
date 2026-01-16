@@ -57,6 +57,7 @@ interface UserManagementTableProps {
   onRestoreUser: (user: AdminUser) => void
   onToggleActive: (user: AdminUser) => void
   onResetPassword: (user: AdminUser) => void
+  onManageAdRecords: (user: AdminUser) => void
   onBulkDelete: (users: AdminUser[]) => void
   onExport: () => void
   isSuperAdmin: boolean
@@ -78,6 +79,7 @@ export function UserManagementTable({
   onRestoreUser,
   onToggleActive,
   onResetPassword,
+  onManageAdRecords,
   onBulkDelete,
   onExport,
   isSuperAdmin,
@@ -99,6 +101,7 @@ export function UserManagementTable({
         onRestoreUser,
         onToggleActive,
         onResetPassword,
+        onManageAdRecords,
         t,
         dateFormat: settings.dateFormat,
         timeFormat: settings.timeFormat,
@@ -111,6 +114,7 @@ export function UserManagementTable({
       onRestoreUser,
       onToggleActive,
       onResetPassword,
+      onManageAdRecords,
       t,
       settings.dateFormat,
       settings.timeFormat,

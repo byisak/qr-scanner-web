@@ -24,6 +24,8 @@ interface UserRow {
   deleted_at: Date | null;
   session_count: string;
   scan_count: string;
+  ad_watch_counts: Record<string, number> | null;
+  unlocked_features: string[] | null;
 }
 
 // 관리자 권한 체크
@@ -124,13 +126,15 @@ export async function GET(request: NextRequest) {
     );
     const total = parseInt(countResult.rows[0].total);
 
-    // 사용자 목록 조회 (세션 수, 스캔 수 포함)
+    // 사용자 목록 조회 (세션 수, 스캔 수, 광고 기록 포함)
     const usersResult = await client.query<UserRow>(
       `SELECT
         u.id, u.email, u.name, u.profile_image, u.provider, u.role,
         u.is_active, u.last_login_at, u.created_at, u.updated_at, u.deleted_at,
         COALESCE(s.session_count, 0) as session_count,
-        COALESCE(sc.scan_count, 0) as scan_count
+        COALESCE(sc.scan_count, 0) as scan_count,
+        ar.ad_watch_counts,
+        ar.unlocked_features
       FROM users u
       LEFT JOIN (
         SELECT user_id, COUNT(*) as session_count
@@ -143,27 +147,37 @@ export async function GET(request: NextRequest) {
         FROM scan_data
         GROUP BY user_id
       ) sc ON u.id = sc.user_id
+      LEFT JOIN user_ad_records ar ON u.id = ar.user_id
       ${whereClause}
       ORDER BY ${sortColumn === 'session_count' || sortColumn === 'scan_count' ? sortColumn : 'u.' + sortColumn} ${order}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
       [...params, limit, offset]
     );
 
-    const users: AdminUser[] = usersResult.rows.map(row => ({
-      id: row.id,
-      email: row.email,
-      name: row.name,
-      profileImage: row.profile_image,
-      provider: row.provider as AdminUser['provider'],
-      role: (row.role || 'user') as AdminUser['role'],
-      isActive: row.is_active ?? true,
-      lastLoginAt: row.last_login_at?.toISOString(),
-      createdAt: row.created_at.toISOString(),
-      updatedAt: row.updated_at?.toISOString(),
-      deletedAt: row.deleted_at?.toISOString(),
-      sessionCount: parseInt(row.session_count),
-      scanCount: parseInt(row.scan_count),
-    }));
+    const users: AdminUser[] = usersResult.rows.map(row => {
+      // 광고 시청 횟수 합계 계산
+      const adWatchCounts = row.ad_watch_counts || {};
+      const adWatchedCount = Object.values(adWatchCounts).reduce((sum, count) => sum + count, 0);
+      const adUnlockedCount = (row.unlocked_features || []).length;
+
+      return {
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        profileImage: row.profile_image,
+        provider: row.provider as AdminUser['provider'],
+        role: (row.role || 'user') as AdminUser['role'],
+        isActive: row.is_active ?? true,
+        lastLoginAt: row.last_login_at?.toISOString(),
+        createdAt: row.created_at.toISOString(),
+        updatedAt: row.updated_at?.toISOString(),
+        deletedAt: row.deleted_at?.toISOString(),
+        sessionCount: parseInt(row.session_count),
+        scanCount: parseInt(row.scan_count),
+        adWatchedCount,
+        adUnlockedCount,
+      };
+    });
 
     return NextResponse.json({
       success: true,

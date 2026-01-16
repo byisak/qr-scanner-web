@@ -473,6 +473,16 @@
       "totalScans": "총 스캔",
       "scansToday": "오늘 {count}건",
       "usersByProvider": "로그인 방식별 사용자"
+    },
+    "adRecords": {
+      "title": "광고 기록 관리",
+      "unlocked": "해제된 기능",
+      "watchCounts": "시청 횟수",
+      "banner": "배너 설정",
+      "unlockAll": "전체 해제",
+      "lockAll": "전체 잠금",
+      "resetCounts": "횟수 초기화",
+      "bannerDesc": "화면별 배너 광고 표시 설정 (ON = 표시, OFF = 숨김)"
     }
   }
 }
