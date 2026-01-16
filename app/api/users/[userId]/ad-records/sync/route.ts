@@ -101,20 +101,32 @@ export async function POST(
       const serverBannerSettings = serverData.banner_settings || {};
       const adminModifiedAt = serverData.admin_modified_at;
 
-      // 관리자가 앱의 마지막 동기화 이후에 수정했는지 확인
-      const appLastSync = localLastSyncedAt ? new Date(localLastSyncedAt) : null;
-      const shouldUseServerData = adminModifiedAt &&
-        (!appLastSync || adminModifiedAt > appLastSync);
+      // 관리자가 수정한 기록이 있는 경우 특별 처리
+      if (adminModifiedAt) {
+        // 앱이 서버에 없는 기능을 가지고 있는지 확인
+        // (관리자가 제거한 기능을 앱이 다시 추가하려는 경우)
+        const appHasExtraFeatures = (localUnlocked || []).some(
+          (f: string) => !serverUnlocked.includes(f)
+        );
 
-      if (shouldUseServerData) {
-        // 관리자가 수정한 경우 - 서버 데이터 우선 (병합 없이)
-        console.log('[AdSync] Admin override - using server data');
-        mergedUnlocked = serverUnlocked;
-        mergedCounts = serverCounts;
-        mergedBannerSettings = serverBannerSettings;
-        adminOverride = true;
+        if (appHasExtraFeatures) {
+          // 관리자가 제거한 기능이 있으므로 서버 데이터 우선
+          console.log('[AdSync] Admin override - app has features removed by admin');
+          mergedUnlocked = serverUnlocked;
+          mergedCounts = serverCounts;
+          mergedBannerSettings = serverBannerSettings;
+          adminOverride = true;
+        } else {
+          // 앱이 서버의 subset이거나 동일 - 정상 병합 허용
+          mergedUnlocked = [...new Set([...serverUnlocked, ...(localUnlocked || [])])];
+          mergedCounts = { ...serverCounts };
+          for (const [featureId, count] of Object.entries(localCounts || {})) {
+            mergedCounts[featureId] = Math.max(mergedCounts[featureId] || 0, count);
+          }
+          mergedBannerSettings = { ...localBannerSettings, ...serverBannerSettings };
+        }
       } else {
-        // 일반 병합 로직
+        // 관리자 수정 기록 없음 - 일반 병합 로직
         // 해제된 기능: 합집합 (서버 또는 로컬 중 하나라도 해제되어 있으면 해제)
         mergedUnlocked = [...new Set([...serverUnlocked, ...(localUnlocked || [])])];
 
