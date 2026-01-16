@@ -20,6 +20,8 @@ interface UserRow {
   name: string;
   profile_image: string | null;
   provider: string;
+  role: string;
+  is_active: boolean;
   created_at: Date;
 }
 
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     // 사용자 조회
     const result = await client.query<UserRow>(
-      `SELECT id, email, password_hash, name, profile_image, provider, created_at
+      `SELECT id, email, password_hash, name, profile_image, provider, role, is_active, created_at
        FROM users
        WHERE email = $1 AND deleted_at IS NULL`,
       [email.toLowerCase()]
@@ -113,6 +115,8 @@ export async function POST(request: NextRequest) {
       name: userRow.name,
       profileImage: userRow.profile_image,
       provider: 'email',
+      role: (userRow.role || 'user') as User['role'],
+      isActive: userRow.is_active ?? true,
       createdAt: userRow.created_at.toISOString(),
     };
 

@@ -104,6 +104,8 @@ export async function POST(request: NextRequest) {
       name,
       profileImage: null,
       provider: 'email',
+      role: 'user',
+      isActive: true,
       createdAt: now.toISOString(),
     };
 
