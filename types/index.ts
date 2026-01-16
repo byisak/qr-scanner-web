@@ -147,20 +147,22 @@ export interface SocketEvents {
 // ============================================
 
 export interface UserAdRecords {
-  id: number;
+  id?: number;
   userId: string;
   unlockedFeatures: string[];           // 해제된 기능 ID 배열
   adWatchCounts: Record<string, number>; // 기능별 광고 시청 횟수
   bannerSettings: Record<string, boolean>; // 화면별 배너 광고 설정 {"scanner": true, "history": false, ...}
   lastSyncedAt: string | null;          // 마지막 동기화 시간
-  createdAt: string;
-  updatedAt: string;
+  adminModifiedAt?: string | null;      // 관리자가 마지막으로 수정한 시간
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface AdRecordsSyncRequest {
   unlockedFeatures: string[];
   adWatchCounts: Record<string, number>;
   bannerSettings?: Record<string, boolean>;
+  lastSyncedAt?: string;                // 앱의 마지막 동기화 시간
 }
 
 export interface AdRecordsResponse {

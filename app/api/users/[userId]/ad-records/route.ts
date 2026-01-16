@@ -18,6 +18,7 @@ interface AdRecordRow {
   ad_watch_counts: Record<string, number>;
   banner_settings: Record<string, boolean>;
   last_synced_at: Date | null;
+  admin_modified_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -69,7 +70,7 @@ export async function GET(
     // 광고 기록 조회
     const result = await client.query<AdRecordRow>(
       `SELECT id, user_id, unlocked_features, ad_watch_counts, banner_settings,
-              last_synced_at, created_at, updated_at
+              last_synced_at, admin_modified_at, created_at, updated_at
        FROM user_ad_records
        WHERE user_id = $1`,
       [userId]
@@ -85,6 +86,7 @@ export async function GET(
           adWatchCounts: {},
           bannerSettings: {},
           lastSyncedAt: null,
+          adminModifiedAt: null,
           createdAt: null,
           updatedAt: null,
         },
@@ -99,6 +101,7 @@ export async function GET(
       adWatchCounts: row.ad_watch_counts || {},
       bannerSettings: row.banner_settings || {},
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
+      adminModifiedAt: row.admin_modified_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
     };
@@ -172,23 +175,30 @@ export async function PUT(
 
     const now = new Date();
 
+    // 관리자가 다른 사용자의 데이터를 수정하는 경우 admin_modified_at 설정
+    const isAdminModifying = tokenUser.userId !== userId;
+
     // UPSERT: 기록이 있으면 업데이트, 없으면 삽입
+    // 관리자 수정 시 admin_modified_at도 업데이트
     const result = await client.query<AdRecordRow>(
-      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $5, $5)
+      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, admin_modified_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $5, $5)
        ON CONFLICT (user_id) DO UPDATE SET
          unlocked_features = $2,
          ad_watch_counts = $3,
          banner_settings = $4,
          last_synced_at = $5,
+         admin_modified_at = CASE WHEN $7 THEN $5 ELSE user_ad_records.admin_modified_at END,
          updated_at = $5
-       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, created_at, updated_at`,
+       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, admin_modified_at, created_at, updated_at`,
       [
         userId,
         JSON.stringify(unlockedFeatures || []),
         JSON.stringify(adWatchCounts || {}),
         JSON.stringify(bannerSettings || {}),
         now,
+        isAdminModifying ? now : null,  // INSERT용 admin_modified_at
+        isAdminModifying,               // UPDATE 조건용
       ]
     );
 
@@ -200,6 +210,7 @@ export async function PUT(
       adWatchCounts: row.ad_watch_counts || {},
       bannerSettings: row.banner_settings || {},
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
+      adminModifiedAt: row.admin_modified_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
     };
