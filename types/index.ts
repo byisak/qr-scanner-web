@@ -95,3 +95,42 @@ export interface SocketEvents {
   'scan-received': (data: { success: boolean; code: string }) => void;
   error: (data: { message: string }) => void;
 }
+
+// ============================================
+// 광고 기록 타입 (모바일 앱 동기화용)
+// ============================================
+
+export interface UserAdRecords {
+  id: number;
+  userId: string;
+  unlockedFeatures: string[];           // 해제된 기능 ID 배열
+  adWatchCounts: Record<string, number>; // 기능별 광고 시청 횟수
+  bannerSettings: Record<string, boolean>; // 화면별 배너 광고 설정 {"scanner": true, "history": false, ...}
+  lastSyncedAt: string | null;          // 마지막 동기화 시간
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdRecordsSyncRequest {
+  unlockedFeatures: string[];
+  adWatchCounts: Record<string, number>;
+  bannerSettings?: Record<string, boolean>;
+}
+
+export interface AdRecordsResponse {
+  success: boolean;
+  data?: UserAdRecords;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+// 잠금 가능한 기능 정의 (모바일 앱과 동기화)
+export interface LockedFeatureConfig {
+  id: string;
+  adCount: number;
+  type: 'qrType' | 'qrStyle' | 'barcode' | 'settings' | 'backup';
+  name?: string;
+  description?: string;
+}
