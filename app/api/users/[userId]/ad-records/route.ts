@@ -175,8 +175,14 @@ export async function PUT(
 
     const now = new Date();
 
-    // 관리자가 다른 사용자의 데이터를 수정하는 경우 admin_modified_at 설정
-    const isAdminModifying = tokenUser.userId !== userId;
+    // 관리자 권한 확인 (다른 사용자 수정 시 이미 검증됨)
+    // 관리자가 수정하는 경우 admin_modified_at 설정 (본인/타인 무관)
+    const roleCheck = await client.query(
+      'SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL',
+      [tokenUser.userId]
+    );
+    const userRole = roleCheck.rows[0]?.role;
+    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
     // UPSERT: 기록이 있으면 업데이트, 없으면 삽입
     // 관리자 수정 시 admin_modified_at도 업데이트
@@ -197,8 +203,8 @@ export async function PUT(
         JSON.stringify(adWatchCounts || {}),
         JSON.stringify(bannerSettings || {}),
         now,
-        isAdminModifying ? now : null,  // INSERT용 admin_modified_at
-        isAdminModifying,               // UPDATE 조건용
+        isAdmin ? now : null,  // INSERT용 admin_modified_at
+        isAdmin,               // UPDATE 조건용 (관리자면 true)
       ]
     );
 
