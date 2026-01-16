@@ -15,6 +15,9 @@ interface UserRow {
   name: string;
   profile_image: string | null;
   provider: string;
+  role: string;
+  is_active: boolean;
+  last_login_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // 사용자 정보 조회
     const result = await client.query<UserRow>(
-      `SELECT id, email, name, profile_image, provider, created_at, updated_at
+      `SELECT id, email, name, profile_image, provider, role, is_active, last_login_at, created_at, updated_at
        FROM users
        WHERE id = $1 AND deleted_at IS NULL`,
       [tokenUser.userId]
@@ -64,6 +67,9 @@ export async function GET(request: NextRequest) {
       name: userRow.name,
       profileImage: userRow.profile_image,
       provider: userRow.provider as User['provider'],
+      role: (userRow.role || 'user') as User['role'],
+      isActive: userRow.is_active ?? true,
+      lastLoginAt: userRow.last_login_at?.toISOString(),
       createdAt: userRow.created_at.toISOString(),
       updatedAt: userRow.updated_at?.toISOString(),
     };

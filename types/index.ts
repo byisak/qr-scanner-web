@@ -2,6 +2,8 @@
 // 사용자 및 인증 타입
 // ============================================
 
+export type UserRole = 'user' | 'admin' | 'super_admin';
+
 export interface User {
   id: string;
   email: string;
@@ -9,8 +11,49 @@ export interface User {
   profileImage: string | null;
   provider: 'email' | 'kakao' | 'google' | 'apple';
   providerId?: string;
+  role: UserRole;
+  isActive: boolean;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+// 관리자 페이지용 확장 사용자 정보
+export interface AdminUser extends User {
+  sessionCount: number;
+  scanCount: number;
+  deletedAt?: string;
+}
+
+// 감사 로그
+export interface AuditLog {
+  id: number;
+  adminId: string;
+  adminName?: string;
+  adminEmail?: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  details: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+// 관리자 대시보드 통계
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersToday: number;
+  newUsersWeek: number;
+  totalSessions: number;
+  totalScans: number;
+  providerStats: {
+    email: number;
+    google: number;
+    apple: number;
+    kakao: number;
+  };
 }
 
 export interface AuthResponse {

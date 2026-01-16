@@ -15,6 +15,9 @@ import {
   Hash,
   Check,
   Pencil,
+  Shield,
+  Users,
+  FileText,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -92,7 +95,7 @@ function saveSortOrder(order: SortOrder) {
 export function NavMain({ currentSessionId }: NavMainProps) {
   const router = useRouter()
   const t = useTranslations()
-  const { isAuthenticated, accessToken } = useAuth()
+  const { isAuthenticated, accessToken, isAdmin } = useAuth()
   const [sessions, setSessions] = React.useState<Session[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [pinnedIds, setPinnedIds] = React.useState<string[]>([])
@@ -446,6 +449,38 @@ export function NavMain({ currentSessionId }: NavMainProps) {
             </CollapsibleContent>
           </SidebarMenuItem>
         </Collapsible>
+
+        {/* 관리자 메뉴 - 관리자 권한이 있을 때만 표시 */}
+        {isAdmin && (
+          <Collapsible
+            asChild
+            defaultOpen={false}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip={t('sidebar.admin')}>
+                  <Shield className="size-4" />
+                  <span>{t('sidebar.admin')}</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push('/dashboard/admin/users')}
+                      className="cursor-pointer"
+                    >
+                      <Users className="size-3 mr-1" />
+                      <span>{t('sidebar.userManagement')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        )}
       </SidebarMenu>
       {ConfirmDialog}
     </SidebarGroup>
