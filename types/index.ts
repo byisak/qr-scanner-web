@@ -2,6 +2,8 @@
 // 사용자 및 인증 타입
 // ============================================
 
+export type UserRole = 'user' | 'admin' | 'super_admin';
+
 export interface User {
   id: string;
   email: string;
@@ -9,8 +11,52 @@ export interface User {
   profileImage: string | null;
   provider: 'email' | 'kakao' | 'google' | 'apple';
   providerId?: string;
+  role: UserRole;
+  isActive: boolean;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+// 관리자 페이지용 확장 사용자 정보
+export interface AdminUser extends User {
+  sessionCount: number;
+  scanCount: number;
+  deletedAt?: string;
+  // 광고 기록 요약
+  adWatchedCount: number;      // 총 광고 시청 횟수
+  adUnlockedCount: number;     // 해제된 기능 수
+}
+
+// 감사 로그
+export interface AuditLog {
+  id: number;
+  adminId: string;
+  adminName?: string;
+  adminEmail?: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  details: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+// 관리자 대시보드 통계
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersToday: number;
+  newUsersWeek: number;
+  totalSessions: number;
+  totalScans: number;
+  providerStats: {
+    email: number;
+    google: number;
+    apple: number;
+    kakao: number;
+  };
 }
 
 export interface AuthResponse {
@@ -101,20 +147,22 @@ export interface SocketEvents {
 // ============================================
 
 export interface UserAdRecords {
-  id: number;
+  id?: number;
   userId: string;
   unlockedFeatures: string[];           // 해제된 기능 ID 배열
   adWatchCounts: Record<string, number>; // 기능별 광고 시청 횟수
   bannerSettings: Record<string, boolean>; // 화면별 배너 광고 설정 {"scanner": true, "history": false, ...}
   lastSyncedAt: string | null;          // 마지막 동기화 시간
-  createdAt: string;
-  updatedAt: string;
+  adminModifiedAt?: string | null;      // 관리자가 마지막으로 수정한 시간
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface AdRecordsSyncRequest {
   unlockedFeatures: string[];
   adWatchCounts: Record<string, number>;
   bannerSettings?: Record<string, boolean>;
+  lastSyncedAt?: string;                // 앱의 마지막 동기화 시간
 }
 
 export interface AdRecordsResponse {

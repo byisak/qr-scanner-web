@@ -39,6 +39,8 @@ interface UserRow {
   name: string;
   profile_image: string | null;
   provider: string;
+  role: string;
+  is_active: boolean;
   created_at: Date;
 }
 
@@ -122,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     // 기존 사용자 확인 (provider_id로 검색)
     let userResult = await client.query<UserRow>(
-      `SELECT id, email, name, profile_image, provider, created_at
+      `SELECT id, email, name, profile_image, provider, role, is_active, created_at
        FROM users
        WHERE provider = 'apple' AND provider_id = $1 AND deleted_at IS NULL`,
       [providerId]
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
     if (userResult.rows.length === 0) {
       // 이메일로 기존 계정 확인
       const emailCheck = await client.query<UserRow>(
-        `SELECT id, email, name, profile_image, provider, created_at
+        `SELECT id, email, name, profile_image, provider, role, is_active, created_at
          FROM users
          WHERE email = $1 AND deleted_at IS NULL`,
         [email.toLowerCase()]
@@ -168,6 +170,8 @@ export async function POST(request: NextRequest) {
         name: name,
         profile_image: null,
         provider: 'apple',
+        role: 'user',
+        is_active: true,
         created_at: nowDate,
       };
     } else {
@@ -210,6 +214,8 @@ export async function POST(request: NextRequest) {
       name: userRow.name,
       profileImage: userRow.profile_image,
       provider: 'apple',
+      role: (userRow.role || 'user') as User['role'],
+      isActive: userRow.is_active ?? true,
       createdAt: userRow.created_at.toISOString(),
     };
 

@@ -3,12 +3,17 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+type UserRole = "user" | "admin" | "super_admin"
+
 interface User {
   id: string
   email: string
   name: string
   profileImage: string | null
   provider: "email" | "google" | "apple" | "kakao"
+  role: UserRole
+  isActive: boolean
+  lastLoginAt?: string
   createdAt: string
 }
 
@@ -16,6 +21,8 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  isAdmin: boolean
+  isSuperAdmin: boolean
   accessToken: string | null
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string) => Promise<void>
@@ -232,12 +239,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const isAdmin = !!user && (user.role === "admin" || user.role === "super_admin")
+  const isSuperAdmin = !!user && user.role === "super_admin"
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated: !!user,
+        isAdmin,
+        isSuperAdmin,
         accessToken,
         login,
         register,

@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
     profile_image VARCHAR(500),
     provider VARCHAR(20) NOT NULL,        -- email, kakao, google, apple
     provider_id VARCHAR(255),             -- 소셜 로그인 고유 ID
+    role VARCHAR(20) DEFAULT 'user',      -- user, admin, super_admin
+    is_active BOOLEAN DEFAULT true,       -- 계정 활성화 상태
+    last_login_at TIMESTAMP,              -- 마지막 로그인 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP                   -- Soft delete
@@ -152,6 +155,7 @@ CREATE TABLE IF NOT EXISTS user_ad_records (
     ad_watch_counts JSONB DEFAULT '{}'::jsonb,       -- 기능별 광고 시청 횟수 {"qrTypeWebsite": 2, "batchScan": 1, ...}
     banner_settings JSONB DEFAULT '{}'::jsonb,       -- 화면별 배너 광고 설정 {"scanner": true, "history": true, "generator": true, ...}
     last_synced_at TIMESTAMP,                        -- 마지막 동기화 시간
+    admin_modified_at TIMESTAMP,                     -- 관리자가 마지막으로 수정한 시간 (이 시간 이후 동기화는 서버 우선)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ad_records_user
@@ -160,6 +164,9 @@ CREATE TABLE IF NOT EXISTS user_ad_records (
         ON DELETE CASCADE
 );
 
+-- 마이그레이션용 ALTER (admin_modified_at 컬럼 추가)
+-- ALTER TABLE user_ad_records ADD COLUMN IF NOT EXISTS admin_modified_at TIMESTAMP;
+
 -- 광고 기록 인덱스
 CREATE INDEX IF NOT EXISTS idx_ad_records_user ON user_ad_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_ad_records_synced ON user_ad_records(last_synced_at);
@@ -167,3 +174,40 @@ CREATE INDEX IF NOT EXISTS idx_ad_records_synced ON user_ad_records(last_synced_
 -- 마이그레이션용 ALTER (기존 테이블에 추가 시)
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS unlocked_features JSONB DEFAULT '[]'::jsonb;
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS ad_watch_counts JSONB DEFAULT '{}'::jsonb;
+
+-- ============================================
+-- 사용자 역할 및 관리자 기능
+-- ============================================
+
+-- 사용자 테이블에 role 컬럼 추가 (마이그레이션용)
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
+
+-- 감사 로그 테이블 (관리자 활동 추적)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    admin_id VARCHAR(36) NOT NULL,             -- 작업을 수행한 관리자
+    action VARCHAR(50) NOT NULL,               -- 수행한 작업 (create, update, delete, login, etc.)
+    target_type VARCHAR(50) NOT NULL,          -- 대상 타입 (user, session, etc.)
+    target_id VARCHAR(36),                     -- 대상 ID
+    details JSONB DEFAULT '{}'::jsonb,         -- 상세 정보 (변경 전/후 값 등)
+    ip_address VARCHAR(45),                    -- IPv6 지원
+    user_agent TEXT,                           -- 브라우저 정보
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_audit_admin
+        FOREIGN KEY (admin_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL
+);
+
+-- 감사 로그 인덱스
+CREATE INDEX IF NOT EXISTS idx_audit_admin ON audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_target ON audit_logs(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);
+
+-- 사용자 역할 인덱스
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC);
