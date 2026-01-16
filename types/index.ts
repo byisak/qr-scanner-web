@@ -75,20 +75,24 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface SocialLoginRequest {
   accessToken: string;
   idToken?: string; // Apple 로그인용
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
+  deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
 export interface ProfileUpdateRequest {
@@ -152,6 +156,7 @@ export interface UserAdRecords {
   unlockedFeatures: string[];           // 해제된 기능 ID 배열
   adWatchCounts: Record<string, number>; // 기능별 광고 시청 횟수
   bannerSettings: Record<string, boolean>; // 화면별 배너 광고 설정 {"scanner": true, "history": false, ...}
+  adminRemovedFeatures: string[];       // 관리자가 명시적으로 제거한 기능 ID 배열
   lastSyncedAt: string | null;          // 마지막 동기화 시간
   adminModifiedAt?: string | null;      // 관리자가 마지막으로 수정한 시간
   createdAt?: string | null;

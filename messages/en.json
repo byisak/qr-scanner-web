@@ -207,6 +207,7 @@
     "unpin": "Unpin",
     "sessionNamePlaceholder": "Enter session name...",
     "admin": "Admin",
+    "adminDashboard": "Admin Dashboard",
     "userManagement": "User Management"
   },
   "settings": {
@@ -384,6 +385,22 @@
     "editCount": "Edit Count"
   },
   "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "totalVisitors": "Total Visitors",
+      "totalForPeriod": "Total for selected period",
+      "dailySignups": "Daily Sign-ups",
+      "dailySignupsDesc": "New sign-ups over the last 7 days",
+      "dailyScans": "Daily Scans",
+      "dailyScansDesc": "Scan count over the last 7 days",
+      "signups": "Sign-ups",
+      "scans": "Scans",
+      "period": {
+        "3months": "Last 3 months",
+        "30days": "Last 30 days",
+        "7days": "Last 7 days"
+      }
+    },
     "users": {
       "title": "User Management",
       "userList": "User List",

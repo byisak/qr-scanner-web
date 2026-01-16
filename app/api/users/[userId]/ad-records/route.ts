@@ -17,6 +17,7 @@ interface AdRecordRow {
   unlocked_features: string[];
   ad_watch_counts: Record<string, number>;
   banner_settings: Record<string, boolean>;
+  admin_removed_features: string[];
   last_synced_at: Date | null;
   admin_modified_at: Date | null;
   created_at: Date;
@@ -70,7 +71,7 @@ export async function GET(
     // 광고 기록 조회
     const result = await client.query<AdRecordRow>(
       `SELECT id, user_id, unlocked_features, ad_watch_counts, banner_settings,
-              last_synced_at, admin_modified_at, created_at, updated_at
+              admin_removed_features, last_synced_at, admin_modified_at, created_at, updated_at
        FROM user_ad_records
        WHERE user_id = $1`,
       [userId]
@@ -85,6 +86,7 @@ export async function GET(
           unlockedFeatures: [],
           adWatchCounts: {},
           bannerSettings: {},
+          adminRemovedFeatures: [],
           lastSyncedAt: null,
           adminModifiedAt: null,
           createdAt: null,
@@ -100,6 +102,7 @@ export async function GET(
       unlockedFeatures: row.unlocked_features || [],
       adWatchCounts: row.ad_watch_counts || {},
       bannerSettings: row.banner_settings || {},
+      adminRemovedFeatures: row.admin_removed_features || [],
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
       adminModifiedAt: row.admin_modified_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
@@ -175,30 +178,61 @@ export async function PUT(
 
     const now = new Date();
 
-    // 관리자가 다른 사용자의 데이터를 수정하는 경우 admin_modified_at 설정
-    const isAdminModifying = tokenUser.userId !== userId;
+    // 관리자 권한 확인
+    const roleCheck = await client.query(
+      'SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL',
+      [tokenUser.userId]
+    );
+    const userRole = roleCheck.rows[0]?.role;
+    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+    // 관리자인 경우 기존 데이터 조회하여 제거된 기능 추적
+    let adminRemovedFeatures: string[] = [];
+    if (isAdmin) {
+      const existingResult = await client.query<AdRecordRow>(
+        `SELECT unlocked_features, admin_removed_features FROM user_ad_records WHERE user_id = $1`,
+        [userId]
+      );
+
+      if (existingResult.rows.length > 0) {
+        const existingUnlocked = existingResult.rows[0].unlocked_features || [];
+        const existingRemoved = existingResult.rows[0].admin_removed_features || [];
+        const newUnlocked = unlockedFeatures || [];
+
+        // 기존에 있었는데 새로 없어진 기능 = 관리자가 제거한 기능
+        const newlyRemoved = existingUnlocked.filter(f => !newUnlocked.includes(f));
+        // 새로 추가된 기능은 admin_removed_features에서 제거
+        const newlyAdded = newUnlocked.filter(f => !existingUnlocked.includes(f));
+
+        // admin_removed_features 업데이트: 기존 + 새로 제거된 - 새로 추가된
+        adminRemovedFeatures = [
+          ...new Set([...existingRemoved, ...newlyRemoved])
+        ].filter(f => !newlyAdded.includes(f));
+      }
+    }
 
     // UPSERT: 기록이 있으면 업데이트, 없으면 삽입
-    // 관리자 수정 시 admin_modified_at도 업데이트
     const result = await client.query<AdRecordRow>(
-      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, admin_modified_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $5, $5)
+      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, admin_removed_features, last_synced_at, admin_modified_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $6, $6)
        ON CONFLICT (user_id) DO UPDATE SET
          unlocked_features = $2,
          ad_watch_counts = $3,
          banner_settings = $4,
-         last_synced_at = $5,
-         admin_modified_at = CASE WHEN $7 THEN $5 ELSE user_ad_records.admin_modified_at END,
-         updated_at = $5
-       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, admin_modified_at, created_at, updated_at`,
+         admin_removed_features = CASE WHEN $8 THEN $5 ELSE user_ad_records.admin_removed_features END,
+         last_synced_at = $6,
+         admin_modified_at = CASE WHEN $8 THEN $6 ELSE user_ad_records.admin_modified_at END,
+         updated_at = $6
+       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, admin_removed_features, last_synced_at, admin_modified_at, created_at, updated_at`,
       [
         userId,
         JSON.stringify(unlockedFeatures || []),
         JSON.stringify(adWatchCounts || {}),
         JSON.stringify(bannerSettings || {}),
+        JSON.stringify(adminRemovedFeatures),
         now,
-        isAdminModifying ? now : null,  // INSERT용 admin_modified_at
-        isAdminModifying,               // UPDATE 조건용
+        isAdmin ? now : null,  // INSERT용 admin_modified_at
+        isAdmin,               // UPDATE 조건용 (관리자면 true)
       ]
     );
 
@@ -209,6 +243,7 @@ export async function PUT(
       unlockedFeatures: row.unlocked_features || [],
       adWatchCounts: row.ad_watch_counts || {},
       bannerSettings: row.banner_settings || {},
+      adminRemovedFeatures: row.admin_removed_features || [],
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
       adminModifiedAt: row.admin_modified_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),

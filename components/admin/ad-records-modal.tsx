@@ -310,6 +310,36 @@ export function AdRecordsModal({
     const currentCount = adWatchCounts[featureId] || 0
     const newCount = Math.max(0, currentCount + delta)
     setAdWatchCounts({ ...adWatchCounts, [featureId]: newCount })
+
+    // 필요 광고 횟수 확인
+    const requiredCount = FEATURE_CONFIG[featureId]?.adCount || 0
+
+    // 광고 횟수가 필요 횟수를 충족하면 자동 잠금 해제
+    if (newCount >= requiredCount && !unlockedFeatures.includes(featureId)) {
+      setUnlockedFeatures([...unlockedFeatures, featureId])
+    }
+    // 광고 횟수가 필요 횟수 미만이면 잠금 상태로 변경
+    else if (newCount < requiredCount && unlockedFeatures.includes(featureId)) {
+      setUnlockedFeatures(unlockedFeatures.filter((f) => f !== featureId))
+    }
+  }
+
+  // 광고 횟수 직접 입력 시
+  const setWatchCount = (featureId: string, value: number) => {
+    const newCount = Math.max(0, value)
+    setAdWatchCounts({ ...adWatchCounts, [featureId]: newCount })
+
+    // 필요 광고 횟수 확인
+    const requiredCount = FEATURE_CONFIG[featureId]?.adCount || 0
+
+    // 광고 횟수가 필요 횟수를 충족하면 자동 잠금 해제
+    if (newCount >= requiredCount && !unlockedFeatures.includes(featureId)) {
+      setUnlockedFeatures([...unlockedFeatures, featureId])
+    }
+    // 광고 횟수가 필요 횟수 미만이면 잠금 상태로 변경
+    else if (newCount < requiredCount && unlockedFeatures.includes(featureId)) {
+      setUnlockedFeatures(unlockedFeatures.filter((f) => f !== featureId))
+    }
   }
 
   const toggleBannerSetting = (screenId: string) => {
@@ -449,10 +479,7 @@ export function AdRecordsModal({
                                     type="number"
                                     value={count}
                                     onChange={(e) =>
-                                      setAdWatchCounts({
-                                        ...adWatchCounts,
-                                        [featureId]: parseInt(e.target.value) || 0,
-                                      })
+                                      setWatchCount(featureId, parseInt(e.target.value) || 0)
                                     }
                                     className="w-16 h-7 text-center"
                                   />

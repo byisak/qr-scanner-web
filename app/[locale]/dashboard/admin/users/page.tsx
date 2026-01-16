@@ -27,34 +27,7 @@ import { UserManagementTable } from '@/components/admin/user-management-table';
 import { UserDetailModal } from '@/components/admin/user-detail-modal';
 import { UserEditModal } from '@/components/admin/user-edit-modal';
 import { AdRecordsModal } from '@/components/admin/ad-records-modal';
-import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
 import type { AdminUser } from '@/types';
-
-interface AdminStats {
-  users: {
-    total: number;
-    active: number;
-    newToday: number;
-    newWeek: number;
-    activeWeek: number;
-  };
-  sessions: {
-    total: number;
-    newToday: number;
-    activeWeek: number;
-  };
-  scans: {
-    total: number;
-    today: number;
-    week: number;
-  };
-  providers: {
-    email: number;
-    google: number;
-    apple: number;
-    kakao: number;
-  };
-}
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -64,9 +37,7 @@ export default function AdminUsersPage() {
 
   // 상태
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -126,33 +97,11 @@ export default function AdminUsersPage() {
     }
   }, [accessToken, pagination.page, pagination.limit, search, providerFilter, roleFilter, statusFilter]);
 
-  // 통계 조회
-  const fetchStats = useCallback(async () => {
-    if (!accessToken) return;
-
-    setStatsLoading(true);
-    try {
-      const res = await fetch('/api/admin/stats', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [accessToken]);
-
   useEffect(() => {
     if (isAdmin && accessToken) {
       fetchUsers();
-      fetchStats();
     }
-  }, [isAdmin, accessToken, fetchUsers, fetchStats]);
+  }, [isAdmin, accessToken, fetchUsers]);
 
   // 핸들러
   const handlePageChange = (page: number) => {
@@ -200,7 +149,6 @@ export default function AdminUsersPage() {
           description: t('admin.users.deleteSuccessDesc'),
         });
         fetchUsers();
-        fetchStats();
       } else {
         const data = await res.json();
         toast.error(t('admin.users.deleteError'), {
@@ -226,7 +174,6 @@ export default function AdminUsersPage() {
           description: t('admin.users.restoreSuccessDesc'),
         });
         fetchUsers();
-        fetchStats();
       } else {
         const data = await res.json();
         toast.error(t('admin.users.restoreError'), {
@@ -306,7 +253,6 @@ export default function AdminUsersPage() {
 
     if (!confirmed) return;
 
-    // 일괄 삭제 처리
     let successCount = 0;
     for (const user of selectedUsers) {
       if (user.role === 'super_admin') continue;
@@ -328,11 +274,9 @@ export default function AdminUsersPage() {
     });
 
     fetchUsers();
-    fetchStats();
   };
 
   const handleExport = () => {
-    // CSV 내보내기 (UTF-8 BOM 추가로 한글 깨짐 방지)
     const csvContent = [
       ['ID', t('admin.users.email'), t('admin.users.name'), t('admin.users.role'), t('admin.users.provider'), t('admin.users.status'), t('admin.users.createdAt'), t('admin.users.lastLogin')].join(','),
       ...users.map((user) =>
@@ -349,7 +293,6 @@ export default function AdminUsersPage() {
       ),
     ].join('\n');
 
-    // UTF-8 BOM 추가
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -377,6 +320,10 @@ export default function AdminUsersPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
+                  <BreadcrumbLink href="/dashboard/admin">{t('admin.dashboard.title')}</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
                   <BreadcrumbPage>{t('admin.users.title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
@@ -385,44 +332,36 @@ export default function AdminUsersPage() {
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {/* 통계 카드 */}
-          <AdminStatsCards stats={stats} isLoading={statsLoading} />
-
-          <div className="grid gap-4 lg:grid-cols-4">
-            {/* 제공자 통계 */}
-            <ProviderStatsCard providers={stats?.providers} isLoading={statsLoading} />
-
-            {/* 사용자 테이블 */}
-            <Card className="lg:col-span-3">
-              <CardHeader>
-                <CardTitle>{t('admin.users.userList')}</CardTitle>
-                <CardDescription>{t('admin.users.userListDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserManagementTable
-                  users={users}
-                  isLoading={isLoading}
-                  pagination={pagination}
-                  onPageChange={handlePageChange}
-                  onSearch={handleSearch}
-                  onProviderFilter={setProviderFilter}
-                  onRoleFilter={setRoleFilter}
-                  onStatusFilter={setStatusFilter}
-                  onRefresh={fetchUsers}
-                  onViewUser={handleViewUser}
-                  onEditUser={handleEditUser}
-                  onDeleteUser={handleDeleteUser}
-                  onRestoreUser={handleRestoreUser}
-                  onToggleActive={handleToggleActive}
-                  onResetPassword={handleResetPassword}
-                  onManageAdRecords={handleManageAdRecords}
-                  onBulkDelete={handleBulkDelete}
-                  onExport={handleExport}
-                  isSuperAdmin={isSuperAdmin}
-                />
-              </CardContent>
-            </Card>
-          </div>
+          {/* 사용자 테이블 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('admin.users.userList')}</CardTitle>
+              <CardDescription>{t('admin.users.userListDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserManagementTable
+                users={users}
+                isLoading={isLoading}
+                pagination={pagination}
+                onPageChange={handlePageChange}
+                onSearch={handleSearch}
+                onProviderFilter={setProviderFilter}
+                onRoleFilter={setRoleFilter}
+                onStatusFilter={setStatusFilter}
+                onRefresh={fetchUsers}
+                onViewUser={handleViewUser}
+                onEditUser={handleEditUser}
+                onDeleteUser={handleDeleteUser}
+                onRestoreUser={handleRestoreUser}
+                onToggleActive={handleToggleActive}
+                onResetPassword={handleResetPassword}
+                onManageAdRecords={handleManageAdRecords}
+                onBulkDelete={handleBulkDelete}
+                onExport={handleExport}
+                isSuperAdmin={isSuperAdmin}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         {/* 모달 */}
@@ -439,10 +378,7 @@ export default function AdminUsersPage() {
           user={selectedUser}
           accessToken={accessToken}
           isSuperAdmin={isSuperAdmin}
-          onSuccess={() => {
-            fetchUsers();
-            fetchStats();
-          }}
+          onSuccess={fetchUsers}
         />
 
         <AdRecordsModal
