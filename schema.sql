@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS user_ad_records (
     user_id VARCHAR(36) NOT NULL UNIQUE,
     unlocked_features JSONB DEFAULT '[]'::jsonb,     -- 해제된 기능 ID 배열 ["qrTypeWebsite", "batchScan", ...]
     ad_watch_counts JSONB DEFAULT '{}'::jsonb,       -- 기능별 광고 시청 횟수 {"qrTypeWebsite": 2, "batchScan": 1, ...}
-    banner_disabled BOOLEAN DEFAULT false,           -- 배너 광고 비활성화 여부
+    banner_settings JSONB DEFAULT '{}'::jsonb,       -- 화면별 배너 광고 설정 {"scanner": true, "history": true, "generator": true, ...}
     last_synced_at TIMESTAMP,                        -- 마지막 동기화 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

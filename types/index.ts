@@ -105,7 +105,7 @@ export interface UserAdRecords {
   userId: string;
   unlockedFeatures: string[];           // 해제된 기능 ID 배열
   adWatchCounts: Record<string, number>; // 기능별 광고 시청 횟수
-  bannerDisabled: boolean;              // 배너 광고 비활성화
+  bannerSettings: Record<string, boolean>; // 화면별 배너 광고 설정 {"scanner": true, "history": false, ...}
   lastSyncedAt: string | null;          // 마지막 동기화 시간
   createdAt: string;
   updatedAt: string;
@@ -114,7 +114,7 @@ export interface UserAdRecords {
 export interface AdRecordsSyncRequest {
   unlockedFeatures: string[];
   adWatchCounts: Record<string, number>;
-  bannerDisabled?: boolean;
+  bannerSettings?: Record<string, boolean>;
 }
 
 export interface AdRecordsResponse {

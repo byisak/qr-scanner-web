@@ -54,6 +54,15 @@ const FEATURE_CONFIG: Record<string, { name: string; type: string; adCount: numb
   googleDriveBackup: { name: "Google Drive Backup", type: "backup", adCount: 3 },
 }
 
+// 배너 광고가 표시되는 화면 목록
+const BANNER_SCREENS: Record<string, string> = {
+  scanner: "Scanner",
+  history: "History",
+  generator: "Generator",
+  settings: "Settings",
+  lotto: "Lotto",
+}
+
 export default function AdRecordsPage() {
   const router = useRouter()
   const t = useTranslations()
@@ -68,7 +77,7 @@ export default function AdRecordsPage() {
   // 편집 상태
   const [unlockedFeatures, setUnlockedFeatures] = useState<string[]>([])
   const [adWatchCounts, setAdWatchCounts] = useState<Record<string, number>>({})
-  const [bannerDisabled, setBannerDisabled] = useState(false)
+  const [bannerSettings, setBannerSettings] = useState<Record<string, boolean>>({})
 
   const fetchAdRecords = useCallback(async () => {
     if (!user || !accessToken) return
@@ -87,7 +96,7 @@ export default function AdRecordsPage() {
           setAdRecords(data.data)
           setUnlockedFeatures(data.data.unlockedFeatures || [])
           setAdWatchCounts(data.data.adWatchCounts || {})
-          setBannerDisabled(data.data.bannerDisabled || false)
+          setBannerSettings(data.data.bannerSettings || {})
         }
       } else {
         toast.error(t("adRecords.loadError"))
@@ -121,7 +130,7 @@ export default function AdRecordsPage() {
         body: JSON.stringify({
           unlockedFeatures,
           adWatchCounts,
-          bannerDisabled,
+          bannerSettings,
         }),
       })
 
@@ -162,7 +171,7 @@ export default function AdRecordsPage() {
       if (res.ok) {
         setUnlockedFeatures([])
         setAdWatchCounts({})
-        setBannerDisabled(false)
+        setBannerSettings({})
         setAdRecords(null)
         toast.success(t("adRecords.resetSuccess"))
       } else {
@@ -185,6 +194,13 @@ export default function AdRecordsPage() {
     const currentCount = adWatchCounts[featureId] || 0
     const newCount = Math.max(0, currentCount + delta)
     setAdWatchCounts({ ...adWatchCounts, [featureId]: newCount })
+  }
+
+  const toggleBannerSetting = (screenId: string) => {
+    setBannerSettings({
+      ...bannerSettings,
+      [screenId]: !bannerSettings[screenId],
+    })
   }
 
   const getFeaturesByType = (type: string) => {
@@ -241,7 +257,7 @@ export default function AdRecordsPage() {
           </CardContent>
         </Card>
 
-        {/* 배너 광고 설정 */}
+        {/* 배너 광고 설정 (화면별) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -251,16 +267,23 @@ export default function AdRecordsPage() {
             <CardDescription>{t("adRecords.bannerDisabledDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="banner-disabled"
-                checked={bannerDisabled}
-                onCheckedChange={setBannerDisabled}
-              />
-              <Label htmlFor="banner-disabled">
-                {bannerDisabled ? "Disabled" : "Enabled"}
-              </Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {Object.entries(BANNER_SCREENS).map(([screenId, screenName]) => (
+                <div key={screenId} className="flex items-center justify-between p-3 border rounded-md">
+                  <Label htmlFor={`banner-${screenId}`} className="text-sm">
+                    {screenName}
+                  </Label>
+                  <Switch
+                    id={`banner-${screenId}`}
+                    checked={bannerSettings[screenId] !== false}
+                    onCheckedChange={() => toggleBannerSetting(screenId)}
+                  />
+                </div>
+              ))}
             </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              * ON = 배너 광고 표시, OFF = 배너 광고 숨김
+            </p>
           </CardContent>
         </Card>
 

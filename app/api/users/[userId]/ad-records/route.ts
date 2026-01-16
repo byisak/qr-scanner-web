@@ -16,7 +16,7 @@ interface AdRecordRow {
   user_id: string;
   unlocked_features: string[];
   ad_watch_counts: Record<string, number>;
-  banner_disabled: boolean;
+  banner_settings: Record<string, boolean>;
   last_synced_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -59,7 +59,7 @@ export async function GET(
 
     // 광고 기록 조회
     const result = await client.query<AdRecordRow>(
-      `SELECT id, user_id, unlocked_features, ad_watch_counts, banner_disabled,
+      `SELECT id, user_id, unlocked_features, ad_watch_counts, banner_settings,
               last_synced_at, created_at, updated_at
        FROM user_ad_records
        WHERE user_id = $1`,
@@ -74,7 +74,7 @@ export async function GET(
           userId,
           unlockedFeatures: [],
           adWatchCounts: {},
-          bannerDisabled: false,
+          bannerSettings: {},
           lastSyncedAt: null,
           createdAt: null,
           updatedAt: null,
@@ -88,7 +88,7 @@ export async function GET(
       userId: row.user_id,
       unlockedFeatures: row.unlocked_features || [],
       adWatchCounts: row.ad_watch_counts || {},
-      bannerDisabled: row.banner_disabled || false,
+      bannerSettings: row.banner_settings || {},
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
@@ -148,27 +148,27 @@ export async function PUT(
     }
 
     const body = (await request.json()) as AdRecordsSyncRequest;
-    const { unlockedFeatures, adWatchCounts, bannerDisabled } = body;
+    const { unlockedFeatures, adWatchCounts, bannerSettings } = body;
 
     client = await getConnection();
     const now = new Date();
 
     // UPSERT: 기록이 있으면 업데이트, 없으면 삽입
     const result = await client.query<AdRecordRow>(
-      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_disabled, last_synced_at, created_at, updated_at)
+      `INSERT INTO user_ad_records (user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $5, $5)
        ON CONFLICT (user_id) DO UPDATE SET
          unlocked_features = $2,
          ad_watch_counts = $3,
-         banner_disabled = $4,
+         banner_settings = $4,
          last_synced_at = $5,
          updated_at = $5
-       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_disabled, last_synced_at, created_at, updated_at`,
+       RETURNING id, user_id, unlocked_features, ad_watch_counts, banner_settings, last_synced_at, created_at, updated_at`,
       [
         userId,
         JSON.stringify(unlockedFeatures || []),
         JSON.stringify(adWatchCounts || {}),
-        bannerDisabled || false,
+        JSON.stringify(bannerSettings || {}),
         now,
       ]
     );
@@ -179,7 +179,7 @@ export async function PUT(
       userId: row.user_id,
       unlockedFeatures: row.unlocked_features || [],
       adWatchCounts: row.ad_watch_counts || {},
-      bannerDisabled: row.banner_disabled || false,
+      bannerSettings: row.banner_settings || {},
       lastSyncedAt: row.last_synced_at?.toISOString() || null,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
