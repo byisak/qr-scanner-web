@@ -387,12 +387,19 @@
   "admin": {
     "dashboard": {
       "title": "관리 대시보드",
+      "totalVisitors": "총 방문자",
+      "totalForPeriod": "선택한 기간의 통계",
       "dailySignups": "일별 신규 가입자",
       "dailySignupsDesc": "최근 7일간 신규 가입자 추이",
       "dailyScans": "일별 스캔 수",
       "dailyScansDesc": "최근 7일간 스캔 수 추이",
       "signups": "가입자",
-      "scans": "스캔"
+      "scans": "스캔",
+      "period": {
+        "3months": "최근 3개월",
+        "30days": "최근 30일",
+        "7days": "최근 7일"
+      }
     },
     "users": {
       "title": "사용자 관리",

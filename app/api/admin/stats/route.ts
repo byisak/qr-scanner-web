@@ -32,6 +32,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 기간 파라미터 (기본값: 7일)
+    const { searchParams } = new URL(request.url);
+    const period = parseInt(searchParams.get('period') || '7');
+    const validPeriods = [7, 30, 90];
+    const chartPeriod = validPeriods.includes(period) ? period : 7;
+
     client = await getConnection();
 
     // 관리자 권한 확인
@@ -76,24 +82,24 @@ export async function GET(request: NextRequest) {
       FROM scan_data
     `);
 
-    // 최근 7일간 일별 가입자 수
+    // 기간별 일별 가입자 수
     const dailySignupsResult = await client.query(`
       SELECT
         DATE(created_at) as date,
         COUNT(*) as count
       FROM users
-      WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '6 days'
+      WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
       GROUP BY DATE(created_at)
       ORDER BY date
     `);
 
-    // 최근 7일간 일별 스캔 수
+    // 기간별 일별 스캔 수
     const dailyScansResult = await client.query(`
       SELECT
         DATE(created_at) as date,
         COUNT(*) as count
       FROM scan_data
-      WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+      WHERE created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
       GROUP BY DATE(created_at)
       ORDER BY date
     `);

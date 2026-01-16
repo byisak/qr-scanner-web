@@ -64,6 +64,7 @@ export default function AdminDashboardPage() {
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState(7);
 
   // 권한 체크
   useEffect(() => {
@@ -73,12 +74,12 @@ export default function AdminDashboardPage() {
   }, [authLoading, isAuthenticated, isAdmin, router]);
 
   // 통계 조회
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (period: number) => {
     if (!accessToken) return;
 
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/stats', {
+      const res = await fetch(`/api/admin/stats?period=${period}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -95,9 +96,14 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (isAdmin && accessToken) {
-      fetchStats();
+      fetchStats(chartPeriod);
     }
-  }, [isAdmin, accessToken, fetchStats]);
+  }, [isAdmin, accessToken, chartPeriod, fetchStats]);
+
+  // 기간 변경 핸들러
+  const handlePeriodChange = useCallback((period: number) => {
+    setChartPeriod(period);
+  }, []);
 
   if (authLoading || !isAdmin) {
     return null;
@@ -134,6 +140,8 @@ export default function AdminDashboardPage() {
             dailySignups={stats?.charts?.dailySignups || []}
             dailyScans={stats?.charts?.dailyScans || []}
             isLoading={isLoading}
+            period={chartPeriod}
+            onPeriodChange={handlePeriodChange}
           />
 
           {/* 제공자 통계 */}
