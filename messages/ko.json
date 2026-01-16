@@ -207,6 +207,7 @@
     "unpin": "고정 해제",
     "sessionNamePlaceholder": "세션 이름 입력...",
     "admin": "관리자",
+    "adminDashboard": "관리 대시보드",
     "userManagement": "사용자 관리"
   },
   "settings": {
@@ -384,6 +385,15 @@
     "editCount": "횟수 수정"
   },
   "admin": {
+    "dashboard": {
+      "title": "관리 대시보드",
+      "dailySignups": "일별 신규 가입자",
+      "dailySignupsDesc": "최근 7일간 신규 가입자 추이",
+      "dailyScans": "일별 스캔 수",
+      "dailyScansDesc": "최근 7일간 스캔 수 추이",
+      "signups": "가입자",
+      "scans": "스캔"
+    },
     "users": {
       "title": "사용자 관리",
       "userList": "사용자 목록",

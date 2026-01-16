@@ -18,6 +18,7 @@ import {
   Shield,
   Users,
   FileText,
+  BarChart3,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -467,6 +468,15 @@ export function NavMain({ currentSessionId }: NavMainProps) {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push('/dashboard/admin')}
+                      className="cursor-pointer"
+                    >
+                      <BarChart3 className="size-3 mr-1" />
+                      <span>{t('sidebar.adminDashboard')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton
                       onClick={() => router.push('/dashboard/admin/users')}
