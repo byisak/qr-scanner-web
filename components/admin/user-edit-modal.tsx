@@ -46,7 +46,7 @@ export function UserEditModal({
   const t = useTranslations()
   const [isLoading, setIsLoading] = React.useState(false)
   const [name, setName] = React.useState("")
-  const [role, setRole] = React.useState("")
+  const [role, setRole] = React.useState("user")
   const [isActive, setIsActive] = React.useState(true)
 
   React.useEffect(() => {

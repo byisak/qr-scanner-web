@@ -166,12 +166,12 @@ export function UserManagementTable({
         </form>
 
         <div className="flex flex-wrap gap-2">
-          <Select onValueChange={onProviderFilter} defaultValue="">
+          <Select onValueChange={(v) => onProviderFilter(v === "all" ? "" : v)} defaultValue="all">
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder={t('admin.users.allProviders')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('admin.users.allProviders')}</SelectItem>
+              <SelectItem value="all">{t('admin.users.allProviders')}</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="google">Google</SelectItem>
               <SelectItem value="apple">Apple</SelectItem>
@@ -179,24 +179,24 @@ export function UserManagementTable({
             </SelectContent>
           </Select>
 
-          <Select onValueChange={onRoleFilter} defaultValue="">
+          <Select onValueChange={(v) => onRoleFilter(v === "all" ? "" : v)} defaultValue="all">
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder={t('admin.users.allRoles')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('admin.users.allRoles')}</SelectItem>
+              <SelectItem value="all">{t('admin.users.allRoles')}</SelectItem>
               <SelectItem value="user">{t('admin.users.roleUser')}</SelectItem>
               <SelectItem value="admin">{t('admin.users.roleAdmin')}</SelectItem>
               <SelectItem value="super_admin">{t('admin.users.roleSuperAdmin')}</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select onValueChange={onStatusFilter} defaultValue="">
+          <Select onValueChange={(v) => onStatusFilter(v === "all" ? "" : v)} defaultValue="all">
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder={t('admin.users.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('admin.users.allStatus')}</SelectItem>
+              <SelectItem value="all">{t('admin.users.allStatus')}</SelectItem>
               <SelectItem value="active">{t('admin.users.active')}</SelectItem>
               <SelectItem value="inactive">{t('admin.users.inactive')}</SelectItem>
               <SelectItem value="deleted">{t('admin.users.deleted')}</SelectItem>
