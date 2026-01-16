@@ -203,11 +203,11 @@ export function AdminCharts({
                 }}
                 labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
                 itemStyle={{ color: '#fafafa' }}
-                formatter={(value: number, name: string) => {
+                formatter={(value, name) => {
                   const label = name === 'signups'
                     ? t('admin.dashboard.signups')
                     : t('admin.dashboard.scans')
-                  return [value, label]
+                  return [value ?? 0, label]
                 }}
               />
               <Area
