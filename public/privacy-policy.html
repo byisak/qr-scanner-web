@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - ScanView</title>
+    <title>개인정보 처리방침 - ScanView</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -45,7 +45,7 @@
         .lang-en-flex, .lang-ko-flex { display: none; }
     </style>
 </head>
-<body class="bg-dark-950 text-dark-200 min-h-screen" data-lang="en">
+<body class="bg-dark-950 text-dark-200 min-h-screen" data-lang="ko">
     <!-- Header -->
     <header class="sticky top-0 z-50 backdrop-blur-lg bg-dark-950/80 border-b border-dark-800">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4">
@@ -61,8 +61,8 @@
                     <span class="text-xs sm:text-sm text-dark-500 hidden sm:inline lang-ko">개인정보 처리방침</span>
                     <!-- Language Selector -->
                     <div class="flex items-center bg-dark-800 rounded-lg p-1">
-                        <button onclick="setLang('en')" id="btn-en" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors bg-emerald-500 text-white">EN</button>
-                        <button onclick="setLang('ko')" id="btn-ko" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-dark-400 hover:text-white">한국어</button>
+                        <button onclick="setLang('en')" id="btn-en" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-dark-400 hover:text-white">EN</button>
+                        <button onclick="setLang('ko')" id="btn-ko" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors bg-emerald-500 text-white">한국어</button>
                     </div>
                 </div>
             </div>
@@ -580,19 +580,14 @@
             localStorage.setItem('privacy-lang', lang);
         }
 
-        // Load saved language preference or detect browser language
+        // Load saved language preference
         document.addEventListener('DOMContentLoaded', function() {
             const saved = localStorage.getItem('privacy-lang');
             if (saved) {
                 setLang(saved);
             } else {
-                // Default to English, but check if browser prefers Korean
-                const browserLang = navigator.language || navigator.userLanguage;
-                if (browserLang.startsWith('ko')) {
-                    setLang('ko');
-                } else {
-                    setLang('en');
-                }
+                // Default to Korean
+                setLang('ko');
             }
         });
     </script>
