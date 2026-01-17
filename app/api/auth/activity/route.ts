@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     console.error('Activity update error:', error);
     return NextResponse.json(
       createAuthErrorResponse(
-        AuthErrorCodes.INTERNAL_ERROR,
+        AuthErrorCodes.PROVIDER_ERROR,
         '접속 시간 업데이트 중 오류가 발생했습니다.'
       ),
       { status: 500 }
