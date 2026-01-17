@@ -1,194 +1,417 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>개인정보 처리방침 - ScanView</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#52525b',
+                            700: '#3f3f46',
+                            800: '#27272a',
+                            900: '#18181b',
+                            950: '#09090b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.8;
-            color: #333;
-            background-color: #f9f9f9;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #1a1a1a;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        .update-date {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        h2 {
-            color: #2c3e50;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-left: 4px solid #3498db;
-            padding-left: 12px;
-        }
-        p {
-            margin-bottom: 15px;
-            color: #444;
-        }
-        ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-        li {
-            margin-bottom: 8px;
-            color: #444;
-        }
-        .contact {
-            background: #f0f7ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-        .contact h2 {
-            margin-top: 0;
-        }
-        a {
-            color: #3498db;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #888;
-            font-size: 14px;
-        }
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 20px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-            h2 {
-                font-size: 18px;
-            }
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>개인정보 처리방침</h1>
-        <p class="update-date">최종 업데이트: 2025년 1월 17일</p>
+<body class="bg-dark-950 text-dark-200 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-lg bg-dark-950/80 border-b border-dark-800">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="https://scanview.app" class="flex items-center gap-2 text-white font-semibold text-lg hover:text-emerald-400 transition-colors">
+                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                    </svg>
+                    ScanView
+                </a>
+                <span class="text-xs sm:text-sm text-dark-500">개인정보 처리방침</span>
+            </div>
+        </div>
+    </header>
 
-        <p>ScanView(이하 "앱")는 사용자의 개인정보를 중요하게 생각하며, 개인정보 보호법 및 관련 법령을 준수합니다. 본 개인정보 처리방침은 앱이 수집하는 정보와 그 사용 방법에 대해 설명합니다.</p>
-
-        <h2>1. 수집하는 개인정보</h2>
-        <p>앱은 서비스 제공을 위해 다음과 같은 정보를 수집할 수 있습니다:</p>
-        <ul>
-            <li><strong>계정 정보:</strong> 이메일 주소, 이름 (회원가입 시)</li>
-            <li><strong>소셜 로그인 정보:</strong> Google, Apple, Kakao 계정을 통한 인증 정보</li>
-            <li><strong>기기 정보:</strong> 기기 모델, 운영체제 버전, 고유 기기 식별자</li>
-            <li><strong>사용 데이터:</strong> 앱 사용 패턴, 기능 사용 빈도, 오류 로그</li>
-            <li><strong>광고 식별자:</strong> 맞춤형 광고 제공을 위한 광고 ID (IDFA/GAID)</li>
-            <li><strong>카메라 접근:</strong> QR/바코드 스캔을 위한 카메라 사용 (이미지는 저장되지 않음)</li>
-            <li><strong>사진 라이브러리:</strong> 이미지에서 코드 분석 시 선택한 사진에만 접근</li>
-        </ul>
-
-        <h2>2. 개인정보의 수집 및 이용 목적</h2>
-        <p>수집된 정보는 다음 목적으로 사용됩니다:</p>
-        <ul>
-            <li>QR 코드 및 바코드 스캔 서비스 제공</li>
-            <li>회원 관리 및 서비스 이용 기록 관리</li>
-            <li>스캔 기록 저장 및 동기화</li>
-            <li>앱 성능 개선 및 사용자 경험 향상</li>
-            <li>맞춤형 광고 제공 (사용자 동의 시)</li>
-            <li>앱 오류 분석 및 기술 지원</li>
-            <li>서비스 이용 통계 분석</li>
-        </ul>
-
-        <h2>3. 개인정보의 보유 및 이용 기간</h2>
-        <p>수집된 개인정보는 수집 목적이 달성되면 지체 없이 파기됩니다. 다만, 관련 법령에 따라 보존할 필요가 있는 경우 해당 기간 동안 보관됩니다.</p>
-        <ul>
-            <li>회원 정보: 회원 탈퇴 시까지</li>
-            <li>앱 사용 기록: 앱 삭제 또는 회원 탈퇴 시까지</li>
-            <li>광고 관련 데이터: 수집일로부터 1년</li>
-        </ul>
-
-        <h2>4. 개인정보의 제3자 제공</h2>
-        <p>앱은 사용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만, 다음의 경우는 예외로 합니다:</p>
-        <ul>
-            <li>사용자가 사전에 동의한 경우</li>
-            <li>법령에 의거하거나 수사 목적으로 법령에 정해진 절차와 방법에 따라 요청이 있는 경우</li>
-        </ul>
-
-        <h2>5. 제3자 서비스</h2>
-        <p>앱은 다음의 제3자 서비스를 사용합니다:</p>
-        <ul>
-            <li><strong>Supabase:</strong> 사용자 인증 및 데이터 저장</li>
-            <li><strong>Google Analytics (Firebase):</strong> 앱 사용 통계 분석</li>
-            <li><strong>Google AdMob:</strong> 광고 제공</li>
-            <li><strong>Google OAuth:</strong> Google 계정 로그인</li>
-            <li><strong>Apple Sign In:</strong> Apple 계정 로그인</li>
-            <li><strong>Kakao OAuth:</strong> Kakao 계정 로그인</li>
-        </ul>
-        <p>각 서비스의 개인정보 처리방침은 해당 서비스 제공자의 웹사이트에서 확인하실 수 있습니다.</p>
-
-        <h2>6. 앱 추적 투명성 (ATT)</h2>
-        <p>iOS 14.5 이상에서 앱은 사용자의 활동을 추적하기 전에 권한을 요청합니다. 추적 권한을 거부하더라도 앱의 기본 기능은 정상적으로 이용 가능합니다.</p>
-
-        <h2>7. 사용자의 권리</h2>
-        <p>사용자는 다음의 권리를 행사할 수 있습니다:</p>
-        <ul>
-            <li>개인정보 열람, 정정, 삭제 요청</li>
-            <li>개인정보 처리 정지 요청</li>
-            <li>회원 탈퇴 및 계정 삭제 요청</li>
-            <li>광고 추적 동의 철회 (기기 설정에서 변경 가능)</li>
-        </ul>
-
-        <h2>8. 아동의 개인정보</h2>
-        <p>앱은 만 14세 미만 아동의 개인정보를 의도적으로 수집하지 않습니다. 만 14세 미만 아동의 개인정보가 수집된 것을 인지한 경우, 해당 정보를 즉시 삭제합니다.</p>
-
-        <h2>9. 개인정보의 안전성 확보 조치</h2>
-        <p>앱은 개인정보의 안전성 확보를 위해 다음과 같은 조치를 취하고 있습니다:</p>
-        <ul>
-            <li>개인정보의 암호화 저장 및 전송</li>
-            <li>해킹 등에 대비한 기술적 대책</li>
-            <li>개인정보 접근 권한 관리</li>
-            <li>정기적인 보안 점검</li>
-        </ul>
-
-        <h2>10. 개인정보 처리방침의 변경</h2>
-        <p>본 개인정보 처리방침은 법령 또는 서비스 변경에 따라 수정될 수 있습니다. 변경 시 앱 내 공지 또는 본 페이지를 통해 안내드립니다.</p>
-
-        <div class="contact">
-            <h2>11. 문의처</h2>
-            <p>개인정보 처리방침에 대한 문의사항이 있으시면 아래로 연락해 주세요:</p>
-            <ul>
-                <li><strong>이메일:</strong> <a href="mailto:support@scanview.app">support@scanview.app</a></li>
-                <li><strong>서비스명:</strong> ScanView</li>
-                <li><strong>웹사이트:</strong> <a href="https://scanview.app">https://scanview.app</a></li>
-            </ul>
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <!-- Title Section -->
+        <div class="mb-8 sm:mb-12">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">개인정보 처리방침</h1>
+            <div class="flex items-center gap-2 text-dark-500 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>최종 업데이트: 2026년 1월 18일</span>
+            </div>
         </div>
 
-        <div class="footer">
-            <p>&copy; 2025 ScanView. All rights reserved.</p>
+        <!-- Intro -->
+        <div class="bg-dark-900/50 border border-dark-800 rounded-2xl p-5 sm:p-6 mb-8">
+            <p class="text-dark-300 leading-relaxed">
+                ScanView(이하 "앱")는 사용자의 개인정보를 중요하게 생각하며, 개인정보 보호법 및 관련 법령을 준수합니다.
+                본 개인정보 처리방침은 앱이 수집하는 정보와 그 사용 방법에 대해 설명합니다.
+            </p>
         </div>
-    </div>
+
+        <!-- Sections -->
+        <div class="space-y-6 sm:space-y-8">
+            <!-- Section 1 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">1</span>
+                    수집하는 개인정보
+                </h2>
+                <p class="text-dark-400 mb-4">앱은 서비스 제공을 위해 다음과 같은 정보를 수집할 수 있습니다:</p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">계정 정보:</strong> 이메일 주소, 이름 (회원가입 시)</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">소셜 로그인 정보:</strong> Google, Apple, Kakao 계정을 통한 인증 정보</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">기기 정보:</strong> 기기 모델, 운영체제 버전, 고유 기기 식별자</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">사용 데이터:</strong> 앱 사용 패턴, 기능 사용 빈도, 오류 로그</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">광고 식별자:</strong> 맞춤형 광고 제공을 위한 광고 ID (IDFA/GAID)</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">카메라 접근:</strong> QR/바코드 스캔을 위한 카메라 사용 (이미지는 저장되지 않음)</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span><strong class="text-white">사진 라이브러리:</strong> 이미지에서 코드 분석 시 선택한 사진에만 접근</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 2 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">2</span>
+                    개인정보의 수집 및 이용 목적
+                </h2>
+                <p class="text-dark-400 mb-4">수집된 정보는 다음 목적으로 사용됩니다:</p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>QR 코드 및 바코드 스캔 서비스 제공</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>회원 관리 및 서비스 이용 기록 관리</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>스캔 기록 저장 및 동기화</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>앱 성능 개선 및 사용자 경험 향상</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>맞춤형 광고 제공 (사용자 동의 시)</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span>앱 오류 분석 및 기술 지원</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 3 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">3</span>
+                    개인정보의 보유 및 이용 기간
+                </h2>
+                <p class="text-dark-400 mb-4">수집된 개인정보는 수집 목적이 달성되면 지체 없이 파기됩니다. 다만, 관련 법령에 따라 보존할 필요가 있는 경우 해당 기간 동안 보관됩니다.</p>
+                <div class="grid gap-3 sm:grid-cols-3">
+                    <div class="bg-dark-800/50 rounded-xl p-4">
+                        <p class="text-dark-500 text-sm mb-1">회원 정보</p>
+                        <p class="text-white font-medium">회원 탈퇴 시까지</p>
+                    </div>
+                    <div class="bg-dark-800/50 rounded-xl p-4">
+                        <p class="text-dark-500 text-sm mb-1">앱 사용 기록</p>
+                        <p class="text-white font-medium">탈퇴 또는 삭제 시까지</p>
+                    </div>
+                    <div class="bg-dark-800/50 rounded-xl p-4">
+                        <p class="text-dark-500 text-sm mb-1">광고 관련 데이터</p>
+                        <p class="text-white font-medium">수집일로부터 1년</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">4</span>
+                    개인정보의 제3자 제공
+                </h2>
+                <p class="text-dark-400 mb-4">앱은 사용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만, 다음의 경우는 예외로 합니다:</p>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                        <span>사용자가 사전에 동의한 경우</span>
+                    </li>
+                    <li class="flex items-start gap-3 text-dark-300">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                        <span>법령에 의거하거나 수사 목적으로 법령에 정해진 절차와 방법에 따라 요청이 있는 경우</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 5 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">5</span>
+                    제3자 서비스
+                </h2>
+                <p class="text-dark-400 mb-4">앱은 다음의 제3자 서비스를 사용합니다:</p>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Supabase</p>
+                            <p class="text-dark-500 text-sm">사용자 인증 및 데이터 저장</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Google Analytics</p>
+                            <p class="text-dark-500 text-sm">앱 사용 통계 분석</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Google AdMob</p>
+                            <p class="text-dark-500 text-sm">광고 제공</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">OAuth 서비스</p>
+                            <p class="text-dark-500 text-sm">Google, Apple, Kakao 로그인</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-dark-500 text-sm mt-4">각 서비스의 개인정보 처리방침은 해당 서비스 제공자의 웹사이트에서 확인하실 수 있습니다.</p>
+            </section>
+
+            <!-- Section 6 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">6</span>
+                    앱 추적 투명성 (ATT)
+                </h2>
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <p class="text-dark-300">
+                        iOS 14.5 이상에서 앱은 사용자의 활동을 추적하기 전에 권한을 요청합니다.
+                        <strong class="text-white">추적 권한을 거부하더라도 앱의 기본 기능은 정상적으로 이용 가능합니다.</strong>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Section 7 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">7</span>
+                    사용자의 권리
+                </h2>
+                <p class="text-dark-400 mb-4">사용자는 다음의 권리를 행사할 수 있습니다:</p>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="flex items-center gap-3 text-dark-300">
+                        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>개인정보 열람, 정정, 삭제 요청</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-dark-300">
+                        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>개인정보 처리 정지 요청</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-dark-300">
+                        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>회원 탈퇴 및 계정 삭제 요청</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-dark-300">
+                        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>광고 추적 동의 철회</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">8</span>
+                    아동의 개인정보
+                </h2>
+                <p class="text-dark-300">
+                    앱은 만 14세 미만 아동의 개인정보를 의도적으로 수집하지 않습니다.
+                    만 14세 미만 아동의 개인정보가 수집된 것을 인지한 경우, 해당 정보를 즉시 삭제합니다.
+                </p>
+            </section>
+
+            <!-- Section 9 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">9</span>
+                    개인정보의 안전성 확보 조치
+                </h2>
+                <p class="text-dark-400 mb-4">앱은 개인정보의 안전성 확보를 위해 다음과 같은 조치를 취하고 있습니다:</p>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <span class="text-dark-300">개인정보의 암호화 저장 및 전송</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <span class="text-dark-300">해킹 등에 대비한 기술적 대책</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <span class="text-dark-300">개인정보 접근 권한 관리</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-dark-800/50 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <span class="text-dark-300">정기적인 보안 점검</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 10 -->
+            <section class="bg-dark-900/30 border border-dark-800 rounded-2xl p-5 sm:p-6 hover:border-dark-700 transition-colors">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-bold">10</span>
+                    개인정보 처리방침의 변경
+                </h2>
+                <p class="text-dark-300">
+                    본 개인정보 처리방침은 법령 또는 서비스 변경에 따라 수정될 수 있습니다.
+                    변경 시 앱 내 공지 또는 본 페이지를 통해 안내드립니다.
+                </p>
+            </section>
+
+            <!-- Contact Section -->
+            <section class="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-2xl p-5 sm:p-6">
+                <h2 class="flex items-center gap-3 text-lg sm:text-xl font-semibold text-white mb-4">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 text-sm font-bold">11</span>
+                    문의처
+                </h2>
+                <p class="text-dark-300 mb-4">개인정보 처리방침에 대한 문의사항이 있으시면 아래로 연락해 주세요:</p>
+                <div class="space-y-3">
+                    <a href="mailto:support@scanview.app" class="flex items-center gap-3 bg-dark-900/50 rounded-xl p-4 hover:bg-dark-900/70 transition-colors group">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-dark-500 text-sm">이메일</p>
+                            <p class="text-white font-medium group-hover:text-emerald-400 transition-colors">support@scanview.app</p>
+                        </div>
+                    </a>
+                    <a href="https://scanview.app" class="flex items-center gap-3 bg-dark-900/50 rounded-xl p-4 hover:bg-dark-900/70 transition-colors group">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-dark-500 text-sm">웹사이트</p>
+                            <p class="text-white font-medium group-hover:text-emerald-400 transition-colors">scanview.app</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-800 mt-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                <div class="flex items-center gap-2 text-dark-500">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                    </svg>
+                    <span class="font-medium text-dark-400">ScanView</span>
+                </div>
+                <p class="text-dark-600 text-sm">&copy; 2026 ScanView. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
