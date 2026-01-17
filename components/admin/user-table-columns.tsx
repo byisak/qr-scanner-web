@@ -69,22 +69,22 @@ const getRoleBadge = (role: string, t: (key: string) => string) => {
   switch (role) {
     case 'super_admin':
       return (
-        <Badge variant="destructive" className="gap-1">
-          <ShieldCheck className="h-3 w-3" />
+        <Badge variant="destructive" className="gap-1 whitespace-nowrap">
+          <ShieldCheck className="h-3 w-3 flex-shrink-0" />
           {t('admin.users.roleSuperAdmin')}
         </Badge>
       )
     case 'admin':
       return (
-        <Badge variant="default" className="gap-1">
-          <Shield className="h-3 w-3" />
+        <Badge variant="default" className="gap-1 whitespace-nowrap">
+          <Shield className="h-3 w-3 flex-shrink-0" />
           {t('admin.users.roleAdmin')}
         </Badge>
       )
     default:
       return (
-        <Badge variant="secondary" className="gap-1">
-          <User className="h-3 w-3" />
+        <Badge variant="secondary" className="gap-1 whitespace-nowrap">
+          <User className="h-3 w-3 flex-shrink-0" />
           {t('admin.users.roleUser')}
         </Badge>
       )
@@ -100,7 +100,7 @@ const getProviderBadge = (provider: string) => {
   }
 
   return (
-    <Badge variant="outline" className={colors[provider] || ''}>
+    <Badge variant="outline" className={`${colors[provider] || ''} whitespace-nowrap`}>
       {provider.charAt(0).toUpperCase() + provider.slice(1)}
     </Badge>
   )
@@ -186,16 +186,16 @@ export function createUserColumns({
       cell: ({ row }) => {
         const user = row.original
         if (user.deletedAt) {
-          return <Badge variant="destructive">{t('admin.users.deleted')}</Badge>
+          return <Badge variant="destructive" className="whitespace-nowrap">{t('admin.users.deleted')}</Badge>
         }
         return user.isActive ? (
-          <Badge variant="outline" className="text-green-600 border-green-600">
-            <Check className="h-3 w-3 mr-1" />
+          <Badge variant="outline" className="text-green-600 border-green-600 whitespace-nowrap">
+            <Check className="h-3 w-3 mr-1 flex-shrink-0" />
             {t('admin.users.active')}
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-red-600 border-red-600">
-            <X className="h-3 w-3 mr-1" />
+          <Badge variant="outline" className="text-red-600 border-red-600 whitespace-nowrap">
+            <X className="h-3 w-3 mr-1 flex-shrink-0" />
             {t('admin.users.inactive')}
           </Badge>
         )
