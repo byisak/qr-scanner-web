@@ -131,9 +131,9 @@ export async function POST(request: NextRequest) {
     } else {
       userRow = userResult.rows[0];
 
-      // 프로필 정보 업데이트 (선택적)
+      // 프로필 정보 및 마지막 로그인 시간 업데이트
       await client.query(
-        `UPDATE users SET profile_image = $1, updated_at = $2
+        `UPDATE users SET profile_image = $1, last_login_at = $2, updated_at = $2
          WHERE id = $3`,
         [profileImage, new Date(), userRow.id]
       );

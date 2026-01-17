@@ -178,12 +178,19 @@ export async function POST(request: NextRequest) {
     } else {
       userRow = userResult.rows[0];
 
-      // 이름이 제공된 경우에만 업데이트 (Apple은 첫 로그인 시에만 이름 제공)
+      // 이름이 제공된 경우 이름도 업데이트 (Apple은 첫 로그인 시에만 이름 제공)
+      // 마지막 로그인 시간은 항상 업데이트
       if (appleUser?.name) {
         await client.query(
-          `UPDATE users SET name = $1, updated_at = $2
+          `UPDATE users SET name = $1, last_login_at = $2, updated_at = $2
            WHERE id = $3`,
           [name, new Date(), userRow.id]
+        );
+      } else {
+        await client.query(
+          `UPDATE users SET last_login_at = $1, updated_at = $1
+           WHERE id = $2`,
+          [new Date(), userRow.id]
         );
       }
     }
