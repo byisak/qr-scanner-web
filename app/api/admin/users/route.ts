@@ -80,13 +80,21 @@ export async function GET(request: NextRequest) {
     const params: (string | number)[] = [];
     let paramIndex = 1;
 
+    // 휴면 기준: 1년 (365일)
+    const DORMANT_DAYS = 365;
+
     // 삭제된 사용자 필터
     if (status === 'deleted') {
       conditions.push('u.deleted_at IS NOT NULL');
     } else if (status === 'active') {
       conditions.push('u.deleted_at IS NULL AND u.is_active = true');
+      conditions.push(`(u.last_login_at IS NULL OR u.last_login_at > CURRENT_TIMESTAMP - INTERVAL '${DORMANT_DAYS} days')`);
     } else if (status === 'inactive') {
       conditions.push('u.deleted_at IS NULL AND u.is_active = false');
+    } else if (status === 'dormant') {
+      // 휴면회원: 1년 이상 로그인하지 않은 활성 사용자
+      conditions.push('u.deleted_at IS NULL AND u.is_active = true');
+      conditions.push(`u.last_login_at IS NOT NULL AND u.last_login_at <= CURRENT_TIMESTAMP - INTERVAL '${DORMANT_DAYS} days'`);
     } else {
       conditions.push('u.deleted_at IS NULL');
     }

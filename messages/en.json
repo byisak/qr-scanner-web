@@ -415,6 +415,7 @@
       "roleSuperAdmin": "Super Admin",
       "active": "Active",
       "inactive": "Inactive",
+      "dormant": "Dormant",
       "deleted": "Deleted",
       "name": "Name",
       "email": "Email",
