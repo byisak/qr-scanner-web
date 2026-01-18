@@ -140,17 +140,45 @@ const LineHeight = Extension.create({
     return {
       setLineHeight:
         (lineHeight: string) =>
-        ({ commands }) => {
-          return this.options.types.every((type: string) =>
-            commands.updateAttributes(type, { lineHeight })
-          );
+        ({ tr, state, dispatch }) => {
+          const { selection } = state;
+          const { from, to } = selection;
+
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (this.options.types.includes(node.type.name)) {
+              tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                lineHeight,
+              });
+            }
+          });
+
+          if (dispatch) {
+            dispatch(tr);
+          }
+
+          return true;
         },
       unsetLineHeight:
         () =>
-        ({ commands }) => {
-          return this.options.types.every((type: string) =>
-            commands.resetAttributes(type, 'lineHeight')
-          );
+        ({ tr, state, dispatch }) => {
+          const { selection } = state;
+          const { from, to } = selection;
+
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (this.options.types.includes(node.type.name)) {
+              tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                lineHeight: null,
+              });
+            }
+          });
+
+          if (dispatch) {
+            dispatch(tr);
+          }
+
+          return true;
         },
     };
   },
