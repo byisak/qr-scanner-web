@@ -8,7 +8,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import {
   Bold,
   Italic,
@@ -31,6 +31,7 @@ import {
   Code,
   Type,
   ALargeSmall,
+  WrapText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
@@ -100,6 +101,61 @@ const FontSize = Extension.create({
   },
 });
 
+// 커스텀 LineHeight Extension
+const LineHeight = Extension.create({
+  name: 'lineHeight',
+
+  addOptions() {
+    return {
+      types: ['paragraph', 'heading'],
+      defaultLineHeight: null,
+    };
+  },
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          lineHeight: {
+            default: this.options.defaultLineHeight,
+            parseHTML: (element) => {
+              return element.style.lineHeight || null;
+            },
+            renderHTML: (attributes) => {
+              if (!attributes.lineHeight) {
+                return {};
+              }
+              return {
+                style: `line-height: ${attributes.lineHeight}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setLineHeight:
+        (lineHeight: string) =>
+        ({ commands }) => {
+          return this.options.types.every((type: string) =>
+            commands.updateAttributes(type, { lineHeight })
+          );
+        },
+      unsetLineHeight:
+        () =>
+        ({ commands }) => {
+          return this.options.types.every((type: string) =>
+            commands.resetAttributes(type, 'lineHeight')
+          );
+        },
+    };
+  },
+});
+
 interface WysiwygEditorProps {
   content: string;
   onChange: (html: string) => void;
@@ -133,12 +189,27 @@ const FONT_SIZES = [
   { value: '48px', label: '48px' },
 ];
 
+const LINE_HEIGHTS = [
+  { value: 'default', label: '기본' },
+  { value: '1', label: '1.0' },
+  { value: '1.2', label: '1.2' },
+  { value: '1.5', label: '1.5' },
+  { value: '1.8', label: '1.8' },
+  { value: '2', label: '2.0' },
+  { value: '2.5', label: '2.5' },
+  { value: '3', label: '3.0' },
+];
+
 // Editor commands 타입 확장
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     fontSize: {
       setFontSize: (fontSize: string) => ReturnType;
       unsetFontSize: () => ReturnType;
+    };
+    lineHeight: {
+      setLineHeight: (lineHeight: string) => ReturnType;
+      unsetLineHeight: () => ReturnType;
     };
   }
 }
@@ -149,6 +220,11 @@ export function WysiwygEditor({
   placeholder = '내용을 입력하세요...',
   className = '',
 }: WysiwygEditorProps) {
+  // 현재 선택된 스타일 상태 추적
+  const [currentFontFamily, setCurrentFontFamily] = useState('default');
+  const [currentFontSize, setCurrentFontSize] = useState('default');
+  const [currentLineHeight, setCurrentLineHeight] = useState('default');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -172,6 +248,7 @@ export function WysiwygEditor({
       TextStyle,
       FontFamily,
       FontSize,
+      LineHeight,
     ],
     content,
     editorProps: {
@@ -191,6 +268,39 @@ export function WysiwygEditor({
     }
   }, [content, editor]);
 
+  // 선택 영역 변경 시 현재 스타일 업데이트
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateCurrentStyles = () => {
+      // 폰트 패밀리
+      const fontFamily = editor.getAttributes('textStyle').fontFamily;
+      setCurrentFontFamily(fontFamily || 'default');
+
+      // 폰트 사이즈
+      const fontSize = editor.getAttributes('textStyle').fontSize;
+      setCurrentFontSize(fontSize || 'default');
+
+      // 줄 간격 (paragraph 또는 heading에서 가져옴)
+      const paragraphLineHeight = editor.getAttributes('paragraph').lineHeight;
+      const headingLineHeight = editor.getAttributes('heading').lineHeight;
+      const lineHeight = paragraphLineHeight || headingLineHeight;
+      setCurrentLineHeight(lineHeight || 'default');
+    };
+
+    // 초기 상태 업데이트
+    updateCurrentStyles();
+
+    // 선택 변경 및 트랜잭션 시 업데이트
+    editor.on('selectionUpdate', updateCurrentStyles);
+    editor.on('transaction', updateCurrentStyles);
+
+    return () => {
+      editor.off('selectionUpdate', updateCurrentStyles);
+      editor.off('transaction', updateCurrentStyles);
+    };
+  }, [editor]);
+
   const setLink = useCallback(() => {
     if (!editor) return;
 
@@ -207,7 +317,7 @@ export function WysiwygEditor({
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
-  const setFontFamily = (fontFamily: string) => {
+  const handleFontFamilyChange = (fontFamily: string) => {
     if (!editor) return;
 
     if (fontFamily === 'default') {
@@ -217,7 +327,7 @@ export function WysiwygEditor({
     }
   };
 
-  const setFontSize = (fontSize: string) => {
+  const handleFontSizeChange = (fontSize: string) => {
     if (!editor) return;
 
     if (fontSize === 'default') {
@@ -227,16 +337,14 @@ export function WysiwygEditor({
     }
   };
 
-  const getCurrentFontFamily = () => {
-    if (!editor) return 'default';
-    const fontFamily = editor.getAttributes('textStyle').fontFamily;
-    return fontFamily || 'default';
-  };
+  const handleLineHeightChange = (lineHeight: string) => {
+    if (!editor) return;
 
-  const getCurrentFontSize = () => {
-    if (!editor) return 'default';
-    const fontSize = editor.getAttributes('textStyle').fontSize;
-    return fontSize || 'default';
+    if (lineHeight === 'default') {
+      editor.chain().focus().unsetLineHeight().run();
+    } else {
+      editor.chain().focus().setLineHeight(lineHeight).run();
+    }
   };
 
   if (!editor) {
@@ -269,7 +377,7 @@ export function WysiwygEditor({
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* 폰트 선택 */}
-          <Select value={getCurrentFontFamily()} onValueChange={setFontFamily}>
+          <Select value={currentFontFamily} onValueChange={handleFontFamilyChange}>
             <SelectTrigger className="h-8 w-[120px] text-xs">
               <Type className="h-3 w-3 mr-1" />
               <SelectValue placeholder="폰트" />
@@ -288,7 +396,7 @@ export function WysiwygEditor({
           </Select>
 
           {/* 글자 크기 선택 */}
-          <Select value={getCurrentFontSize()} onValueChange={setFontSize}>
+          <Select value={currentFontSize} onValueChange={handleFontSizeChange}>
             <SelectTrigger className="h-8 w-[90px] text-xs">
               <ALargeSmall className="h-3 w-3 mr-1" />
               <SelectValue placeholder="크기" />
@@ -301,6 +409,21 @@ export function WysiwygEditor({
                   style={{ fontSize: size.value !== 'default' ? size.value : undefined }}
                 >
                   {size.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* 줄 간격 선택 */}
+          <Select value={currentLineHeight} onValueChange={handleLineHeightChange}>
+            <SelectTrigger className="h-8 w-[80px] text-xs">
+              <WrapText className="h-3 w-3 mr-1" />
+              <SelectValue placeholder="줄간격" />
+            </SelectTrigger>
+            <SelectContent>
+              {LINE_HEIGHTS.map((height) => (
+                <SelectItem key={height.value} value={height.value}>
+                  {height.label}
                 </SelectItem>
               ))}
             </SelectContent>
