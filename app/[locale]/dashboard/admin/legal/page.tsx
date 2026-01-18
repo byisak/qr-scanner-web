@@ -36,6 +36,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/components/ui/sonner';
 import { Copy, ExternalLink, Save, Eye } from 'lucide-react';
+import { WysiwygEditor } from '@/components/admin/wysiwyg-editor';
 
 interface LegalDocument {
   id: string;
@@ -413,17 +414,10 @@ function LegalEditor({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="content">{t('admin.legal.content')}</Label>
-          <span className="text-xs text-muted-foreground">
-            {t('admin.legal.markdownSupport')}
-          </span>
-        </div>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full min-h-[400px] p-3 border rounded-md bg-background font-mono text-sm resize-y"
+        <Label>{t('admin.legal.content')}</Label>
+        <WysiwygEditor
+          content={content}
+          onChange={setContent}
           placeholder={t('admin.legal.contentPlaceholder')}
         />
       </div>
