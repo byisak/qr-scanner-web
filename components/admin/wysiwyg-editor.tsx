@@ -6,6 +6,8 @@ import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
+import TextStyle from '@tiptap/extension-text-style';
+import FontFamily from '@tiptap/extension-font-family';
 import { useEffect, useCallback } from 'react';
 import {
   Bold,
@@ -21,11 +23,13 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   Quote,
   Minus,
   Undo,
   Redo,
   Code,
+  Type,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
@@ -36,6 +40,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface WysiwygEditorProps {
   content: string;
@@ -43,6 +54,17 @@ interface WysiwygEditorProps {
   placeholder?: string;
   className?: string;
 }
+
+const FONT_FAMILIES = [
+  { value: 'default', label: '기본 폰트' },
+  { value: 'Pretendard', label: 'Pretendard' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Courier New', label: 'Courier New' },
+  { value: 'Noto Sans KR', label: 'Noto Sans KR' },
+];
 
 export function WysiwygEditor({
   content,
@@ -54,7 +76,7 @@ export function WysiwygEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4],
         },
       }),
       Link.configure({
@@ -70,6 +92,8 @@ export function WysiwygEditor({
       Placeholder.configure({
         placeholder,
       }),
+      TextStyle,
+      FontFamily,
     ],
     content,
     editorProps: {
@@ -105,6 +129,22 @@ export function WysiwygEditor({
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
+  const setFontFamily = (fontFamily: string) => {
+    if (!editor) return;
+
+    if (fontFamily === 'default') {
+      editor.chain().focus().unsetFontFamily().run();
+    } else {
+      editor.chain().focus().setFontFamily(fontFamily).run();
+    }
+  };
+
+  const getCurrentFontFamily = () => {
+    if (!editor) return 'default';
+    const fontFamily = editor.getAttributes('textStyle').fontFamily;
+    return fontFamily || 'default';
+  };
+
   if (!editor) {
     return (
       <div className="border rounded-md p-4 min-h-[400px] animate-pulse bg-muted" />
@@ -131,6 +171,27 @@ export function WysiwygEditor({
           >
             <Redo className="h-4 w-4" />
           </ToolbarButton>
+
+          <Separator orientation="vertical" className="h-6 mx-1" />
+
+          {/* 폰트 선택 */}
+          <Select value={getCurrentFontFamily()} onValueChange={setFontFamily}>
+            <SelectTrigger className="h-8 w-[130px] text-xs">
+              <Type className="h-3 w-3 mr-1" />
+              <SelectValue placeholder="폰트" />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_FAMILIES.map((font) => (
+                <SelectItem
+                  key={font.value}
+                  value={font.value}
+                  style={{ fontFamily: font.value !== 'default' ? font.value : undefined }}
+                >
+                  {font.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -161,6 +222,15 @@ export function WysiwygEditor({
             tooltip="제목 3"
           >
             <Heading3 className="h-4 w-4" />
+          </ToolbarToggle>
+          <ToolbarToggle
+            pressed={editor.isActive('heading', { level: 4 })}
+            onPressedChange={() =>
+              editor.chain().focus().toggleHeading({ level: 4 }).run()
+            }
+            tooltip="제목 4"
+          >
+            <Heading4 className="h-4 w-4" />
           </ToolbarToggle>
 
           <Separator orientation="vertical" className="h-6 mx-1" />
@@ -303,16 +373,21 @@ export function WysiwygEditor({
           pointer-events: none;
         }
         .ProseMirror h1 {
+          font-size: 1.75em;
+          font-weight: 700;
+          margin: 1em 0 0.5em;
+        }
+        .ProseMirror h2 {
           font-size: 1.5em;
           font-weight: 600;
           margin: 1em 0 0.5em;
         }
-        .ProseMirror h2 {
+        .ProseMirror h3 {
           font-size: 1.25em;
           font-weight: 600;
           margin: 1em 0 0.5em;
         }
-        .ProseMirror h3 {
+        .ProseMirror h4 {
           font-size: 1.1em;
           font-weight: 600;
           margin: 1em 0 0.5em;

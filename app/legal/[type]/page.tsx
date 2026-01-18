@@ -209,9 +209,10 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
               dangerouslySetInnerHTML={{ __html: renderContent() }}
             />
             <style jsx global>{`
-              .legal-content h1 { font-size: 1.5em; font-weight: 600; margin: 1.5em 0 0.75em; }
-              .legal-content h2 { font-size: 1.25em; font-weight: 600; margin: 1.25em 0 0.5em; }
-              .legal-content h3 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
+              .legal-content h1 { font-size: 1.75em; font-weight: 700; margin: 1.5em 0 0.75em; }
+              .legal-content h2 { font-size: 1.5em; font-weight: 600; margin: 1.25em 0 0.5em; }
+              .legal-content h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; }
+              .legal-content h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
               .legal-content p { margin: 0.75em 0; }
               .legal-content ul, .legal-content ol { margin: 0.75em 0; padding-left: 1.5em; }
               .legal-content ul { list-style-type: disc; }
