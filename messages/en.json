@@ -208,7 +208,8 @@
     "sessionNamePlaceholder": "Enter session name...",
     "admin": "Admin",
     "adminDashboard": "Admin Dashboard",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "legalManagement": "Legal Documents"
   },
   "settings": {
     "title": "Settings",
@@ -507,6 +508,31 @@
       "lockAll": "Lock All",
       "resetCounts": "Reset Counts",
       "bannerDesc": "Banner ad display settings by screen (ON = show, OFF = hide)"
+    },
+    "legal": {
+      "title": "Legal Documents",
+      "description": "Manage Terms of Service and Privacy Policy",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "docTitle": "Title",
+      "titlePlaceholder": "Enter document title",
+      "content": "Content",
+      "contentPlaceholder": "Enter content in markdown format...",
+      "version": "Version",
+      "markdownSupport": "Markdown supported",
+      "publishStatus": "Publish Status",
+      "published": "Published",
+      "notPublished": "Not Published",
+      "publishedAt": "Published on {date}",
+      "saveDraft": "Save Draft",
+      "publish": "Publish",
+      "saveSuccess": "Saved successfully",
+      "saveError": "Failed to save",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link copied to clipboard",
+      "preview": "Preview",
+      "publicUrls": "Public URLs",
+      "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)"
     }
   }
 }

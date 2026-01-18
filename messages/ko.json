@@ -208,7 +208,8 @@
     "sessionNamePlaceholder": "세션 이름 입력...",
     "admin": "관리자",
     "adminDashboard": "관리 대시보드",
-    "userManagement": "사용자 관리"
+    "userManagement": "사용자 관리",
+    "legalManagement": "약관 관리"
   },
   "settings": {
     "title": "설정",
@@ -507,6 +508,31 @@
       "lockAll": "전체 잠금",
       "resetCounts": "횟수 초기화",
       "bannerDesc": "화면별 배너 광고 표시 설정 (ON = 표시, OFF = 숨김)"
+    },
+    "legal": {
+      "title": "약관 관리",
+      "description": "서비스 이용약관과 개인정보 처리방침을 관리합니다",
+      "terms": "이용약관",
+      "privacy": "개인정보 처리방침",
+      "docTitle": "제목",
+      "titlePlaceholder": "문서 제목을 입력하세요",
+      "content": "내용",
+      "contentPlaceholder": "마크다운 형식으로 내용을 입력하세요...",
+      "version": "버전",
+      "markdownSupport": "마크다운 지원",
+      "publishStatus": "발행 상태",
+      "published": "발행됨",
+      "notPublished": "미발행",
+      "publishedAt": "{date}에 발행됨",
+      "saveDraft": "임시 저장",
+      "publish": "발행하기",
+      "saveSuccess": "저장되었습니다",
+      "saveError": "저장에 실패했습니다",
+      "copyLink": "링크 복사",
+      "linkCopied": "링크가 복사되었습니다",
+      "preview": "미리보기",
+      "publicUrls": "공개 URL",
+      "urlHint": "lang 파라미터로 언어를 변경할 수 있습니다 (ko, en, ja, zh, es)"
     }
   }
 }

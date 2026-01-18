@@ -486,6 +486,15 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                       <span>{t('sidebar.userManagement')}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push('/dashboard/admin/legal')}
+                      className="cursor-pointer"
+                    >
+                      <FileText className="size-3 mr-1" />
+                      <span>{t('sidebar.legalManagement')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>
