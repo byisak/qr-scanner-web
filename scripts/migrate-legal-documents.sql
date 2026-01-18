@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS legal_documents (
   published_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_by UUID REFERENCES users(id),
+  created_by VARCHAR(255) REFERENCES users(id),
   UNIQUE(type, locale)
 );
 
