@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Users, UserCheck, UserPlus, FolderOpen, ScanLine, Activity } from "lucide-react"
+import { Users, UserPlus, FolderOpen, ScanLine, UserX } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -13,6 +13,7 @@ interface AdminStats {
     newToday: number
     newWeek: number
     activeWeek: number
+    dormant: number
   }
   sessions: {
     total: number
@@ -40,6 +41,11 @@ interface AdminStatsCardsProps {
 export function AdminStatsCards({ stats, isLoading }: AdminStatsCardsProps) {
   const t = useTranslations()
 
+  // 휴면회원 비율 계산
+  const dormantPercentage = stats?.users.active && stats?.users.dormant
+    ? Math.round((stats.users.dormant / stats.users.active) * 100)
+    : 0
+
   const cards = [
     {
       title: t('admin.stats.totalUsers'),
@@ -54,6 +60,13 @@ export function AdminStatsCards({ stats, isLoading }: AdminStatsCardsProps) {
       description: t('admin.stats.newUsersWeek', { count: stats?.users.newWeek || 0 }),
       icon: UserPlus,
       color: "text-green-600",
+    },
+    {
+      title: t('admin.stats.dormantUsers'),
+      value: stats?.users.dormant || 0,
+      description: t('admin.stats.dormantPercentage', { percentage: dormantPercentage }),
+      icon: UserX,
+      color: "text-amber-600",
     },
     {
       title: t('admin.stats.totalSessions'),
@@ -72,7 +85,7 @@ export function AdminStatsCards({ stats, isLoading }: AdminStatsCardsProps) {
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {cards.map((card, index) => (
         <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

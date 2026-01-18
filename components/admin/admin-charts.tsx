@@ -19,9 +19,16 @@ interface ChartData {
   count: number
 }
 
+interface UserGrowthData {
+  date: string
+  newUsers: number
+  totalUsers: number
+}
+
 interface AdminChartsProps {
   dailySignups: ChartData[]
   dailyScans: ChartData[]
+  userGrowth?: UserGrowthData[]
   isLoading: boolean
   period: number
   onPeriodChange: (period: number) => void
@@ -94,9 +101,44 @@ function PeriodTabs({
   )
 }
 
+// 사용자 증가 데이터에 빈 날짜 채우기
+function fillUserGrowthDates(data: UserGrowthData[], period: number): UserGrowthData[] {
+  if (data.length === 0) return []
+
+  const result: UserGrowthData[] = []
+  const today = new Date()
+  let lastTotalUsers = data[0]?.totalUsers || 0
+
+  // 첫 날짜 이전의 총 사용자 수 계산
+  if (data.length > 0) {
+    lastTotalUsers = data[0].totalUsers - data[0].newUsers
+  }
+
+  for (let i = period - 1; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    const dateStr = date.toISOString().split('T')[0]
+    const existing = data.find(d => d.date === dateStr)
+
+    if (existing) {
+      lastTotalUsers = existing.totalUsers
+      result.push(existing)
+    } else {
+      result.push({
+        date: dateStr,
+        newUsers: 0,
+        totalUsers: lastTotalUsers,
+      })
+    }
+  }
+
+  return result
+}
+
 export function AdminCharts({
   dailySignups,
   dailyScans,
+  userGrowth = [],
   isLoading,
   period,
   onPeriodChange
@@ -114,9 +156,20 @@ export function AdminCharts({
     }))
   }, [dailySignups, dailyScans, period])
 
+  // 사용자 증가 차트 데이터
+  const userGrowthData = React.useMemo(() => {
+    const filled = fillUserGrowthDates(userGrowth, period)
+    return filled.map((d) => ({
+      displayDate: formatDate(d.date, period),
+      newUsers: d.newUsers,
+      totalUsers: d.totalUsers,
+    }))
+  }, [userGrowth, period])
+
   // 총합 계산
   const totalSignups = dailySignups.reduce((sum, d) => sum + d.count, 0)
   const totalScans = dailyScans.reduce((sum, d) => sum + d.count, 0)
+  const latestTotalUsers = userGrowthData.length > 0 ? userGrowthData[userGrowthData.length - 1].totalUsers : 0
 
   if (isLoading) {
     return (
@@ -223,6 +276,121 @@ export function AdminCharts({
                 stroke="#a1a1aa"
                 strokeWidth={2}
                 fill="url(#signupGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// 사용자 증가 그래프 컴포넌트
+export function UserGrowthChart({
+  userGrowth = [],
+  isLoading,
+  period,
+}: {
+  userGrowth?: UserGrowthData[]
+  isLoading: boolean
+  period: number
+}) {
+  const t = useTranslations()
+
+  const chartData = React.useMemo(() => {
+    const filled = fillUserGrowthDates(userGrowth, period)
+    return filled.map((d) => ({
+      displayDate: formatDate(d.date, period),
+      newUsers: d.newUsers,
+      totalUsers: d.totalUsers,
+    }))
+  }, [userGrowth, period])
+
+  const latestTotalUsers = chartData.length > 0 ? chartData[chartData.length - 1].totalUsers : 0
+  const firstTotalUsers = chartData.length > 0 ? chartData[0].totalUsers : 0
+  const growthCount = latestTotalUsers - firstTotalUsers
+  const growthPercentage = firstTotalUsers > 0 ? Math.round((growthCount / firstTotalUsers) * 100) : 0
+
+  if (isLoading) {
+    return (
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader>
+          <div className="h-5 w-32 bg-zinc-800 animate-pulse rounded" />
+          <div className="h-4 w-48 bg-zinc-800 animate-pulse rounded mt-1" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-[250px] bg-zinc-800 animate-pulse rounded" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="bg-zinc-900 border-zinc-800">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base text-zinc-100">
+          {t('admin.dashboard.userGrowth')}
+        </CardTitle>
+        <div className="flex items-center gap-4 mt-1">
+          <p className="text-sm text-zinc-400">
+            {t('admin.dashboard.currentUsers')}: <span className="text-zinc-100 font-medium">{latestTotalUsers.toLocaleString()}</span>
+          </p>
+          {growthCount > 0 && (
+            <p className="text-sm text-emerald-500">
+              +{growthCount} ({growthPercentage}%)
+            </p>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="displayDate"
+                tick={{ fontSize: 11, fill: '#71717a' }}
+                tickLine={false}
+                axisLine={false}
+                interval={period <= 7 ? 0 : period <= 30 ? 4 : 14}
+                dy={10}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#71717a' }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+                width={40}
+                domain={['dataMin - 5', 'dataMax + 5']}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#18181b',
+                  border: '1px solid #27272a',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                }}
+                labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
+                itemStyle={{ color: '#fafafa' }}
+                formatter={(value, name) => {
+                  const label = name === 'totalUsers'
+                    ? t('admin.dashboard.totalUsers')
+                    : t('admin.dashboard.newUsers')
+                  return [value, label]
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="totalUsers"
+                stroke="#10b981"
+                strokeWidth={2}
+                fill="url(#userGrowthGradient)"
               />
             </AreaChart>
           </ResponsiveContainer>

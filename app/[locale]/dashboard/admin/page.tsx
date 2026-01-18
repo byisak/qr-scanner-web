@@ -20,11 +20,17 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/auth-context';
 import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
-import { AdminCharts } from '@/components/admin/admin-charts';
+import { AdminCharts, UserGrowthChart } from '@/components/admin/admin-charts';
 
 interface ChartData {
   date: string;
   count: number;
+}
+
+interface UserGrowthData {
+  date: string;
+  newUsers: number;
+  totalUsers: number;
 }
 
 interface AdminStats {
@@ -34,6 +40,7 @@ interface AdminStats {
     newToday: number;
     newWeek: number;
     activeWeek: number;
+    dormant: number;
   };
   sessions: {
     total: number;
@@ -54,6 +61,7 @@ interface AdminStats {
   charts: {
     dailySignups: ChartData[];
     dailyScans: ChartData[];
+    userGrowth: UserGrowthData[];
   };
 }
 
@@ -136,13 +144,21 @@ export default function AdminDashboardPage() {
           <AdminStatsCards stats={stats} isLoading={isLoading} />
 
           {/* 그래프 */}
-          <AdminCharts
-            dailySignups={stats?.charts?.dailySignups || []}
-            dailyScans={stats?.charts?.dailyScans || []}
-            isLoading={isLoading}
-            period={chartPeriod}
-            onPeriodChange={handlePeriodChange}
-          />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <AdminCharts
+              dailySignups={stats?.charts?.dailySignups || []}
+              dailyScans={stats?.charts?.dailyScans || []}
+              userGrowth={stats?.charts?.userGrowth || []}
+              isLoading={isLoading}
+              period={chartPeriod}
+              onPeriodChange={handlePeriodChange}
+            />
+            <UserGrowthChart
+              userGrowth={stats?.charts?.userGrowth || []}
+              isLoading={isLoading}
+              period={chartPeriod}
+            />
+          </div>
 
           {/* 제공자 통계 */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
