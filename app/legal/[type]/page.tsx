@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { marked } from 'marked';
 
 interface LegalDocument {
   id: string;
@@ -84,10 +83,10 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
     window.history.replaceState({}, '', url.toString());
   };
 
-  // 마크다운 렌더링
+  // HTML 콘텐츠 렌더링 (WYSIWYG 에디터에서 HTML로 저장됨)
   const renderContent = () => {
     if (!document?.content) return '';
-    return marked(document.content, { breaks: true });
+    return document.content;
   };
 
   // 타이틀 설정
