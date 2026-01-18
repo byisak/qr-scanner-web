@@ -203,6 +203,7 @@ export function UserManagementTable({
               <SelectItem value="all">{t('admin.users.allStatus')}</SelectItem>
               <SelectItem value="active">{t('admin.users.active')}</SelectItem>
               <SelectItem value="inactive">{t('admin.users.inactive')}</SelectItem>
+              <SelectItem value="dormant">{t('admin.users.dormant')}</SelectItem>
               <SelectItem value="deleted">{t('admin.users.deleted')}</SelectItem>
             </SelectContent>
           </Select>

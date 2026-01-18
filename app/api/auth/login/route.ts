@@ -87,6 +87,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 마지막 로그인 시간 업데이트
+    await client.query(
+      `UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      [userRow.id]
+    );
+
     // 해당 기기의 기존 리프레시 토큰만 삭제 (다중 기기 지원)
     await client.query(
       `DELETE FROM refresh_tokens WHERE user_id = $1 AND device_id = $2`,

@@ -415,6 +415,7 @@
       "roleSuperAdmin": "최고 관리자",
       "active": "활성",
       "inactive": "비활성",
+      "dormant": "휴면",
       "deleted": "삭제됨",
       "name": "이름",
       "email": "이메일",
