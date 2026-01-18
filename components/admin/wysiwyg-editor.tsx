@@ -1,6 +1,6 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
@@ -30,6 +30,7 @@ import {
   Redo,
   Code,
   Type,
+  ALargeSmall,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
@@ -48,6 +49,57 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// 커스텀 FontSize Extension
+const FontSize = Extension.create({
+  name: 'fontSize',
+
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    };
+  },
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => element.style.fontSize?.replace(/['"]+/g, ''),
+            renderHTML: (attributes) => {
+              if (!attributes.fontSize) {
+                return {};
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setFontSize:
+        (fontSize: string) =>
+        ({ chain }) => {
+          return chain().setMark('textStyle', { fontSize }).run();
+        },
+      unsetFontSize:
+        () =>
+        ({ chain }) => {
+          return chain()
+            .setMark('textStyle', { fontSize: null })
+            .removeEmptyTextStyle()
+            .run();
+        },
+    };
+  },
+});
+
 interface WysiwygEditorProps {
   content: string;
   onChange: (html: string) => void;
@@ -65,6 +117,31 @@ const FONT_FAMILIES = [
   { value: 'Courier New', label: 'Courier New' },
   { value: 'Noto Sans KR', label: 'Noto Sans KR' },
 ];
+
+const FONT_SIZES = [
+  { value: 'default', label: '기본 크기' },
+  { value: '10px', label: '10px' },
+  { value: '12px', label: '12px' },
+  { value: '14px', label: '14px' },
+  { value: '16px', label: '16px' },
+  { value: '18px', label: '18px' },
+  { value: '20px', label: '20px' },
+  { value: '24px', label: '24px' },
+  { value: '28px', label: '28px' },
+  { value: '32px', label: '32px' },
+  { value: '36px', label: '36px' },
+  { value: '48px', label: '48px' },
+];
+
+// Editor commands 타입 확장
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (fontSize: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
+}
 
 export function WysiwygEditor({
   content,
@@ -94,6 +171,7 @@ export function WysiwygEditor({
       }),
       TextStyle,
       FontFamily,
+      FontSize,
     ],
     content,
     editorProps: {
@@ -139,10 +217,26 @@ export function WysiwygEditor({
     }
   };
 
+  const setFontSize = (fontSize: string) => {
+    if (!editor) return;
+
+    if (fontSize === 'default') {
+      editor.chain().focus().unsetFontSize().run();
+    } else {
+      editor.chain().focus().setFontSize(fontSize).run();
+    }
+  };
+
   const getCurrentFontFamily = () => {
     if (!editor) return 'default';
     const fontFamily = editor.getAttributes('textStyle').fontFamily;
     return fontFamily || 'default';
+  };
+
+  const getCurrentFontSize = () => {
+    if (!editor) return 'default';
+    const fontSize = editor.getAttributes('textStyle').fontSize;
+    return fontSize || 'default';
   };
 
   if (!editor) {
@@ -176,7 +270,7 @@ export function WysiwygEditor({
 
           {/* 폰트 선택 */}
           <Select value={getCurrentFontFamily()} onValueChange={setFontFamily}>
-            <SelectTrigger className="h-8 w-[130px] text-xs">
+            <SelectTrigger className="h-8 w-[120px] text-xs">
               <Type className="h-3 w-3 mr-1" />
               <SelectValue placeholder="폰트" />
             </SelectTrigger>
@@ -188,6 +282,25 @@ export function WysiwygEditor({
                   style={{ fontFamily: font.value !== 'default' ? font.value : undefined }}
                 >
                   {font.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* 글자 크기 선택 */}
+          <Select value={getCurrentFontSize()} onValueChange={setFontSize}>
+            <SelectTrigger className="h-8 w-[90px] text-xs">
+              <ALargeSmall className="h-3 w-3 mr-1" />
+              <SelectValue placeholder="크기" />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_SIZES.map((size) => (
+                <SelectItem
+                  key={size.value}
+                  value={size.value}
+                  style={{ fontSize: size.value !== 'default' ? size.value : undefined }}
+                >
+                  {size.label}
                 </SelectItem>
               ))}
             </SelectContent>
