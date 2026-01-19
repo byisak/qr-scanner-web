@@ -203,12 +203,10 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
             {/* 문서 내용 */}
             <div
               className="p-6 legal-content"
-              style={{
-                lineHeight: '1.7',
-              }}
               dangerouslySetInnerHTML={{ __html: renderContent() }}
             />
             <style jsx global>{`
+              .legal-content { line-height: 1.7; }
               .legal-content h1 { font-size: 1.75em; font-weight: 700; margin: 1.5em 0 0.75em; }
               .legal-content h2 { font-size: 1.5em; font-weight: 600; margin: 1.25em 0 0.5em; }
               .legal-content h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; }
