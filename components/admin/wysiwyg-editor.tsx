@@ -646,11 +646,12 @@ export function WysiwygEditor({
         <EditorContent editor={editor} className="min-h-[300px]" />
       </div>
 
-      {/* 에디터 스타일 */}
+      {/* 에디터 스타일 - 공개 페이지와 동일하게 */}
       <style jsx global>{`
         .ProseMirror {
           min-height: 300px;
           padding: 1rem;
+          line-height: 1.7;
         }
         .ProseMirror:focus {
           outline: none;
@@ -665,12 +666,12 @@ export function WysiwygEditor({
         .ProseMirror h1 {
           font-size: 1.75em;
           font-weight: 700;
-          margin: 1em 0 0.5em;
+          margin: 1.5em 0 0.75em;
         }
         .ProseMirror h2 {
           font-size: 1.5em;
           font-weight: 600;
-          margin: 1em 0 0.5em;
+          margin: 1.25em 0 0.5em;
         }
         .ProseMirror h3 {
           font-size: 1.25em;
@@ -683,17 +684,20 @@ export function WysiwygEditor({
           margin: 1em 0 0.5em;
         }
         .ProseMirror p {
-          margin: 0.5em 0;
+          margin: 0.75em 0;
+        }
+        .ProseMirror p:empty {
+          min-height: 1em;
         }
         .ProseMirror ul {
           list-style-type: disc;
           padding-left: 1.5em;
-          margin: 0.5em 0;
+          margin: 0.75em 0;
         }
         .ProseMirror ol {
           list-style-type: decimal;
           padding-left: 1.5em;
-          margin: 0.5em 0;
+          margin: 0.75em 0;
         }
         .ProseMirror li {
           margin: 0.25em 0;

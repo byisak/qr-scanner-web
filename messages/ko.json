@@ -531,6 +531,7 @@
       "copyLink": "링크 복사",
       "linkCopied": "링크가 복사되었습니다",
       "preview": "미리보기",
+      "openPage": "페이지 열기",
       "publicUrls": "공개 URL",
       "urlHint": "lang 파라미터로 언어를 변경할 수 있습니다 (ko, en, ja, zh, es)"
     }

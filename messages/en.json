@@ -531,6 +531,7 @@
       "copyLink": "Copy Link",
       "linkCopied": "Link copied to clipboard",
       "preview": "Preview",
+      "openPage": "Open Page",
       "publicUrls": "Public URLs",
       "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)"
     }

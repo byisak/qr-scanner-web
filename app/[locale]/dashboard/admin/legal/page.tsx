@@ -35,8 +35,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/components/ui/sonner';
-import { Copy, ExternalLink, Save, Eye } from 'lucide-react';
+import { Copy, ExternalLink, Save, Eye, X } from 'lucide-react';
 import { WysiwygEditor } from '@/components/admin/wysiwyg-editor';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface LegalDocument {
   id: string;
@@ -75,6 +81,7 @@ export default function AdminLegalPage() {
   const [content, setContent] = useState('');
   const [version, setVersion] = useState('1.0');
   const [isPublished, setIsPublished] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // 권한 체크
   useEffect(() => {
@@ -177,8 +184,13 @@ export default function AdminLegalPage() {
     toast.success(t('admin.legal.linkCopied'));
   };
 
-  // 미리보기
+  // 미리보기 (현재 편집 중인 내용)
   const openPreview = () => {
+    setShowPreview(true);
+  };
+
+  // 발행된 페이지 열기
+  const openPublishedPage = () => {
     const url = `/legal/${activeTab}?lang=${selectedLocale}`;
     window.open(url, '_blank');
   };
@@ -293,6 +305,14 @@ export default function AdminLegalPage() {
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
+                          onClick={openPreview}
+                          disabled={!content}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          {t('admin.legal.preview')}
+                        </Button>
+                        <Button
+                          variant="outline"
                           onClick={copyLink}
                           disabled={!currentDoc?.isPublished}
                         >
@@ -301,11 +321,11 @@ export default function AdminLegalPage() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={openPreview}
+                          onClick={openPublishedPage}
                           disabled={!currentDoc?.isPublished}
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />
-                          {t('admin.legal.preview')}
+                          {t('admin.legal.openPage')}
                         </Button>
                       </div>
 
@@ -322,7 +342,6 @@ export default function AdminLegalPage() {
                           onClick={() => handleSave(true)}
                           disabled={isSaving || !content}
                         >
-                          <Eye className="mr-2 h-4 w-4" />
                           {isSaving ? t('common.loading') : t('admin.legal.publish')}
                         </Button>
                       </div>
@@ -359,6 +378,47 @@ export default function AdminLegalPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* 미리보기 모달 */}
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center justify-between">
+                <span>{title || t('admin.legal.preview')}</span>
+                <Badge variant="outline">v{version}</Badge>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto">
+              <div
+                className="legal-preview p-4"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </div>
+            <style jsx global>{`
+              .legal-preview { line-height: 1.7; }
+              .legal-preview h1 { font-size: 1.75em; font-weight: 700; margin: 1.5em 0 0.75em; }
+              .legal-preview h2 { font-size: 1.5em; font-weight: 600; margin: 1.25em 0 0.5em; }
+              .legal-preview h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; }
+              .legal-preview h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
+              .legal-preview p { margin: 0.75em 0; }
+              .legal-preview p:empty { min-height: 1em; }
+              .legal-preview ul, .legal-preview ol { margin: 0.75em 0; padding-left: 1.5em; }
+              .legal-preview ul { list-style-type: disc; }
+              .legal-preview ol { list-style-type: decimal; }
+              .legal-preview li { margin: 0.25em 0; }
+              .legal-preview a { color: #3b82f6; }
+              .legal-preview a:hover { text-decoration: underline; }
+              .legal-preview blockquote { border-left: 3px solid #d1d5db; padding-left: 1em; margin: 1em 0; color: #6b7280; }
+              .legal-preview code { background: #f3f4f6; padding: 0.125em 0.25em; border-radius: 0.25em; font-size: 0.875em; }
+              .legal-preview pre { background: #f3f4f6; padding: 1em; border-radius: 0.5em; overflow-x: auto; }
+              .legal-preview hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
+              .dark .legal-preview blockquote { border-left-color: #4b5563; color: #9ca3af; }
+              .dark .legal-preview code { background: #374151; }
+              .dark .legal-preview pre { background: #1f2937; }
+              .dark .legal-preview hr { border-top-color: #374151; }
+            `}</style>
+          </DialogContent>
+        </Dialog>
       </SidebarInset>
     </SidebarProvider>
   );
