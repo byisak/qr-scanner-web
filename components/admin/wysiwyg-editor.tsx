@@ -641,8 +641,10 @@ export function WysiwygEditor({
         </div>
       </TooltipProvider>
 
-      {/* 에디터 영역 */}
-      <EditorContent editor={editor} className="min-h-[300px]" />
+      {/* 에디터 영역 - 스크롤 가능 */}
+      <div className="max-h-[500px] overflow-y-auto">
+        <EditorContent editor={editor} className="min-h-[300px]" />
+      </div>
 
       {/* 에디터 스타일 */}
       <style jsx global>{`

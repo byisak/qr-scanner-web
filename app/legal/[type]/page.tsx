@@ -110,11 +110,11 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-lg font-semibold">
-                {type === 'terms' ? (
+                {document?.title || (type === 'terms' ? (
                   currentLang === 'ko' ? '이용약관' : 'Terms of Service'
                 ) : (
                   currentLang === 'ko' ? '개인정보 처리방침' : 'Privacy Policy'
-                )}
+                ))}
               </h1>
               {document?.version && (
                 <span className={`text-xs ${mutedColor} px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
@@ -186,10 +186,9 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
           </div>
         ) : document && (
           <article className={`${cardBg} rounded-lg shadow-sm overflow-hidden`}>
-            {/* 문서 헤더 */}
-            <div className={`p-6 ${borderColor} border-b`}>
-              <h1 className="text-2xl font-bold mb-2">{document.title}</h1>
-              {document.publishedAt && (
+            {/* 문서 헤더 - 수정일만 표시 */}
+            {document.publishedAt && (
+              <div className={`px-6 pt-6 pb-2`}>
                 <p className={`text-sm ${mutedColor}`}>
                   {currentLang === 'ko' ? '최종 수정일: ' : 'Last updated: '}
                   {new Date(document.publishedAt).toLocaleDateString(
@@ -197,8 +196,8 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
                     { year: 'numeric', month: 'long', day: 'numeric' }
                   )}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* 문서 내용 */}
             <div
