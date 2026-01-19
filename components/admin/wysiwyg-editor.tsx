@@ -8,6 +8,8 @@ import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
+import Paragraph from '@tiptap/extension-paragraph';
+import Heading from '@tiptap/extension-heading';
 import { useEffect, useCallback, useState } from 'react';
 import {
   Bold,
@@ -101,39 +103,56 @@ const FontSize = Extension.create({
   },
 });
 
-// 커스텀 LineHeight Extension
+// lineHeight 속성을 가진 커스텀 Paragraph
+const CustomParagraph = Paragraph.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      lineHeight: {
+        default: null,
+        parseHTML: (element) => element.style.lineHeight || null,
+        renderHTML: (attributes) => {
+          if (!attributes.lineHeight) {
+            return {};
+          }
+          return {
+            style: `line-height: ${attributes.lineHeight}`,
+          };
+        },
+      },
+    };
+  },
+});
+
+// lineHeight 속성을 가진 커스텀 Heading
+const CustomHeading = Heading.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      lineHeight: {
+        default: null,
+        parseHTML: (element) => element.style.lineHeight || null,
+        renderHTML: (attributes) => {
+          if (!attributes.lineHeight) {
+            return {};
+          }
+          return {
+            style: `line-height: ${attributes.lineHeight}`,
+          };
+        },
+      },
+    };
+  },
+});
+
+// 커스텀 LineHeight Extension (명령어만 제공)
 const LineHeight = Extension.create({
   name: 'lineHeight',
 
   addOptions() {
     return {
       types: ['paragraph', 'heading'],
-      defaultLineHeight: null,
     };
-  },
-
-  addGlobalAttributes() {
-    return [
-      {
-        types: this.options.types,
-        attributes: {
-          lineHeight: {
-            default: this.options.defaultLineHeight,
-            parseHTML: (element) => {
-              return element.style.lineHeight || null;
-            },
-            renderHTML: (attributes) => {
-              if (!attributes.lineHeight) {
-                return {};
-              }
-              return {
-                style: `line-height: ${attributes.lineHeight}`,
-              };
-            },
-          },
-        },
-      },
-    ];
   },
 
   addCommands() {
@@ -256,9 +275,14 @@ export function WysiwygEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3, 4],
-        },
+        // 커스텀 Paragraph/Heading 사용을 위해 비활성화
+        paragraph: false,
+        heading: false,
+      }),
+      // lineHeight 속성이 포함된 커스텀 Paragraph/Heading
+      CustomParagraph,
+      CustomHeading.configure({
+        levels: [1, 2, 3, 4],
       }),
       Link.configure({
         openOnClick: false,
