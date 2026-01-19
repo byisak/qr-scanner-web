@@ -349,9 +349,9 @@ export function WysiwygEditor({
     if (!editor) return;
 
     if (fontFamily === 'default') {
-      editor.chain().focus().unsetFontFamily().run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).unsetFontFamily().run();
     } else {
-      editor.chain().focus().setFontFamily(fontFamily).run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).setFontFamily(fontFamily).run();
     }
   };
 
@@ -359,9 +359,9 @@ export function WysiwygEditor({
     if (!editor) return;
 
     if (fontSize === 'default') {
-      editor.chain().focus().unsetFontSize().run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).unsetFontSize().run();
     } else {
-      editor.chain().focus().setFontSize(fontSize).run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).setFontSize(fontSize).run();
     }
   };
 
@@ -369,9 +369,9 @@ export function WysiwygEditor({
     if (!editor) return;
 
     if (lineHeight === 'default') {
-      editor.chain().focus().unsetLineHeight().run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).unsetLineHeight().run();
     } else {
-      editor.chain().focus().setLineHeight(lineHeight).run();
+      editor.chain().focus(undefined, { scrollIntoView: false }).setLineHeight(lineHeight).run();
     }
   };
 
