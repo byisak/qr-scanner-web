@@ -1,0 +1,13 @@
+# 관제실 Ops Contract v1 — github.com/byisak/control-tower/docs/OPS_CONTRACT.md
+id: scanview
+name: ScanView (QR 스캐너)
+tier: 1
+lifecycle: live
+urls:
+  public: https://scanview.app
+adapter: contract-v1
+ops:
+  health: /api/health
+  summary: /api/ops/summary
+tile_kpi: [signups, scans]
+secrets: [OPS_TOKEN]
