@@ -7,7 +7,6 @@ import {
   Globe,
   Smartphone,
   Download,
-  Star,
   CheckCircle,
   ArrowRight
 } from 'lucide-react'
@@ -15,7 +14,7 @@ import {
 // SEO 메타데이터 - 매우 중요!
 export const metadata: Metadata = {
   title: 'QR Scanner Pro - 가장 빠른 QR코드 바코드 스캐너 앱 | 재고관리 대량스캔',
-  description: '무료 QR코드 바코드 스캐너 앱. 재고관리, 물류, 창고 업무에 최적화. 대량 스캔, 실시간 PC 전송, CSV/엑셀 내보내기 지원. iOS Android 무료 다운로드.',
+  description: '무료 QR코드 바코드 스캐너 앱. 재고관리, 물류, 창고 업무에 최적화. 대량 스캔, 실시간 PC 전송, CSV/엑셀 내보내기 지원. iOS 무료 다운로드.',
   keywords: 'QR코드, 바코드, 스캐너, 재고관리, 대량스캔, 물류, 창고, 무료, 앱, QR Scanner, barcode, inventory',
   openGraph: {
     title: 'QR Scanner Pro - 전문가용 QR/바코드 스캐너',
@@ -65,21 +64,16 @@ const jsonLd = {
   '@type': 'SoftwareApplication',
   name: 'QR Scanner Pro',
   applicationCategory: 'BusinessApplication',
-  operatingSystem: 'iOS, Android',
+  operatingSystem: 'iOS',
   offers: {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'USD',
   },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '1250',
-  },
   description: '재고관리, 물류, 창고 업무에 최적화된 전문가용 QR코드 바코드 스캐너 앱',
   screenshot: 'https://scanview.app/screenshot.png',
   featureList: '대량 스캔, 실시간 PC 전송, CSV 내보내기, 오프라인 모드',
-  downloadUrl: 'https://apps.apple.com/app/qr-scanner-pro',
+  downloadUrl: 'https://apps.apple.com/app/id6757360768',
   author: {
     '@type': 'Organization',
     name: 'ScanView',
@@ -173,27 +167,18 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="https://apps.apple.com/app/qr-scanner-pro"
+              href="https://apps.apple.com/app/id6757360768"
               className="bg-white text-slate-900 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-100 transition"
             >
               <Download className="w-5 h-5" />
               App Store 다운로드
             </a>
-            <a
-              href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner"
-              className="bg-blue-500 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-600 transition"
+            <span
+              aria-disabled="true"
+              className="bg-slate-700 text-slate-300 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
             >
-              <Download className="w-5 h-5" />
-              Google Play 다운로드
-            </a>
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-6 text-slate-400">
-            <div className="flex">
-              {[1,2,3,4,5].map(i => (
-                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-              ))}
-            </div>
-            <span>4.8점 · 1,250+ 리뷰</span>
+              Google Play 준비 중
+            </span>
           </div>
         </section>
 
@@ -303,19 +288,18 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="https://apps.apple.com/app/qr-scanner-pro"
+                href="https://apps.apple.com/app/id6757360768"
                 className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-100 transition"
               >
                 App Store
                 <ArrowRight className="w-5 h-5" />
               </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner"
-                className="bg-slate-900 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-800 transition"
+              <span
+                aria-disabled="true"
+                className="bg-slate-900/60 text-blue-100 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
               >
-                Google Play
-                <ArrowRight className="w-5 h-5" />
-              </a>
+                Google Play 준비 중
+              </span>
             </div>
           </div>
         </section>
