@@ -251,17 +251,17 @@ export default function BlogPost() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="https://apps.apple.com/app/qr-scanner-pro"
+                href="https://apps.apple.com/app/id6757360768"
                 className="bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold text-center hover:bg-slate-100 transition"
               >
                 App Store 다운로드
               </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner"
-                className="bg-blue-500 px-6 py-3 rounded-lg font-semibold text-center hover:bg-blue-600 transition"
+              <span
+                aria-disabled="true"
+                className="bg-slate-700 text-slate-300 px-6 py-3 rounded-lg font-semibold text-center cursor-not-allowed"
               >
-                Google Play 다운로드
-              </a>
+                Google Play 준비 중
+              </span>
             </div>
           </div>
 

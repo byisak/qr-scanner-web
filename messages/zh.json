@@ -30,15 +30,14 @@
     "heroTitle2": "二维码条形码扫描器",
     "heroDescription": "一次扫描数千个条形码并实时传输到电脑。专为库存管理、物流和仓储业务优化的专业扫描器。",
     "downloadAppStore": "App Store 下载",
-    "downloadGooglePlay": "Google Play 下载",
-    "rating": "4.8星 · 1,250+ 评价",
+    "downloadGooglePlay": "Google Play 即将推出",
     "whyChoose": "为什么选择 QR Scanner Pro？",
     "whoUses": "谁在使用",
     "faqTitle": "常见问题",
     "ctaTitle": "立即开始",
     "ctaDescription": "免费下载，提升库存管理效率",
     "appStore": "App Store",
-    "googlePlay": "Google Play"
+    "googlePlay": "Google Play 即将推出"
   },
   "features": {
     "bulkScan": {
