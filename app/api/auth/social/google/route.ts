@@ -10,17 +10,12 @@ import {
   AuthErrorCodes,
   createAuthErrorResponse,
 } from '@/lib/auth';
+import {
+  verifyGoogleIdToken,
+  verifyGoogleAccessToken,
+  type VerifiedGoogleUser,
+} from '@/lib/social-verify';
 import type { SocialLoginRequest, User } from '@/types';
-
-interface GoogleTokenInfo {
-  sub: string;           // Google user ID
-  email: string;
-  email_verified: boolean;
-  name?: string;
-  picture?: string;
-  given_name?: string;
-  family_name?: string;
-}
 
 interface UserRow {
   id: string;
@@ -51,55 +46,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let googleUser: GoogleTokenInfo;
-
-    // ID 토큰이 있으면 ID 토큰 검증
-    if (idToken) {
-      const tokenInfoResponse = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`
+    // 보안: ID 토큰은 Google 공개키(JWKS)로 서명/iss/aud/exp를 검증하고,
+    // 액세스 토큰만 온 경우 tokeninfo로 aud(우리 클라이언트 ID)를 확인한다.
+    // (이전에는 aud를 확인하지 않아 다른 앱용 Google 토큰으로도 로그인 가능했음)
+    let googleUser: VerifiedGoogleUser;
+    try {
+      googleUser = idToken
+        ? await verifyGoogleIdToken(idToken)
+        : await verifyGoogleAccessToken(googleAccessToken);
+    } catch {
+      return NextResponse.json(
+        createAuthErrorResponse(
+          AuthErrorCodes.PROVIDER_ERROR,
+          idToken ? '구글 ID 토큰 검증에 실패했습니다.' : '구글 인증에 실패했습니다.'
+        ),
+        { status: 401 }
       );
-
-      if (!tokenInfoResponse.ok) {
-        return NextResponse.json(
-          createAuthErrorResponse(
-            AuthErrorCodes.PROVIDER_ERROR,
-            '구글 ID 토큰 검증에 실패했습니다.'
-          ),
-          { status: 401 }
-        );
-      }
-
-      googleUser = (await tokenInfoResponse.json()) as GoogleTokenInfo;
-    } else {
-      // 액세스 토큰으로 사용자 정보 조회
-      const userInfoResponse = await fetch(
-        'https://www.googleapis.com/oauth2/v3/userinfo',
-        {
-          headers: {
-            Authorization: `Bearer ${googleAccessToken}`,
-          },
-        }
-      );
-
-      if (!userInfoResponse.ok) {
-        return NextResponse.json(
-          createAuthErrorResponse(
-            AuthErrorCodes.PROVIDER_ERROR,
-            '구글 인증에 실패했습니다.'
-          ),
-          { status: 401 }
-        );
-      }
-
-      googleUser = (await userInfoResponse.json()) as GoogleTokenInfo;
     }
 
     const providerId = googleUser.sub;
     const email = googleUser.email;
-    const name = googleUser.name || googleUser.given_name || 'Google User';
+    const name = googleUser.name || googleUser.givenName || 'Google User';
     const profileImage = googleUser.picture || null;
 
-    if (!email) {
+    // 검증되지 않은 이메일은 계정 식별에 사용하지 않음
+    if (!email || !googleUser.emailVerified) {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.PROVIDER_ERROR,
