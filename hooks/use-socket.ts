@@ -6,7 +6,20 @@ import { ScanData } from '@/types';
 
 // userId와 authLoading을 직접 받아서 서버로 전달
 // enabled: false이면 소켓 연결하지 않음 (비밀번호 보호 세션 등에서 사용)
-export function useSocket(sessionId: string | null, userId: string | null | undefined, authLoading: boolean = false, enabled: boolean = true) {
+// auth: 로그인 사용자 JWT(accessToken)와 비밀번호 검증 후 받은 세션 접근 토큰(sessionAccessToken)
+//       → 서버가 비밀번호 보호/비공개 세션의 열람 권한을 확인하는 데 사용
+export interface SocketAuthOptions {
+  accessToken?: string | null;
+  sessionAccessToken?: string | null;
+}
+
+export function useSocket(
+  sessionId: string | null,
+  userId: string | null | undefined,
+  authLoading: boolean = false,
+  enabled: boolean = true,
+  auth: SocketAuthOptions = {}
+) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [scans, setScans] = useState<ScanData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -16,6 +29,16 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
   const userIdRef = useRef<string | null | undefined>(userId);
   // 인증 완료 후 첫 연결인지 추적
   const hasJoinedWithAuthRef = useRef(false);
+  // 토큰도 ref로 보관 (재연결 시 최신 값 사용)
+  const authRef = useRef<SocketAuthOptions>(auth);
+  authRef.current = auth;
+
+  const buildJoinPayload = (currentUserId: string | null | undefined) => ({
+    sessionId,
+    userId: currentUserId || null,
+    accessToken: authRef.current.accessToken || undefined,
+    sessionAccessToken: authRef.current.sessionAccessToken || undefined,
+  });
 
   // userId가 변경될 때마다 ref 업데이트
   useEffect(() => {
@@ -55,13 +78,19 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
       // ref에서 최신 userId 값 읽기
       const currentUserId = userIdRef.current;
       // console.log('🔌 세션 참가 요청 - userId:', currentUserId || '(비로그인)');
-      socketIo.emit('join-session', { sessionId, userId: currentUserId || null });
+      socketIo.emit('join-session', buildJoinPayload(currentUserId));
     });
 
     socketIo.on('session-joined', (data: { sessionId: string; existingData: ScanData[] }) => {
       // console.log('✅ 세션 참가 성공:', data.sessionId, '기존 데이터:', data.existingData?.length || 0);
       setScans(data.existingData || []);
       scansRef.current = data.existingData || [];
+    });
+
+    // 서버가 열람 권한을 거부한 경우 (비밀번호 필요/비공개)
+    socketIo.on('session-access-denied', () => {
+      setScans([]);
+      scansRef.current = [];
     });
 
     socketIo.on('new-scan', (scanData: ScanData) => {
@@ -102,7 +131,7 @@ export function useSocket(sessionId: string | null, userId: string | null | unde
   useEffect(() => {
     if (socket && socket.connected && sessionId) {
       // console.log('🔄 userId 변경 감지 - 세션 재참가:', userId || '(비로그인)');
-      socket.emit('join-session', { sessionId, userId: userId || null });
+      socket.emit('join-session', buildJoinPayload(userId));
     }
   }, [socket, sessionId, userId]);
 

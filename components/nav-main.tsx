@@ -216,7 +216,10 @@ export function NavMain({ currentSessionId }: NavMainProps) {
     try {
       const res = await fetch(`/api/sessions/${editingId}/name`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify({ name: editValue.trim() || null })
       })
 

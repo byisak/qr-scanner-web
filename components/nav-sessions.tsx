@@ -114,7 +114,8 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined
       })
 
       if (res.ok) {
@@ -137,7 +138,8 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
   const handleRestoreSession = async (sessionId: string) => {
     try {
       const res = await fetch(`/api/sessions/${sessionId}/restore`, {
-        method: 'POST'
+        method: 'POST',
+        headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined
       })
 
       if (res.ok) {
@@ -159,7 +161,8 @@ export function NavSessions({ currentSessionId, onSessionChange }: NavSessionsPr
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/permanent`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined
       })
 
       if (res.ok) {

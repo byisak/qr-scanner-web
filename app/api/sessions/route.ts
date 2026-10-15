@@ -1,31 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { optionalAuth } from '@/lib/auth-middleware';
+import { isAdminUser } from '@/lib/session-access';
 import type { PoolClient } from 'pg';
 
 // GET - 세션 목록 조회 (status 파라미터로 필터링 가능)
 // ?status=ACTIVE (기본값) - 활성 세션만
-// ?status=DELETED - 삭제된 세션만 (인증 필요, 내 세션만)
-// ?status=ALL - 모든 세션
-// ?mine=true - 내 세션만 (인증 필요)
+// ?status=DELETED - 삭제된 세션만
+// ?status=ALL - 모든 상태
+// ?mine=true - (하위 호환용) 항상 내 세션만 반환하므로 의미 없음
+// ?all=true - 관리자 전용: 전체 사용자의 세션 조회
+//
+// 보안: 이전에는 비로그인 요청에도 모든 사용자의 세션 목록(user_id, 세션 ID 포함)을
+// 반환해, 세션 ID만 알면 접근 가능한 데이터가 전부 노출되었다.
+// 이제 로그인이 필수이며, 본인 세션만 반환한다 (관리자는 all=true로 전체 조회 가능).
 export async function GET(request: NextRequest) {
   let client: PoolClient | null = null;
   try {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status') || 'ACTIVE';
-    const mineOnly = searchParams.get('mine') === 'true';
+    const wantAll = searchParams.get('all') === 'true';
 
-    // 인증 정보 확인 (선택적)
+    // 인증 필수
     const authUser = optionalAuth(request);
-
-    // DELETED 상태 조회는 인증 필수 + 내 세션만
-    if (statusFilter === 'DELETED') {
-      if (!authUser) {
-        return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
-      }
+    if (!authUser) {
+      return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
     client = await getConnection();
+
+    // 관리자만 전체 세션 조회 허용
+    const listAll = wantAll && (await isAdminUser(client, authUser.userId));
 
     const conditions: string[] = [];
     const values: unknown[] = [];
@@ -36,14 +41,11 @@ export async function GET(request: NextRequest) {
       conditions.push(`s.status = 'ACTIVE'`);
     } else if (statusFilter === 'DELETED') {
       conditions.push(`s.status = 'DELETED'`);
-      // DELETED 상태는 반드시 내 세션만 조회
-      conditions.push(`s.user_id = $${paramIndex++}`);
-      values.push(authUser!.userId);
     }
     // status=ALL인 경우 상태 조건 없음
 
-    // 내 세션만 필터 (인증된 경우에만)
-    if (mineOnly && authUser && statusFilter !== 'DELETED') {
+    // 내 세션만 (관리자 전체 조회가 아닌 경우 항상)
+    if (!listAll) {
       conditions.push(`s.user_id = $${paramIndex++}`);
       values.push(authUser.userId);
     }
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // 스캔 카운트 서브쿼리: 인증된 사용자의 경우 자신의 스캔만 카운트
     let scanCountSubquery: string;
-    if (authUser) {
+    if (!listAll) {
       scanCountSubquery = `(SELECT COUNT(*) FROM scan_data sd WHERE sd.session_id = s.session_id AND sd.user_id = $${paramIndex})`;
       values.push(authUser.userId);
     } else {

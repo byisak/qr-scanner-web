@@ -116,7 +116,7 @@ export default function SessionPage() {
   const t = useTranslations();
   const params = useParams();
   const sessionId = params.sessionId as string;
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, accessToken } = useAuth();
   const { settings, updateSettings } = useSettings();
 
   const [copied, setCopied] = useState(false);
@@ -131,13 +131,23 @@ export default function SessionPage() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [verifyingPassword, setVerifyingPassword] = useState(false);
+  // 비밀번호 검증 성공 시 서버가 발급한 세션 접근 토큰 (소켓 join-session 에 제시)
+  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(null);
+
+  // 인증이 필요한 API 호출용 헤더
+  const authHeaders = useMemo<Record<string, string>>(() => {
+    const headers: Record<string, string> = {};
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    return headers;
+  }, [accessToken]);
 
   // 접근 허용 후에만 소켓 연결 (비밀번호 보호 세션 보안)
   const { scans, isConnected, error, removeScan, removeScans } = useSocket(
     sessionId,
     user?.id,
     isLoading,
-    accessGranted // 접근 허용 전까지 소켓 연결 차단
+    accessGranted, // 접근 허용 전까지 소켓 연결 차단
+    { accessToken, sessionAccessToken }
   );
 
   const prevScansLengthRef = useRef(scans.length);
@@ -215,6 +225,7 @@ export default function SessionPage() {
       const data = await res.json();
 
       if (data.accessGranted) {
+        setSessionAccessToken(data.sessionAccessToken || null);
         setAccessGranted(true);
         setPasswordModalOpen(false);
         toast.success(t('session.accessGranted'));
@@ -289,7 +300,8 @@ export default function SessionPage() {
   const handleDeleteScan = useCallback(async (scanId: number) => {
     try {
       const res = await fetch(`/api/scans/${scanId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders,
       });
 
       if (res.ok) {
@@ -303,7 +315,7 @@ export default function SessionPage() {
       // console.error('Scan data delete failed:', error);
       toast.error(t('session.deleteError'));
     }
-  }, [removeScan, t]);
+  }, [removeScan, t, authHeaders]);
 
   const handleDeleteSelected = useCallback(async (ids: number[]) => {
     try {
@@ -311,13 +323,17 @@ export default function SessionPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
         },
         body: JSON.stringify({ ids }),
       });
 
       if (res.ok) {
-        removeScans(ids);
-        toast.success(t('session.scansDeleted', { count: ids.length }));
+        const data = await res.json();
+        // 서버는 권한이 있는 스캔만 삭제하고 실제 삭제된 ID를 돌려준다
+        const deletedIds: number[] = Array.isArray(data.deletedIds) ? data.deletedIds : ids;
+        removeScans(deletedIds);
+        toast.success(t('session.scansDeleted', { count: deletedIds.length }));
       } else {
         const data = await res.json();
         toast.error(data.error || t('session.deleteFailed'));
@@ -326,7 +342,7 @@ export default function SessionPage() {
       // console.error('Bulk scan data delete failed:', error);
       toast.error(t('session.deleteError'));
     }
-  }, [removeScans, t]);
+  }, [removeScans, t, authHeaders]);
 
   const formatOptions = useMemo(() => ({
     dateFormat: settings.dateFormat,
@@ -343,7 +359,9 @@ export default function SessionPage() {
   const handleExport = async (format: 'csv' | 'xlsx') => {
     const loadingToast = toast.loading(t('session.exporting'));
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`);
+      const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`, {
+        headers: authHeaders,
+      });
 
       if (!response.ok) {
         throw new Error(t('session.exportFailed'));
