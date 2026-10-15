@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS scan_data (
     id SERIAL PRIMARY KEY,
     session_id VARCHAR(255) NOT NULL,
     user_id VARCHAR(36),                  -- 스캔을 전송한 사용자
-    code VARCHAR(1000) NOT NULL,
+    code VARCHAR(4096) NOT NULL,
     scan_timestamp BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_session
@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS session_settings (
     max_participants INTEGER DEFAULT NULL,   -- 최대 참가자 수
     allow_anonymous BOOLEAN DEFAULT true,    -- 비로그인 참가 허용
     expires_at TIMESTAMP DEFAULT NULL,       -- 만료 시간
+    realtime_key VARCHAR(64) DEFAULT replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), -- 실시간 채널 키 (scripts/migrate-realtime-key.sql)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_session_settings
