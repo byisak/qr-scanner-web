@@ -1,8 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { optionalAuth } from '@/lib/auth-middleware';
-import { isAdminUser } from '@/lib/session-access';
+import { isAdminUser, getRequestUser } from '@/lib/session-access';
+import { createOrUpdateSession, isValidSessionId } from '@/lib/session-service';
+import { apiError } from '@/lib/api-response';
 import type { PoolClient } from 'pg';
+
+// POST - 세션 만들기 (또는 내 세션 이어 쓰기)  — docs/REALTIME_REST_CONTRACT.md 1절
+// body: { sessionId?, sessionName?, settings?: { password?, isPublic? } }
+// - 새 세션: 소유자 = 토큰 사용자, 201
+// - 기존 세션: 소유자/관리자만 (소유자 없는 옛 공개·무비밀번호 세션은 토큰 사용자가 소유자가 됨), 200
+//   본문에 없는 항목(이름·비밀번호·공개 여부)은 바꾸지 않는다 (부분 업데이트).
+// - 그 외 403
+export async function POST(request: NextRequest) {
+  let client: PoolClient | null = null;
+  try {
+    const user = getRequestUser(request);
+    if (!user) {
+      return apiError(401, 'UNAUTHORIZED', '인증이 필요합니다.');
+    }
+
+    let body: any = {};
+    try {
+      const text = await request.text();
+      body = text ? JSON.parse(text) : {};
+    } catch {
+      return apiError(400, 'INVALID_JSON', '요청 본문이 올바른 JSON이 아닙니다.');
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return apiError(400, 'INVALID_REQUEST', '요청 본문이 올바르지 않습니다.');
+    }
+
+    const { sessionId, sessionName, settings } = body;
+    if (sessionId !== undefined && sessionId !== null && !isValidSessionId(sessionId)) {
+      return apiError(400, 'INVALID_SESSION_ID', '세션 ID 형식이 올바르지 않습니다.');
+    }
+    if (sessionName !== undefined && sessionName !== null && (typeof sessionName !== 'string' || sessionName.length > 255)) {
+      return apiError(400, 'INVALID_SESSION_NAME', '세션 이름은 255자 이하 문자열이어야 합니다.');
+    }
+    if (settings !== undefined && settings !== null) {
+      if (typeof settings !== 'object' || Array.isArray(settings)) {
+        return apiError(400, 'INVALID_SETTINGS', '설정 형식이 올바르지 않습니다.');
+      }
+      if (settings.password !== undefined && settings.password !== null && typeof settings.password !== 'string') {
+        return apiError(400, 'INVALID_SETTINGS', '비밀번호는 문자열이어야 합니다.');
+      }
+      if (settings.isPublic !== undefined && settings.isPublic !== null && typeof settings.isPublic !== 'boolean') {
+        return apiError(400, 'INVALID_SETTINGS', 'isPublic 은 true/false 여야 합니다.');
+      }
+    }
+
+    // 계약에 있는 설정만 반영 (password, isPublic). 빠진 항목은 기존 값 유지.
+    const settingsInput: Record<string, unknown> = {};
+    if (settings && typeof settings.password === 'string' && settings.password) settingsInput.password = settings.password;
+    if (settings && typeof settings.isPublic === 'boolean') settingsInput.isPublic = settings.isPublic;
+
+    client = await getConnection();
+    const result = await createOrUpdateSession(client, {
+      sessionId: sessionId || null,
+      sessionName: sessionName || null,
+      settings: settingsInput,
+      verifiedUserId: user.userId,
+    });
+
+    if (result.kind === 'forbidden') {
+      return apiError(403, 'FORBIDDEN', '이 세션을 변경할 권한이 없습니다.');
+    }
+
+    const created = result.kind === 'created';
+    return NextResponse.json(
+      {
+        success: true,
+        sessionId: result.sessionId,
+        sessionName: result.sessionName,
+        userId: result.userId,
+        created,
+      },
+      { status: created ? 201 : 200 }
+    );
+  } catch (err) {
+    console.error('[POST /api/sessions] 실패:', err instanceof Error ? err.message : err);
+    return apiError(500, 'INTERNAL_ERROR', '세션 생성에 실패했습니다.');
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
 
 // GET - 세션 목록 조회 (status 파라미터로 필터링 가능)
 // ?status=ACTIVE (기본값) - 활성 세션만

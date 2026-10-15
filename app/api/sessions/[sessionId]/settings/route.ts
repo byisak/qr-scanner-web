@@ -1,7 +1,8 @@
 // app/api/sessions/[sessionId]/settings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { hashPassword, verifyPassword, generateSessionAccessToken } from '@/lib/auth';
+import { hashPassword, verifyPassword, generateSessionAccessToken, verifySessionAccessToken } from '@/lib/auth';
+import { ensureRealtimeKey } from '@/lib/session-service';
 import {
   getRequestUser,
   isAdminUser,
@@ -22,6 +23,7 @@ interface SessionSettings {
   expires_at: string | null;
   created_at: string;
   updated_at: string;
+  realtime_key: string | null;
 }
 
 // GET - 세션 설정 조회
@@ -48,7 +50,7 @@ export async function GET(
       `SELECT session_id,
               CASE WHEN password_hash IS NOT NULL THEN true ELSE false END as has_password,
               is_public, access_code, max_participants, allow_anonymous,
-              expires_at, created_at, updated_at
+              expires_at, created_at, updated_at, realtime_key
        FROM session_settings
        WHERE session_id = $1`,
       [sessionId]
@@ -73,7 +75,7 @@ export async function GET(
     // 보안: 접근 코드는 소유자/관리자에게만 노출 (공개 열람 페이지에는 공개 여부/비밀번호 유무만 필요)
     let canSeeSecrets = false;
     const requestUser = getRequestUser(request);
-    if (requestUser && settings.access_code) {
+    if (requestUser) {
       const ownerResult = await client.query(
         `SELECT user_id FROM sessions WHERE session_id = $1`,
         [sessionId]
@@ -81,6 +83,21 @@ export async function GET(
       canSeeSecrets =
         ownerResult.rows[0]?.user_id === requestUser.userId ||
         (await isAdminUser(client, requestUser.userId));
+    }
+
+    // 실시간 채널 키: 열람 권한이 확인된 경우에만 (docs/REALTIME_REST_CONTRACT.md 3절)
+    // - 소유자/관리자: 항상
+    // - 비공개: 그 외 불가
+    // - 비밀번호: X-Session-Access-Token 헤더(비밀번호 검증 후 발급된 토큰)가 유효할 때
+    // - 공개: 누구나
+    const canSeeRealtimeKey =
+      canSeeSecrets ||
+      (settings.is_public !== false &&
+        (!settings.has_password ||
+          verifySessionAccessToken(request.headers.get('x-session-access-token'), sessionId)));
+    let realtimeKey: string | null = null;
+    if (canSeeRealtimeKey) {
+      realtimeKey = settings.realtime_key || (await ensureRealtimeKey(client, sessionId));
     }
     // console.log('📖 세션 설정 조회:', {
     //   sessionId,
@@ -93,6 +110,7 @@ export async function GET(
       hasPassword: settings.has_password,
       isPublic: settings.is_public,
       accessCode: canSeeSecrets ? settings.access_code : null,
+      realtimeKey,
       maxParticipants: settings.max_participants,
       allowAnonymous: settings.allow_anonymous,
       expiresAt: settings.expires_at,
@@ -412,10 +430,13 @@ export async function POST(
     // console.log('✅ 비밀번호 검증 성공');
     clearPasswordFailures(attemptKey);
     // 비밀번호 검증 성공 시 세션 접근 토큰 발급 → 소켓 join-session 에 sessionAccessToken 으로 제시
+    // 실시간 채널 키도 함께 돌려준다 (Supabase Realtime 구독용)
+    const realtimeKey = await ensureRealtimeKey(client, sessionId);
     return NextResponse.json({
       success: true,
       accessGranted: true,
       sessionAccessToken: generateSessionAccessToken(sessionId),
+      realtimeKey,
     });
   } catch (error) {
     // console.error('비밀번호 검증 오류:', error);
