@@ -43,10 +43,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  LEGAL_DOCUMENT_TYPES,
+  getDefaultLegalTitle,
+  type LegalDocumentType,
+} from '@/lib/legal';
+
+// 탭 라벨 (messages/*.json admin.legal.*)
+const TAB_LABEL_KEYS: Record<LegalDocumentType, string> = {
+  terms: 'admin.legal.terms',
+  privacy: 'admin.legal.privacy',
+  'account-deletion': 'admin.legal.accountDeletion',
+};
 
 interface LegalDocument {
   id: string;
-  type: 'terms' | 'privacy';
+  type: LegalDocumentType;
   locale: string;
   title: string;
   content: string;
@@ -70,7 +82,7 @@ export default function AdminLegalPage() {
   const t = useTranslations();
   const { isAuthenticated, isLoading: authLoading, isAdmin, accessToken } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>('terms');
+  const [activeTab, setActiveTab] = useState<LegalDocumentType>('terms');
   const [selectedLocale, setSelectedLocale] = useState('ko');
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,9 +142,7 @@ export default function AdminLegalPage() {
       setIsPublished(currentDoc.isPublished);
     } else {
       // 기본값 설정
-      const defaultTitle = activeTab === 'terms'
-        ? (selectedLocale === 'ko' ? '서비스 이용약관' : 'Terms of Service')
-        : (selectedLocale === 'ko' ? '개인정보 처리방침' : 'Privacy Policy');
+      const defaultTitle = getDefaultLegalTitle(activeTab, selectedLocale);
       setTitle(defaultTitle);
       setContent('');
       setVersion('1.0');
@@ -237,11 +247,12 @@ export default function AdminLegalPage() {
               <CardDescription>{t('admin.legal.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'terms' | 'privacy')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LegalDocumentType)}>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <TabsList className="grid w-full sm:w-auto grid-cols-2">
-                    <TabsTrigger value="terms">{t('admin.legal.terms')}</TabsTrigger>
-                    <TabsTrigger value="privacy">{t('admin.legal.privacy')}</TabsTrigger>
+                  <TabsList className="grid w-full sm:w-auto grid-cols-3">
+                    {LEGAL_DOCUMENT_TYPES.map(docType => (
+                      <TabsTrigger key={docType} value={docType}>{t(TAB_LABEL_KEYS[docType])}</TabsTrigger>
+                    ))}
                   </TabsList>
 
                   <Select value={selectedLocale} onValueChange={setSelectedLocale}>
@@ -270,35 +281,22 @@ export default function AdminLegalPage() {
                   </div>
                 ) : (
                   <>
-                    <TabsContent value="terms" className="space-y-4 mt-0">
-                      <LegalEditor
-                        title={title}
-                        setTitle={setTitle}
-                        content={content}
-                        setContent={setContent}
-                        version={version}
-                        setVersion={setVersion}
-                        isPublished={isPublished}
-                        setIsPublished={setIsPublished}
-                        currentDoc={currentDoc}
-                        t={t}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="privacy" className="space-y-4 mt-0">
-                      <LegalEditor
-                        title={title}
-                        setTitle={setTitle}
-                        content={content}
-                        setContent={setContent}
-                        version={version}
-                        setVersion={setVersion}
-                        isPublished={isPublished}
-                        setIsPublished={setIsPublished}
-                        currentDoc={currentDoc}
-                        t={t}
-                      />
-                    </TabsContent>
+                    {LEGAL_DOCUMENT_TYPES.map(docType => (
+                      <TabsContent key={docType} value={docType} className="space-y-4 mt-0">
+                        <LegalEditor
+                          title={title}
+                          setTitle={setTitle}
+                          content={content}
+                          setContent={setContent}
+                          version={version}
+                          setVersion={setVersion}
+                          isPublished={isPublished}
+                          setIsPublished={setIsPublished}
+                          currentDoc={currentDoc}
+                          t={t}
+                        />
+                      </TabsContent>
+                    ))}
 
                     {/* 액션 버튼 */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
@@ -359,18 +357,14 @@ export default function AdminLegalPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-2 text-sm">
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                  <code className="flex-1 text-xs break-all">
-                    {typeof window !== 'undefined' ? window.location.origin : ''}/legal/terms?lang=ko
-                  </code>
-                  <Badge variant="outline">{t('admin.legal.terms')}</Badge>
-                </div>
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                  <code className="flex-1 text-xs break-all">
-                    {typeof window !== 'undefined' ? window.location.origin : ''}/legal/privacy?lang=ko
-                  </code>
-                  <Badge variant="outline">{t('admin.legal.privacy')}</Badge>
-                </div>
+                {LEGAL_DOCUMENT_TYPES.map(docType => (
+                  <div key={docType} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                    <code className="flex-1 text-xs break-all">
+                      {typeof window !== 'undefined' ? window.location.origin : ''}/legal/{docType}?lang=ko
+                    </code>
+                    <Badge variant="outline">{t(TAB_LABEL_KEYS[docType])}</Badge>
+                  </div>
+                ))}
                 <p className="text-muted-foreground text-xs mt-2">
                   {t('admin.legal.urlHint')}
                 </p>
