@@ -5,8 +5,73 @@ import next from 'next';
 import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { initializePool, getConnection } from './lib/db';
-import { hashPassword } from './lib/auth';
+import { hashPassword, verifyAccessToken, verifyPassword } from './lib/auth';
+import {
+  canViewSession,
+  isPasswordAttemptLimited,
+  recordPasswordFailure,
+  clearPasswordFailures,
+} from './lib/session-guard';
 import type { PoolClient } from 'pg';
+import type { Socket } from 'socket.io';
+
+// ============================================
+// 소켓 인증/권한 헬퍼
+// ============================================
+
+// 소켓 이벤트 payload(accessToken) 또는 연결 시 handshake.auth.token 에서 사용자 검증.
+// 현재 배포된 앱은 토큰을 보내지 않으므로(검증 불가한 userId만 보냄) 없으면 null.
+function getSocketUser(socket: Socket, data: any): { userId: string } | null {
+  const token =
+    (data && typeof data === 'object' && typeof data.accessToken === 'string' && data.accessToken) ||
+    (typeof socket.handshake.auth?.token === 'string' && socket.handshake.auth.token) ||
+    null;
+  if (!token) return null;
+  const payload = verifyAccessToken(token);
+  return payload?.userId ? { userId: payload.userId } : null;
+}
+
+async function isAdminUserId(client: PoolClient, userId: string): Promise<boolean> {
+  const result = await client.query(
+    'SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL',
+    [userId]
+  );
+  const role = result.rows[0]?.role;
+  return role === 'admin' || role === 'super_admin';
+}
+
+interface SessionAccessRow {
+  session_id: string;
+  user_id: string | null;
+  session_name: string | null;
+  is_public: boolean | null;
+  password_hash: string | null;
+}
+
+async function loadSessionForAccess(client: PoolClient, sessionId: string): Promise<SessionAccessRow | null> {
+  const result = await client.query<SessionAccessRow>(
+    `SELECT s.session_id, s.user_id, s.session_name, ss.is_public, ss.password_hash
+     FROM sessions s
+     LEFT JOIN session_settings ss ON ss.session_id = s.session_id
+     WHERE s.session_id = $1`,
+    [sessionId]
+  );
+  return result.rows[0] || null;
+}
+
+// 소켓 비밀번호 검증 (REST와 동일하게 시도 횟수 제한)
+function checkSocketPassword(socket: Socket, sessionId: string, password: unknown, passwordHash: string | null): boolean {
+  if (!passwordHash || typeof password !== 'string' || !password) return false;
+  const key = `socket:${socket.handshake.address}:${sessionId}`;
+  if (isPasswordAttemptLimited(key)) return false;
+  const ok = verifyPassword(password, passwordHash);
+  if (ok) {
+    clearPasswordFailures(key);
+  } else {
+    recordPasswordFailure(key);
+  }
+  return ok;
+}
 
 // .env.local 파일 로드
 dotenv.config({ path: '.env.local' });
@@ -55,21 +120,22 @@ app.prepare().then(() => {
       let client: PoolClient | null = null;
       try {
         const sessionId = data?.sessionId || uuidv4();
-        const userId = data?.userId || null;
+        const claimedUserId = data?.userId || null;
         const sessionName = data?.sessionName || null;
         const settings = data?.settings || {};
+
+        // 토큰으로 검증된 사용자가 있으면 그 ID를 우선 사용 (구버전 앱은 토큰 없이 userId만 보냄)
+        const verifiedUser = getSocketUser(socket, data);
+        const userId = verifiedUser?.userId || claimedUserId;
 
         client = await getConnection();
 
         // 세션이 이미 존재하는지 확인
-        const checkResult = await client.query(
-          `SELECT session_id FROM sessions WHERE session_id = $1`,
-          [sessionId]
-        );
+        const existing = await loadSessionForAccess(client, sessionId);
 
         let isNewSession = false;
 
-        if (checkResult.rows.length === 0) {
+        if (!existing) {
           isNewSession = true;
           // 세션 생성 (user_id, session_name 포함)
           await client.query(
@@ -78,11 +144,44 @@ app.prepare().then(() => {
             [sessionId, socket.id, userId || null, sessionName]
           );
         } else {
+          // 보안: 이전에는 기존 세션 ID로 create-session을 보내면 누구나 소유자/이름/설정
+          // (공개 여부 등)을 덮어쓰고 방에 참가해 실시간 스캔을 받아볼 수 있었다.
+          // 이제 기존 세션 변경은 토큰으로 검증된 소유자 또는 관리자만 가능하다.
+          // (앱은 새 세션 생성에만 create-session을 사용하므로 호환된다)
+          const isVerifiedOwner = !!verifiedUser && existing.user_id === verifiedUser.userId;
+          const isVerifiedAdmin = !!verifiedUser && !isVerifiedOwner && (await isAdminUserId(client, verifiedUser.userId));
+          // 소유자 없는 세션은 보호 설정이 없을 때만 (구버전 앱 호환) 소유권 지정 허용
+          const canClaimOwnerless =
+            !existing.user_id && !!userId && existing.is_public !== false && !existing.password_hash;
+
+          if (!isVerifiedOwner && !isVerifiedAdmin && !canClaimOwnerless) {
+            const viewable = canViewSession({
+              sessionId,
+              ownerId: existing.user_id,
+              isPublic: existing.is_public ?? true,
+              passwordHash: existing.password_hash,
+              verifiedUserId: verifiedUser?.userId || null,
+              verifiedIsAdmin: false,
+              sessionAccessToken: data?.sessionAccessToken,
+            });
+            // 설정/소유자는 변경하지 않고, 열람 가능한 세션일 때만 방에 참가
+            if (viewable) {
+              socket.join(sessionId);
+            }
+            socket.emit('session-created', {
+              sessionId,
+              sessionName: existing.session_name,
+              userId: existing.user_id,
+              message: '이미 존재하는 세션입니다.',
+            });
+            return;
+          }
+
           // 기존 세션 업데이트 (user_id, session_name)
           if (userId || sessionName) {
             await client.query(
               `UPDATE sessions SET
-                user_id = COALESCE($1, user_id),
+                user_id = COALESCE(user_id, $1),
                 session_name = COALESCE($2, session_name)
                WHERE session_id = $3`,
               [userId || null, sessionName, sessionId]
@@ -136,12 +235,16 @@ app.prepare().then(() => {
     });
 
     // 세션 참가
+    // payload: { sessionId, userId?, sessionName?, accessToken?, sessionAccessToken?, password? }
+    // - accessToken: 로그인 사용자 JWT (소유자/관리자 확인용)
+    // - sessionAccessToken: POST /api/sessions/:id/settings 비밀번호 검증 후 발급된 토큰
+    // - password: 세션 비밀번호 (토큰 대신 직접 제시)
     socket.on('join-session', async (data) => {
       let client: PoolClient | null = null;
       try {
         // sessionId, userId, sessionName을 클라이언트에서 직접 받음
         const sessionId = typeof data === 'string' ? data : data?.sessionId;
-        const userId = typeof data === 'object' ? data?.userId : null;
+        const claimedUserId = typeof data === 'object' ? data?.userId : null;
         const sessionName = typeof data === 'object' ? data?.sessionName : null;
 
         if (!sessionId) {
@@ -149,51 +252,52 @@ app.prepare().then(() => {
           return;
         }
 
+        const verifiedUser = getSocketUser(socket, data);
+        // 스캔 필터/소유자 지정에 쓰는 ID: 검증된 사용자 우선, 없으면 (구버전 앱 호환) 클라이언트가 보낸 userId
+        const userId = verifiedUser?.userId || claimedUserId || null;
+
         client = await getConnection();
 
-        // 세션 설정 조회
-        const settingsResult = await client.query(
-          `SELECT is_public,
-                  CASE WHEN password_hash IS NOT NULL THEN true ELSE false END as has_password
-           FROM session_settings WHERE session_id = $1`,
-          [sessionId]
-        );
+        // 세션 + 설정 조회
+        let existingSession = await loadSessionForAccess(client, sessionId);
 
-        const sessionSettings = settingsResult.rows[0] || { is_public: true, has_password: false };
-
-        // 세션이 없으면 자동으로 생성
-        const checkResult = await client.query(
-          `SELECT session_id, user_id, session_name FROM sessions WHERE session_id = $1`,
-          [sessionId]
-        );
-
-        if (checkResult.rows.length === 0) {
+        if (!existingSession) {
+          // 세션이 없으면 자동으로 생성
           // console.log('새 세션 자동 생성:', sessionId, sessionName ? `이름: ${sessionName}` : '', userId ? `(사용자: ${userId})` : '(비로그인)');
           await client.query(
             `INSERT INTO sessions (session_id, socket_id, user_id, session_name, created_at, last_activity, status)
              VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE')`,
             [sessionId, socket.id, userId || null, sessionName]
           );
+          existingSession = {
+            session_id: sessionId,
+            user_id: userId || null,
+            session_name: sessionName,
+            is_public: null,
+            password_hash: null,
+          };
         } else {
-          // 세션 활동 시간 업데이트, user_id/session_name 업데이트
-          const existingSession = checkResult.rows[0];
           // console.log('기존 세션 발견:', sessionId, '현재 user_id:', existingSession.user_id, '요청 userId:', userId);
+          const isProtected = existingSession.is_public === false || !!existingSession.password_hash;
+          const isOwnerClaim = !!userId && existingSession.user_id === userId;
 
-          // user_id가 없거나 session_name이 변경된 경우 업데이트
-          const shouldUpdateUserId = userId && !existingSession.user_id;
-          const shouldUpdateName = sessionName && sessionName !== existingSession.session_name;
+          // 보안: 소유자 없는 세션의 소유권 지정은 보호 설정(비공개/비밀번호)이 없을 때만 허용
+          const shouldUpdateUserId = !!userId && !existingSession.user_id && !isProtected;
+          // 보안: 세션 이름 변경은 (주장된) 소유자만 — 이전에는 누구나 이름을 바꿀 수 있었다
+          const shouldUpdateName =
+            !!sessionName && sessionName !== existingSession.session_name && (isOwnerClaim || shouldUpdateUserId);
 
           if (shouldUpdateUserId || shouldUpdateName) {
-            // console.log('세션 업데이트:', sessionId, shouldUpdateUserId ? `user_id: ${userId}` : '', shouldUpdateName ? `이름: ${sessionName}` : '');
             await client.query(
               `UPDATE sessions SET
                 last_activity = CURRENT_TIMESTAMP,
                 socket_id = $1,
-                user_id = COALESCE($2, user_id),
+                user_id = COALESCE(user_id, $2),
                 session_name = COALESCE($3, session_name)
                WHERE session_id = $4`,
               [socket.id, shouldUpdateUserId ? userId : null, shouldUpdateName ? sessionName : null, sessionId]
             );
+            if (shouldUpdateUserId) existingSession.user_id = userId;
           } else {
             await client.query(
               `UPDATE sessions SET last_activity = CURRENT_TIMESTAMP, socket_id = $1
@@ -201,6 +305,51 @@ app.prepare().then(() => {
               [socket.id, sessionId]
             );
           }
+        }
+
+        const sessionSettings = {
+          is_public: existingSession.is_public ?? true,
+          has_password: !!existingSession.password_hash,
+        };
+
+        // 보안: 이전에는 비밀번호 보호/비공개 세션도 join-session만 보내면 기존 스캔 데이터를
+        // 전부 받고 방에 참가해 실시간 스캔까지 수신할 수 있었다.
+        // 이제 소유자/관리자(토큰 검증) 또는 비밀번호(또는 세션 접근 토큰)가 확인된 경우에만 허용한다.
+        const verifiedIsAdmin =
+          !!verifiedUser &&
+          existingSession.user_id !== verifiedUser.userId &&
+          (sessionSettings.has_password || !sessionSettings.is_public) &&
+          (await isAdminUserId(client, verifiedUser.userId));
+
+        const allowed = canViewSession({
+          sessionId,
+          ownerId: existingSession.user_id,
+          isPublic: sessionSettings.is_public,
+          passwordHash: existingSession.password_hash,
+          verifiedUserId: verifiedUser?.userId || null,
+          verifiedIsAdmin,
+          sessionAccessToken: typeof data === 'object' ? data?.sessionAccessToken : undefined,
+          passwordValid:
+            typeof data === 'object' && data?.password
+              ? checkSocketPassword(socket, sessionId, data.password, existingSession.password_hash)
+              : false,
+        });
+
+        if (!allowed) {
+          const reason = !sessionSettings.is_public ? 'PRIVATE' : 'PASSWORD_REQUIRED';
+          socket.emit('session-access-denied', {
+            sessionId,
+            reason,
+            settings: {
+              isPublic: sessionSettings.is_public,
+              hasPassword: sessionSettings.has_password,
+            },
+          });
+          socket.emit('error', {
+            code: reason,
+            message: reason === 'PRIVATE' ? '비공개 세션입니다.' : '세션 비밀번호가 필요합니다.',
+          });
+          return;
         }
 
         socket.join(sessionId);
