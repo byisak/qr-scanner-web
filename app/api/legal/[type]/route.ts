@@ -1,8 +1,9 @@
 // GET /api/legal/[type] - 공개 약관 조회 (인증 불필요)
-// type: 'terms' | 'privacy'
+// type: 'terms' | 'privacy' | 'account-deletion' (lib/legal.ts)
 // query: ?lang=ko (기본값: ko)
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { isLegalDocumentType } from '@/lib/legal';
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
     const { type } = await params;
 
     // 타입 검증
-    if (!['terms', 'privacy'].includes(type)) {
+    if (!isLegalDocumentType(type)) {
       return NextResponse.json(
         { success: false, error: 'Invalid document type' },
         { status: 400 }

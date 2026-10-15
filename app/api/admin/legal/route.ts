@@ -8,10 +8,15 @@ import {
   AuthErrorCodes,
   createAuthErrorResponse,
 } from '@/lib/auth';
+import {
+  LEGAL_LOCALES,
+  isLegalDocumentType,
+  type LegalDocumentType,
+} from '@/lib/legal';
 
 interface LegalDocument {
   id: string;
-  type: 'terms' | 'privacy';
+  type: LegalDocumentType;
   locale: string;
   title: string;
   content: string;
@@ -59,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     // 쿼리 파라미터
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type'); // 'terms' | 'privacy'
+    const type = searchParams.get('type'); // lib/legal.ts LEGAL_DOCUMENT_TYPES
 
     let query = 'SELECT * FROM legal_documents';
     const params: string[] = [];
@@ -130,14 +135,14 @@ export async function POST(request: NextRequest) {
     const { type, locale, title, content, version, isPublished } = body;
 
     // 유효성 검사
-    if (!type || !['terms', 'privacy'].includes(type)) {
+    if (!type || typeof type !== 'string' || !isLegalDocumentType(type)) {
       return NextResponse.json(
-        { success: false, error: 'type은 terms 또는 privacy여야 합니다.' },
+        { success: false, error: 'type은 terms, privacy, account-deletion 중 하나여야 합니다.' },
         { status: 400 }
       );
     }
 
-    if (!locale || !['ko', 'en', 'ja', 'zh', 'es'].includes(locale)) {
+    if (!locale || !(LEGAL_LOCALES as readonly string[]).includes(locale)) {
       return NextResponse.json(
         { success: false, error: '지원하지 않는 언어입니다.' },
         { status: 400 }

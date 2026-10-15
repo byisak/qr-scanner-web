@@ -511,9 +511,10 @@
     },
     "legal": {
       "title": "Legal Documents",
-      "description": "Manage Terms of Service and Privacy Policy",
+      "description": "Manage the Terms of Service, Privacy Policy and Account Deletion page",
       "terms": "Terms of Service",
       "privacy": "Privacy Policy",
+      "accountDeletion": "Account Deletion",
       "docTitle": "Title",
       "titlePlaceholder": "Enter document title",
       "content": "Content",

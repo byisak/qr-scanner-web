@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { getDefaultLegalTitle, isLegalDocumentType } from '@/lib/legal';
 
 interface LegalDocument {
   id: string;
@@ -58,7 +59,7 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
       }
     };
 
-    if (['terms', 'privacy'].includes(type)) {
+    if (isLegalDocumentType(type)) {
       fetchDocument();
     } else {
       setError('Invalid document type');
@@ -110,11 +111,9 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-lg font-semibold">
-                {document?.title || (type === 'terms' ? (
-                  currentLang === 'ko' ? '이용약관' : 'Terms of Service'
-                ) : (
-                  currentLang === 'ko' ? '개인정보 처리방침' : 'Privacy Policy'
-                ))}
+                {document?.title || (isLegalDocumentType(type)
+                  ? getDefaultLegalTitle(type, currentLang)
+                  : '')}
               </h1>
               {document?.version && (
                 <span className={`text-xs ${mutedColor} px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>

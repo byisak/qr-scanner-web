@@ -511,9 +511,10 @@
     },
     "legal": {
       "title": "약관 관리",
-      "description": "서비스 이용약관과 개인정보 처리방침을 관리합니다",
+      "description": "서비스 이용약관, 개인정보 처리방침, 계정 삭제 안내를 관리합니다",
       "terms": "이용약관",
       "privacy": "개인정보 처리방침",
+      "accountDeletion": "계정 삭제 안내",
       "docTitle": "제목",
       "titlePlaceholder": "문서 제목을 입력하세요",
       "content": "내용",
