@@ -17,7 +17,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ListRow, ListRowSkeleton } from '@/components/ui/list-row';
 import { Empty } from '@/components/ui/empty';
@@ -234,7 +234,7 @@ export default function TrashPage() {
                 <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-secondary text-foreground">
                   <LogIn className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="type-h2">{t('dashboard.loginRequired')}</CardTitle>
+                <h1 className="type-h2">{t('dashboard.loginRequired')}</h1>
                 <CardDescription>{t('dashboard.loginRequiredDesc')}</CardDescription>
               </CardHeader>
               <CardContent>

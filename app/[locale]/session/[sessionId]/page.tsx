@@ -42,7 +42,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide-react';
@@ -416,7 +416,7 @@ export default function SessionPage() {
                 <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-destructive-soft text-destructive">
                   <ShieldX className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="type-h2">{t('session.privateSession')}</CardTitle>
+                <h1 className="type-h2">{t('session.privateSession')}</h1>
                 <CardDescription>{t('session.privateSessionDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -444,7 +444,7 @@ export default function SessionPage() {
                 <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-secondary text-foreground">
                   <Lock className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="type-h2">{t('session.passwordProtected')}</CardTitle>
+                <h1 className="type-h2">{t('session.passwordProtected')}</h1>
                 <CardDescription>{t('session.passwordProtectedDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
