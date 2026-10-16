@@ -295,7 +295,7 @@ export default function TrashPage() {
                 const remaining = getRemainingTime(session.deleted_at);
                 const name = session.session_name || session.session_id;
                 return (
-                  <li key={session.session_id} style={{ '--i': Math.min(i, 12) } as CSSProperties}>
+                  <li key={session.session_id} className="min-w-0" style={{ '--i': Math.min(i, 12) } as CSSProperties}>
                     <ListRow
                       icon={<QrCode />}
                       title={name}
