@@ -92,7 +92,7 @@ export function ListRow({
       data-slot="list-row"
       data-current={current || undefined}
       className={cn(
-        "rounded-field border bg-card transition-[border-color,box-shadow] data-[current]:border-primary",
+        "min-w-0 rounded-field border bg-card transition-[border-color,box-shadow] data-[current]:border-primary",
         className
       )}
       {...props}

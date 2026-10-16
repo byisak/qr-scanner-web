@@ -88,7 +88,7 @@ export function Field({ label, id, error, help, optional, counter, group = false
   return (
     <div
       data-slot="field"
-      className={cn("grid gap-2", className)}
+      className={cn("grid min-w-0 gap-2", className)}
       {...(group ? { role: "group", "aria-labelledby": labelId } : {})}
     >
       <div className="flex items-baseline justify-between gap-3 text-15 font-bold">

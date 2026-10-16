@@ -28,7 +28,7 @@ export function Segmented<T extends string>({
     <ChipGroup
       value={value}
       onValueChange={(v) => onValueChange(v as T)}
-      className={cn("inline-flex h-10 max-w-full flex-nowrap gap-0.5 overflow-x-auto rounded-full bg-secondary p-1", className)}
+      className={cn("inline-flex h-10 w-fit max-w-full flex-nowrap gap-0.5 overflow-x-auto rounded-full bg-secondary p-1", className)}
       {...props}
     >
       {options.map((o) => (
