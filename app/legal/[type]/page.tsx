@@ -2,7 +2,9 @@
 
 import { useState, useEffect, use } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { CircleAlert, Moon, Sun } from 'lucide-react';
 import { getDefaultLegalTitle, isLegalDocumentType } from '@/lib/legal';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LegalDocument {
   id: string;
@@ -22,6 +24,57 @@ const SUPPORTED_LOCALES = [
   { code: 'zh', name: '中文' },
   { code: 'es', name: 'Español' },
 ];
+
+// 이 페이지는 앱 웹뷰에서도 열리므로 next-intl 없이 작은 번역표를 쓴다
+const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 'light' | 'dark' | 'language' | 'loading', string>> = {
+  ko: {
+    notFound: '문서를 찾을 수 없어요',
+    notFoundDesc: '아직 발행된 문서가 없거나 이 언어로는 준비되지 않았어요',
+    lastUpdated: '최종 수정일',
+    light: '밝은 화면으로 보기',
+    dark: '어두운 화면으로 보기',
+    language: '언어',
+    loading: '불러오는 중',
+  },
+  en: {
+    notFound: 'Document not found',
+    notFoundDesc: 'It has not been published yet or is not available in this language',
+    lastUpdated: 'Last updated',
+    light: 'Switch to light mode',
+    dark: 'Switch to dark mode',
+    language: 'Language',
+    loading: 'Loading',
+  },
+  ja: {
+    notFound: '文書が見つかりません',
+    notFoundDesc: 'まだ公開されていないか、この言語では用意されていません',
+    lastUpdated: '最終更新日',
+    light: 'ライトモードに切り替え',
+    dark: 'ダークモードに切り替え',
+    language: '言語',
+    loading: '読み込み中',
+  },
+  zh: {
+    notFound: '找不到文档',
+    notFoundDesc: '文档尚未发布，或暂不支持该语言',
+    lastUpdated: '最后更新',
+    light: '切换到浅色模式',
+    dark: '切换到深色模式',
+    language: '语言',
+    loading: '加载中',
+  },
+  es: {
+    notFound: 'No se encontró el documento',
+    notFoundDesc: 'Aún no se ha publicado o no está disponible en este idioma',
+    lastUpdated: 'Última actualización',
+    light: 'Cambiar a modo claro',
+    dark: 'Cambiar a modo oscuro',
+    language: 'Idioma',
+    loading: 'Cargando',
+  },
+};
+
+const DATE_LOCALE: Record<string, string> = { ko: 'ko-KR', en: 'en-US', ja: 'ja-JP', zh: 'zh-CN', es: 'es-ES' };
 
 export default function LegalPage({ params }: { params: Promise<{ type: string }> }) {
   const { type } = use(params);
@@ -52,7 +105,7 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
         } else {
           setError(data.error || 'Document not found');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load document');
       } finally {
         setIsLoading(false);
@@ -97,37 +150,43 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
     }
   }, [document?.title]);
 
-  const bgColor = isDark ? 'bg-gray-900' : 'bg-gray-50';
-  const cardBg = isDark ? 'bg-gray-800' : 'bg-white';
-  const textColor = isDark ? 'text-gray-100' : 'text-gray-900';
-  const mutedColor = isDark ? 'text-gray-400' : 'text-gray-500';
-  const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
+  // 화면 색은 토큰으로: 어두운 화면이면 html 에 dark 클래스 (앱 웹뷰의 ?theme=dark 도 그대로)
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.toggle('dark', isDark);
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+  }, [isDark]);
+
+  // 읽어 주는 언어도 문서 언어에 맞춘다
+  useEffect(() => {
+    window.document.documentElement.lang = currentLang;
+  }, [currentLang]);
+
+  const tx = TEXT[currentLang] ?? TEXT.en;
+  const docTitle = document?.title || (isLegalDocumentType(type) ? getDefaultLegalTitle(type, currentLang) : '');
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor}`}>
-      {/* 헤더 (embedded 모드가 아닐 때만) */}
+    <div className={`min-h-screen bg-background text-foreground ${isDark ? 'dark' : ''}`}>
+      {/* 머리글 (embedded 모드가 아닐 때만) */}
       {!embedded && (
-        <header className={`sticky top-0 z-10 ${cardBg} ${borderColor} border-b`}>
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-semibold">
-                {document?.title || (isLegalDocumentType(type)
-                  ? getDefaultLegalTitle(type, currentLang)
-                  : '')}
-              </h1>
+        <header className="sticky top-0 z-10 border-b border-border/60 bg-background/85 backdrop-blur-md">
+          <div className="page-narrow flex min-h-[68px] items-center justify-between gap-3 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="type-h3 min-w-0 truncate">{docTitle}</h1>
               {document?.version && (
-                <span className={`text-xs ${mutedColor} px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <span className="tabular shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-13 font-semibold text-muted-foreground">
                   v{document.version}
                 </span>
               )}
             </div>
 
-            {/* 언어 선택 & 테마 토글 */}
-            <div className="flex items-center gap-2">
+            {/* 언어 선택 & 테마 전환 */}
+            <div className="flex shrink-0 items-center gap-1.5">
               <select
                 value={currentLang}
                 onChange={(e) => handleLangChange(e.target.value)}
-                className={`text-sm px-2 py-1 rounded border ${borderColor} ${cardBg} ${textColor} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                aria-label={tx.language}
+                className="h-[34px] rounded-full border border-input bg-card px-3 text-13 font-semibold text-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {SUPPORTED_LOCALES.map(locale => (
                   <option key={locale.code} value={locale.code}>
@@ -137,102 +196,62 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
               </select>
 
               <button
+                type="button"
                 onClick={() => setIsDark(!isDark)}
-                className={`p-2 rounded-full ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                title={isDark ? 'Light mode' : 'Dark mode'}
+                aria-label={isDark ? tx.light : tx.dark}
+                className="inline-flex size-[34px] items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
-                {isDark ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
+                {isDark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}
               </button>
             </div>
           </div>
         </header>
       )}
 
-      {/* 메인 컨텐츠 */}
-      <main className={`max-w-4xl mx-auto px-4 ${embedded ? 'py-4' : 'py-8'}`}>
+      {/* 본문 */}
+      <main id="main" className={`page-narrow ${embedded ? 'py-4' : 'py-8'}`}>
         {isLoading ? (
-          <div className={`${cardBg} rounded-lg p-8 shadow-sm`}>
-            <div className="animate-pulse space-y-4">
-              <div className={`h-8 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded w-1/3`} />
-              <div className={`h-4 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded w-full`} />
-              <div className={`h-4 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded w-full`} />
-              <div className={`h-4 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded w-2/3`} />
+          <div className="rounded-card border bg-card p-6 sm:p-8" aria-busy="true">
+            <span className="sr-only" role="status">{tx.loading}</span>
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-1/3" />
+              <Skeleton className="h-4 w-full rounded-full" />
+              <Skeleton className="h-4 w-full rounded-full" />
+              <Skeleton className="h-4 w-2/3 rounded-full" />
             </div>
           </div>
         ) : error ? (
-          <div className={`${cardBg} rounded-lg p-8 shadow-sm text-center`}>
-            <div className="text-red-500 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <p className={`text-lg ${mutedColor}`}>
-              {currentLang === 'ko' ? '문서를 찾을 수 없습니다.' : 'Document not found.'}
-            </p>
-            <p className={`text-sm ${mutedColor} mt-2`}>
-              {currentLang === 'ko'
-                ? '아직 발행된 문서가 없거나 요청한 언어를 지원하지 않습니다.'
-                : 'The document has not been published yet or the requested language is not supported.'}
-            </p>
+          <div className="rounded-card border bg-card p-8 text-center" role="alert">
+            <CircleAlert className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
+            <p className="mt-4 type-h3">{tx.notFound}</p>
+            <p className="mt-2 text-15 text-muted-foreground">{tx.notFoundDesc}</p>
           </div>
         ) : document && (
-          <article className={`${cardBg} rounded-lg shadow-sm overflow-hidden`}>
-            {/* 문서 헤더 - 수정일만 표시 */}
+          <article className="min-w-0 rounded-card border bg-card">
             {document.publishedAt && (
-              <div className={`px-6 pt-6 pb-2`}>
-                <p className={`text-sm ${mutedColor}`}>
-                  {currentLang === 'ko' ? '최종 수정일: ' : 'Last updated: '}
-                  {new Date(document.publishedAt).toLocaleDateString(
-                    currentLang === 'ko' ? 'ko-KR' : 'en-US',
-                    { year: 'numeric', month: 'long', day: 'numeric' }
-                  )}
-                </p>
-              </div>
+              <p className="tabular px-5 pt-6 text-13 text-muted-foreground sm:px-8">
+                {tx.lastUpdated}{' '}
+                {new Date(document.publishedAt).toLocaleDateString(DATE_LOCALE[currentLang] ?? 'en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
             )}
 
-            {/* 문서 내용 */}
+            {/* 문서 내용 (그래파이트 prose, 긴 주소는 줄바꿈) */}
             <div
-              className="p-6 legal-content"
+              className="prose max-w-none px-5 pb-8 pt-2 type-body sm:px-8 [&_a]:break-all"
               dangerouslySetInnerHTML={{ __html: renderContent() }}
             />
-            <style jsx global>{`
-              .legal-content { line-height: 1.7; }
-              .legal-content h1 { font-size: 1.75em; font-weight: 700; margin: 1.5em 0 0.75em; }
-              .legal-content h2 { font-size: 1.5em; font-weight: 600; margin: 1.25em 0 0.5em; }
-              .legal-content h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; }
-              .legal-content h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
-              .legal-content p { margin: 0.75em 0; }
-              .legal-content p:empty { min-height: 1em; }
-              .legal-content ul, .legal-content ol { margin: 0.75em 0; padding-left: 1.5em; }
-              .legal-content ul { list-style-type: disc; }
-              .legal-content ol { list-style-type: decimal; }
-              .legal-content li { margin: 0.25em 0; }
-              .legal-content a { color: #3b82f6; }
-              .legal-content a:hover { text-decoration: underline; }
-              .legal-content blockquote { border-left: 3px solid ${isDark ? '#4b5563' : '#d1d5db'}; padding-left: 1em; margin: 1em 0; color: ${isDark ? '#9ca3af' : '#6b7280'}; }
-              .legal-content code { background: ${isDark ? '#374151' : '#f3f4f6'}; padding: 0.125em 0.25em; border-radius: 0.25em; font-size: 0.875em; }
-              .legal-content pre { background: ${isDark ? '#1f2937' : '#f3f4f6'}; padding: 1em; border-radius: 0.5em; overflow-x: auto; }
-              .legal-content hr { border: none; border-top: 1px solid ${isDark ? '#374151' : '#e5e7eb'}; margin: 1.5em 0; }
-              .legal-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
-              .legal-content th, .legal-content td { border: 1px solid ${isDark ? '#374151' : '#e5e7eb'}; padding: 0.5em 0.75em; text-align: left; }
-              .legal-content th { background: ${isDark ? '#1f2937' : '#f9fafb'}; font-weight: 600; }
-            `}</style>
           </article>
         )}
       </main>
 
-      {/* 푸터 (embedded 모드가 아닐 때만) */}
+      {/* 바닥글 (embedded 모드가 아닐 때만) */}
       {!embedded && (
-        <footer className={`${borderColor} border-t mt-8`}>
-          <div className={`max-w-4xl mx-auto px-4 py-6 text-center ${mutedColor} text-sm`}>
+        <footer className="mt-8 border-t">
+          <div className="page-narrow py-6 text-center text-13 text-muted-foreground">
             <p>&copy; {new Date().getFullYear()} ScanView. All rights reserved.</p>
           </div>
         </footer>
