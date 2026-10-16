@@ -490,7 +490,8 @@ export default function SessionPage() {
           <Card className="enter" style={{ '--i': 0 } as CSSProperties}>
             <CardHeader>
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <h1 className="type-h2 min-w-0 flex-1 break-all">{displayName}</h1>
+                {/* 좁은 화면: 제목은 한 줄 전체, 버튼은 아래 줄 */}
+                <h1 className="type-h2 min-w-0 flex-1 basis-full break-all sm:basis-0">{displayName}</h1>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {/* 연결 상태: 색만이 아니라 글자로도 */}
                   <span
@@ -589,7 +590,7 @@ export default function SessionPage() {
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="type-h3">{t('session.scanData')}</h2>
-                <Badge variant="secondary" className="tabular">{scans.length} {t('session.items')}</Badge>
+                <Badge variant="secondary" className="tabular">{t('dashboard.scans', { count: scans.length })}</Badge>
               </div>
             </CardHeader>
             <Separator />

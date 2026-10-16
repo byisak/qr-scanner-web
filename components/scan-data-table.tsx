@@ -112,7 +112,6 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               id={searchId}
-              type="search"
               placeholder={t('table.searchPlaceholder')}
               value={searchValue}
               onChange={(event) =>

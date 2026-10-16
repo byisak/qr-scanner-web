@@ -193,7 +193,7 @@ const codeColumn: ColumnDef<ScanData> = {
   accessorKey: "code",
   header: ({ column }) => <SortHeader column={column} k="qrCode" />,
   cell: ({ row }) => {
-    return <div className="max-w-[28rem] break-all font-mono">{row.getValue("code")}</div>
+    return <div className="min-w-[13rem] max-w-[28rem] break-all font-mono">{row.getValue("code")}</div>
   },
 }
 

@@ -193,7 +193,7 @@ export default function Dashboard() {
                       description={
                         <>
                           {session.session_name ? (
-                            <span className="font-mono">{session.session_id} · </span>
+                            <><span className="font-mono">{session.session_id}</span>{' · '}</>
                           ) : null}
                           <span className="tabular">{t('dashboard.scans', { count: session.scan_count })}</span>
                           {' · '}

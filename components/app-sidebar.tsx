@@ -25,7 +25,9 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onSessionChange?: () => void
 }
 
-export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
+export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppSidebarProps) {
+  // onSessionChange 는 아직 쓰지 않지만, DOM(Sidebar)으로 흘러가면 React 경고가 나므로 여기서 걸러낸다
+  void onSessionChange
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const t = useTranslations()
 
