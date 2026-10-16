@@ -62,8 +62,8 @@
       "description": "无网络也能扫描。在仓库、地下室等网络信号差的地方也能使用。"
     },
     "allBarcodes": {
-      "title": "支持所有条形码",
-      "description": "识别30+种条形码格式，包括QR、EAN-13、Code128、UPC-A、DataMatrix。"
+      "title": "支持13种主流条形码",
+      "description": "识别13种条形码格式，包括QR、EAN-13、Code128、UPC-A、DataMatrix。"
     },
     "validation": {
       "title": "条形码验证",
@@ -91,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "QR Scanner Pro 是免费的吗？",
-      "answer": "是的，QR Scanner Pro 可以免费下载使用。所有基本扫描功能都是免费的，您可以升级到Pro版本获得高级功能。"
+      "answer": "是的，QR Scanner Pro 可以免费下载使用，扫描、记录、生成码以及实时传送到电脑都是免费的。"
     },
     "q2": {
       "question": "如何使用 QR Scanner Pro 进行库存管理？",
@@ -107,7 +107,7 @@
     },
     "q5": {
       "question": "支持哪些条形码格式？",
-      "answer": "我们支持30多种条形码格式，包括 QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417 和 Aztec。"
+      "answer": "我们支持13种条形码格式：QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417 和 Aztec。"
     }
   },
   "footer": {
@@ -118,7 +118,7 @@
     "webApp": "网页应用",
     "privacy": "隐私政策",
     "terms": "服务条款",
-    "copyright": "© 2024 ScanView. 保留所有权利。"
+    "copyright": "© {year} ScanView. 保留所有权利。"
   },
   "dashboard": {
     "title": "仪表板",

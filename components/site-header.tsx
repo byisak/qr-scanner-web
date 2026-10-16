@@ -99,7 +99,7 @@ export async function SiteFooter() {
           { href: "/legal/terms", label: t("footer.terms") },
         ])}
       </div>
-      <p className="page border-t py-6 text-13 text-muted-foreground">{t("footer.copyright")}</p>
+      <p className="page border-t py-6 text-13 text-muted-foreground">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
     </footer>
   )
 }

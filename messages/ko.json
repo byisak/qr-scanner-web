@@ -62,8 +62,8 @@
       "description": "인터넷 없이도 스캔할 수 있어요. 창고나 지하처럼 네트워크가 약한 곳에서도 돼요"
     },
     "allBarcodes": {
-      "title": "모든 바코드 지원",
-      "description": "QR코드, EAN-13, Code128, UPC-A, DataMatrix 등 30가지가 넘는 바코드 형식을 읽어요"
+      "title": "주요 바코드 13종 지원",
+      "description": "QR코드, EAN-13, Code128, UPC-A, DataMatrix 등 13가지 바코드 형식을 읽어요"
     },
     "validation": {
       "title": "바코드 유효성 검사",
@@ -91,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "QR Scanner Pro는 무료인가요?",
-      "answer": "네, 무료로 내려받아 쓸 수 있어요. 기본 스캔 기능은 모두 무료이고, 프리미엄 기능이 필요하면 Pro 버전으로 바꿀 수 있어요"
+      "answer": "네, 무료로 내려받아 쓸 수 있어요. 스캔, 기록, 코드 생성, 실시간 PC 전송까지 모두 무료예요"
     },
     "q2": {
       "question": "재고관리에 QR Scanner Pro를 어떻게 활용할 수 있나요?",
@@ -107,7 +107,7 @@
     },
     "q5": {
       "question": "어떤 바코드 형식을 지원하나요?",
-      "answer": "QR코드, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417, Aztec 등 30가지가 넘는 바코드 형식을 읽어요"
+      "answer": "QR코드, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417, Aztec까지 13가지 바코드 형식을 읽어요"
     }
   },
   "footer": {
@@ -118,7 +118,7 @@
     "webApp": "웹앱",
     "privacy": "개인정보처리방침",
     "terms": "이용약관",
-    "copyright": "© 2024 ScanView. All rights reserved."
+    "copyright": "© {year} ScanView. All rights reserved."
   },
   "dashboard": {
     "title": "대시보드",

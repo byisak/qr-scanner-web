@@ -62,8 +62,8 @@
       "description": "インターネットなしでもスキャン可能。倉庫、地下など電波の届きにくい場所でもOK。"
     },
     "allBarcodes": {
-      "title": "全バーコード対応",
-      "description": "QR、EAN-13、Code128、UPC-A、DataMatrixなど30種類以上のバーコード形式を認識。"
+      "title": "主要13種類のバーコードに対応",
+      "description": "QR、EAN-13、Code128、UPC-A、DataMatrixなど13種類のバーコード形式を認識。"
     },
     "validation": {
       "title": "バーコード検証",
@@ -91,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "QR Scanner Pro は無料ですか？",
-      "answer": "はい、QR Scanner Pro は無料でダウンロードして使用できます。基本的なスキャン機能はすべて無料で、プレミアム機能を利用したい場合はPro版にアップグレードできます。"
+      "answer": "はい、QR Scanner Pro は無料でダウンロードして使用できます。スキャン、履歴、コード作成、PCへのリアルタイム送信まですべて無料です。"
     },
     "q2": {
       "question": "在庫管理に QR Scanner Pro をどのように活用できますか？",
@@ -107,7 +107,7 @@
     },
     "q5": {
       "question": "どのバーコード形式に対応していますか？",
-      "answer": "QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417、Aztecなど30種類以上のバーコード形式に対応しています。"
+      "answer": "QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417、Aztecの13種類のバーコード形式に対応しています。"
     }
   },
   "footer": {
@@ -118,7 +118,7 @@
     "webApp": "ウェブアプリ",
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
-    "copyright": "© 2024 ScanView. All rights reserved."
+    "copyright": "© {year} ScanView. All rights reserved."
   },
   "dashboard": {
     "title": "ダッシュボード",

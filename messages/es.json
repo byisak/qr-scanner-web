@@ -62,8 +62,8 @@
       "description": "Escanea sin internet. Funciona en almacenes, sótanos y áreas con mala conectividad."
     },
     "allBarcodes": {
-      "title": "Soporte para Todos los Códigos",
-      "description": "Reconoce más de 30 formatos de código de barras incluyendo QR, EAN-13, Code128, UPC-A, DataMatrix."
+      "title": "13 formatos principales",
+      "description": "Reconoce 13 formatos de código de barras, incluidos QR, EAN-13, Code128, UPC-A y DataMatrix."
     },
     "validation": {
       "title": "Validación de Códigos",
@@ -91,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "¿Es gratis QR Scanner Pro?",
-      "answer": "Sí, QR Scanner Pro es gratis para descargar y usar. Todas las funciones básicas de escaneo son gratuitas, y puedes actualizar a la versión Pro para funciones premium."
+      "answer": "Sí. QR Scanner Pro es gratis para descargar y usar, incluido el escaneo, el historial, la creación de códigos y el envío en tiempo real al PC."
     },
     "q2": {
       "question": "¿Cómo puedo usar QR Scanner Pro para gestión de inventario?",
@@ -107,7 +107,7 @@
     },
     "q5": {
       "question": "¿Qué formatos de código de barras son compatibles?",
-      "answer": "Soportamos más de 30 formatos de código de barras incluyendo QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417 y Aztec."
+      "answer": "Soportamos 13 formatos de código de barras: QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417 y Aztec."
     }
   },
   "footer": {
@@ -118,7 +118,7 @@
     "webApp": "App Web",
     "privacy": "Política de Privacidad",
     "terms": "Términos de Servicio",
-    "copyright": "© 2024 ScanView. Todos los derechos reservados."
+    "copyright": "© {year} ScanView. Todos los derechos reservados."
   },
   "dashboard": {
     "title": "Panel",
