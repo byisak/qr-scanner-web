@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Loader2, Unlock, Eye, Ban, Plus, Minus, Trash2 } from "lucide-react"
+import { Unlock, Lock, Eye, Ban, Plus, Minus, Trash2 } from "lucide-react"
 
 import {
   Dialog,
@@ -15,11 +15,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+import { Chip } from "@/components/ui/chip"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/components/ui/sonner"
+import { notify } from "@/lib/notify"
 import { useConfirmDialog } from "@/components/confirm-dialog"
 import type { AdminUser, UserAdRecords } from "@/types"
 
@@ -228,9 +228,11 @@ export function AdRecordsModal({
           setAdWatchCounts(data.data.adWatchCounts || {})
           setBannerSettings(data.data.bannerSettings || {})
         }
+      } else {
+        notify.error(t("adRecords.loadError"))
       }
     } catch {
-      toast.error(t("adRecords.loadError"))
+      notify.error(t("adRecords.loadError"))
     } finally {
       setIsLoading(false)
     }
@@ -255,14 +257,14 @@ export function AdRecordsModal({
       })
 
       if (res.ok) {
-        toast.success(t("adRecords.saveSuccess"))
+        notify.success(t("adRecords.saveSuccess"))
         onSuccess()
         onOpenChange(false)
       } else {
-        toast.error(t("adRecords.saveError"))
+        notify.error(t("adRecords.saveError"))
       }
     } catch {
-      toast.error(t("adRecords.saveError"))
+      notify.error(t("adRecords.saveError"))
     } finally {
       setIsSaving(false)
     }
@@ -288,13 +290,13 @@ export function AdRecordsModal({
         setUnlockedFeatures([])
         setAdWatchCounts({})
         setBannerSettings({})
-        toast.success(t("adRecords.resetSuccess"))
+        notify.success(t("adRecords.resetSuccess"))
         onSuccess()
       } else {
-        toast.error(t("adRecords.resetError"))
+        notify.error(t("adRecords.resetError"))
       }
     } catch {
-      toast.error(t("adRecords.resetError"))
+      notify.error(t("adRecords.resetError"))
     }
   }
 
@@ -367,43 +369,51 @@ export function AdRecordsModal({
     setAdWatchCounts({})
   }
 
+  const groupTitle = "text-13 font-bold text-muted-foreground"
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogContent className="sm:max-w-2xl" closeLabel={t('common.close')}>
           <DialogHeader>
             <DialogTitle>{t('admin.adRecords.title')}</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="break-all">
               {user?.name} ({user?.email})
             </DialogDescription>
           </DialogHeader>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
+            <div className="space-y-4" aria-busy="true">
+              <span className="sr-only" role="status">{t('common.loading')}</span>
+              <Skeleton className="h-10 rounded-full" />
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 10 }, (_, i) => (
+                  <Skeleton key={i} className="h-9 rounded-full" style={{ width: 72 + ((i * 23) % 50) }} />
+                ))}
+              </div>
             </div>
           ) : (
-            <Tabs defaultValue="unlocked" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="unlocked">
-                  <Unlock className="h-4 w-4 mr-2" />
+            <Tabs defaultValue="unlocked" className="min-w-0">
+              <TabsList className="w-full overflow-x-auto">
+                <TabsTrigger value="unlocked" className="flex-1">
+                  <Unlock aria-hidden="true" />
                   {t('admin.adRecords.unlocked')}
                 </TabsTrigger>
-                <TabsTrigger value="counts">
-                  <Eye className="h-4 w-4 mr-2" />
+                <TabsTrigger value="counts" className="flex-1">
+                  <Eye aria-hidden="true" />
                   {t('admin.adRecords.watchCounts')}
                 </TabsTrigger>
-                <TabsTrigger value="banner">
-                  <Ban className="h-4 w-4 mr-2" />
+                <TabsTrigger value="banner" className="flex-1">
+                  <Ban aria-hidden="true" />
                   {t('admin.adRecords.banner')}
                 </TabsTrigger>
               </TabsList>
 
-              {/* 해제된 기능 탭 */}
+              {/* 해제된 기능 탭: 칩을 눌러 켜고 끄기 (aria-pressed + 자물쇠 아이콘) */}
               <TabsContent value="unlocked">
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
+                <ScrollArea className="h-[min(400px,50dvh)] pr-3">
+                  <div className="space-y-5">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={unlockAll}>
                         {t('admin.adRecords.unlockAll')}
                       </Button>
@@ -413,23 +423,22 @@ export function AdRecordsModal({
                     </div>
 
                     {["qrType", "barcode", "qrStyle", "settings", "backup"].map((type) => (
-                      <div key={type} className="space-y-2">
-                        <h4 className="font-medium text-sm text-muted-foreground">
+                      <div key={type} role="group" aria-labelledby={`ad-unlock-${type}`} className="space-y-2">
+                        <h4 id={`ad-unlock-${type}`} className={groupTitle}>
                           {t(`adRecords.featureTypes.${type}`)}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {getFeaturesByType(type).map(([featureId, config]) => {
                             const isUnlocked = unlockedFeatures.includes(featureId)
                             return (
-                              <Badge
+                              <Chip
                                 key={featureId}
-                                variant={isUnlocked ? "default" : "outline"}
-                                className="cursor-pointer"
+                                selected={isUnlocked}
                                 onClick={() => toggleFeature(featureId)}
                               >
-                                {isUnlocked && <Unlock className="mr-1 h-3 w-3" />}
+                                {isUnlocked ? <Unlock aria-hidden="true" /> : <Lock aria-hidden="true" className="text-faint" />}
                                 {config.name}
-                              </Badge>
+                              </Chip>
                             )
                           })}
                         </div>
@@ -441,61 +450,65 @@ export function AdRecordsModal({
 
               {/* 광고 시청 횟수 탭 */}
               <TabsContent value="counts">
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
+                <ScrollArea className="h-[min(400px,50dvh)] pr-3">
+                  <div className="space-y-5">
                     <Button variant="outline" size="sm" onClick={resetAllCounts}>
                       {t('admin.adRecords.resetCounts')}
                     </Button>
 
                     {["qrType", "barcode", "qrStyle", "settings", "backup"].map((type) => (
                       <div key={type} className="space-y-2">
-                        <h4 className="font-medium text-sm text-muted-foreground">
+                        <h4 className={groupTitle}>
                           {t(`adRecords.featureTypes.${type}`)}
                         </h4>
-                        <div className="grid grid-cols-1 gap-2">
+                        <ul className="grid grid-cols-1 gap-2">
                           {getFeaturesByType(type).map(([featureId, config]) => {
                             const count = adWatchCounts[featureId] || 0
+                            const inputId = `ad-count-${featureId}`
                             return (
-                              <div
+                              <li
                                 key={featureId}
-                                className="flex items-center justify-between p-2 border rounded-md"
+                                className="flex min-w-0 items-center justify-between gap-2 rounded-field border bg-card px-3 py-2"
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm">{config.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    (필요: {config.adCount})
+                                <label htmlFor={inputId} className="min-w-0 text-15">
+                                  <span className="break-words">{config.name}</span>{' '}
+                                  <span className="tabular text-13 text-muted-foreground">
+                                    {t('adRecords.required', { count: config.adCount })}
                                   </span>
-                                </div>
-                                <div className="flex items-center gap-1">
+                                </label>
+                                <div className="flex shrink-0 items-center gap-1">
                                   <Button
                                     variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
+                                    size="icon-sm"
+                                    aria-label={t('adRecords.decrease', { name: config.name })}
                                     onClick={() => updateWatchCount(featureId, -1)}
                                   >
-                                    <Minus className="h-3 w-3" />
+                                    <Minus aria-hidden="true" />
                                   </Button>
                                   <Input
+                                    id={inputId}
                                     type="number"
+                                    inputMode="numeric"
+                                    min={0}
                                     value={count}
                                     onChange={(e) =>
                                       setWatchCount(featureId, parseInt(e.target.value) || 0)
                                     }
-                                    className="w-16 h-7 text-center"
+                                    className="tabular h-[34px] w-16 text-center"
                                   />
                                   <Button
                                     variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7"
+                                    size="icon-sm"
+                                    aria-label={t('adRecords.increase', { name: config.name })}
                                     onClick={() => updateWatchCount(featureId, 1)}
                                   >
-                                    <Plus className="h-3 w-3" />
+                                    <Plus aria-hidden="true" />
                                   </Button>
                                 </div>
-                              </div>
+                              </li>
                             )
                           })}
-                        </div>
+                        </ul>
                       </div>
                     ))}
                   </div>
@@ -505,26 +518,30 @@ export function AdRecordsModal({
               {/* 배너 광고 설정 탭 */}
               <TabsContent value="banner">
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
+                  <p id="ad-banner-desc" className="text-15 text-muted-foreground">
                     {t('admin.adRecords.bannerDesc')}
                   </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(BANNER_SCREENS).map(([screenId, screenName]) => (
-                      <div key={screenId} className="flex items-center justify-between p-3 border rounded-md">
-                        <Label htmlFor={`banner-${screenId}`} className="text-sm">
-                          {screenName}
-                        </Label>
-                        <Switch
-                          id={`banner-${screenId}`}
-                          checked={bannerSettings[screenId] !== false}
-                          onCheckedChange={() => toggleBannerSetting(screenId)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    * ON = 배너 광고 표시, OFF = 배너 광고 숨김
-                  </p>
+                  <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                    {Object.entries(BANNER_SCREENS).map(([screenId, screenName]) => {
+                      const on = bannerSettings[screenId] !== false
+                      return (
+                        <li key={screenId} className="flex items-center justify-between gap-3 rounded-field border bg-card px-3 py-2.5">
+                          <label htmlFor={`banner-${screenId}`} className="text-15">
+                            {screenName}
+                            <span className="ml-2 text-13 text-muted-foreground">
+                              {on ? t('adRecords.bannerOn') : t('adRecords.bannerOff')}
+                            </span>
+                          </label>
+                          <Switch
+                            id={`banner-${screenId}`}
+                            aria-describedby="ad-banner-desc"
+                            checked={on}
+                            onCheckedChange={() => toggleBannerSetting(screenId)}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </div>
               </TabsContent>
             </Tabs>
@@ -535,8 +552,9 @@ export function AdRecordsModal({
               variant="destructive"
               onClick={handleReset}
               disabled={isLoading || isSaving}
+              className="sm:mr-auto"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 aria-hidden="true" />
               {t('adRecords.reset')}
             </Button>
             <Button
@@ -547,8 +565,7 @@ export function AdRecordsModal({
               {t('common.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={isLoading || isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t('adRecords.save')}
+              {isSaving ? t('adRecords.saving') : t('adRecords.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

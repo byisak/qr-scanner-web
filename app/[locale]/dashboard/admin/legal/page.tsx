@@ -18,7 +18,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -29,13 +29,13 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/form/field';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/auth-context';
-import { toast } from '@/components/ui/sonner';
-import { Copy, ExternalLink, Save, Eye, X } from 'lucide-react';
+import { notify } from '@/lib/notify';
+import { Copy, ExternalLink, Save, Eye, CircleCheck, CircleDashed } from 'lucide-react';
 import { WysiwygEditor } from '@/components/admin/wysiwyg-editor';
 import {
   Dialog,
@@ -115,13 +115,15 @@ export default function AdminLegalPage() {
       if (res.ok) {
         const data = await res.json();
         setDocuments(data.documents || []);
+      } else {
+        notify.error(t('admin.legal.loadError'));
       }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error);
+    } catch {
+      notify.error(t('admin.legal.loadError'));
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     if (isAdmin && accessToken) {
@@ -173,14 +175,13 @@ export default function AdminLegalPage() {
       });
 
       if (res.ok) {
-        toast.success(t('admin.legal.saveSuccess'));
+        notify.success(t('admin.legal.saveSuccess'));
         fetchDocuments();
       } else {
-        toast.error(t('admin.legal.saveError'));
+        notify.error(t('admin.legal.saveError'));
       }
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error(t('admin.legal.saveError'));
+    } catch {
+      notify.error(t('admin.legal.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -190,8 +191,10 @@ export default function AdminLegalPage() {
   const copyLink = () => {
     const baseUrl = window.location.origin;
     const url = `${baseUrl}/legal/${activeTab}?lang=${selectedLocale}`;
-    navigator.clipboard.writeText(url);
-    toast.success(t('admin.legal.linkCopied'));
+    navigator.clipboard.writeText(url).then(
+      () => notify.success(t('admin.legal.linkCopied')),
+      () => notify.error(t('session.copyFailed'))
+    );
   };
 
   // 미리보기 (현재 편집 중인 내용)
@@ -219,7 +222,7 @@ export default function AdminLegalPage() {
       <AppSidebar />
       <SidebarInset>
         <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
-          <div className="flex items-center gap-2 px-4 flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -240,23 +243,24 @@ export default function AdminLegalPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.legal.title')}</CardTitle>
-              <CardDescription>{t('admin.legal.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <div className="page flex flex-col gap-4 pb-16">
+          <div className="enter pb-2 pt-8 sm:pt-9" style={{ "--i": 0 } as React.CSSProperties}>
+            <h1 className="type-h1">{t('admin.legal.title')}</h1>
+            <p className="mt-2 type-lead">{t('admin.legal.description')}</p>
+          </div>
+
+          <Card className="min-w-0">
+            <CardContent className="pt-5 sm:pt-6">
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LegalDocumentType)}>
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <TabsList className="grid w-full sm:w-auto grid-cols-3">
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <TabsList className="w-full overflow-x-auto sm:w-auto">
                     {LEGAL_DOCUMENT_TYPES.map(docType => (
-                      <TabsTrigger key={docType} value={docType}>{t(TAB_LABEL_KEYS[docType])}</TabsTrigger>
+                      <TabsTrigger key={docType} value={docType} className="flex-1 sm:flex-none">{t(TAB_LABEL_KEYS[docType])}</TabsTrigger>
                     ))}
                   </TabsList>
 
                   <Select value={selectedLocale} onValueChange={setSelectedLocale}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectTrigger className="w-full sm:ml-auto sm:w-[200px]" aria-label={t('admin.legal.language')}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -264,9 +268,9 @@ export default function AdminLegalPage() {
                         <SelectItem key={locale.code} value={locale.code}>
                           {locale.name}
                           {documents.find(d => d.type === activeTab && d.locale === locale.code && d.isPublished) && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
+                            <span className="ml-2 text-13 text-muted-foreground">
                               {t('admin.legal.published')}
-                            </Badge>
+                            </span>
                           )}
                         </SelectItem>
                       ))}
@@ -275,14 +279,18 @@ export default function AdminLegalPage() {
                 </div>
 
                 {isLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-[400px] w-full" />
+                  <div className="space-y-4" aria-busy="true">
+                    <span className="sr-only" role="status">{t('common.loading')}</span>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <Skeleton className="h-[400px] w-full rounded-card" />
                   </div>
                 ) : (
                   <>
                     {LEGAL_DOCUMENT_TYPES.map(docType => (
-                      <TabsContent key={docType} value={docType} className="space-y-4 mt-0">
+                      <TabsContent key={docType} value={docType} className="mt-0 space-y-4">
                         <LegalEditor
                           title={title}
                           setTitle={setTitle}
@@ -298,49 +306,54 @@ export default function AdminLegalPage() {
                       </TabsContent>
                     ))}
 
-                    {/* 액션 버튼 */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                      <div className="flex gap-2">
+                    {/* 동작 버튼 */}
+                    <div className="mt-4 flex flex-col gap-3 border-t pt-4 lg:flex-row">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={openPreview}
                           disabled={!content}
                         >
-                          <Eye className="mr-2 h-4 w-4" />
+                          <Eye aria-hidden="true" />
                           {t('admin.legal.preview')}
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={copyLink}
                           disabled={!currentDoc?.isPublished}
                         >
-                          <Copy className="mr-2 h-4 w-4" />
+                          <Copy aria-hidden="true" />
                           {t('admin.legal.copyLink')}
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={openPublishedPage}
                           disabled={!currentDoc?.isPublished}
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
+                          <ExternalLink aria-hidden="true" />
                           {t('admin.legal.openPage')}
                         </Button>
                       </div>
 
-                      <div className="flex gap-2 sm:ml-auto">
+                      <div className="flex gap-2 lg:ml-auto">
                         <Button
                           variant="outline"
+                          className="flex-1 lg:flex-none"
                           onClick={() => handleSave(false)}
                           disabled={isSaving || !content}
                         >
-                          <Save className="mr-2 h-4 w-4" />
+                          <Save aria-hidden="true" />
                           {t('admin.legal.saveDraft')}
                         </Button>
                         <Button
+                          className="flex-1 lg:flex-none"
                           onClick={() => handleSave(true)}
                           disabled={isSaving || !content}
                         >
-                          {isSaving ? t('common.loading') : t('admin.legal.publish')}
+                          {isSaving ? t('profile.saving') : t('admin.legal.publish')}
                         </Button>
                       </div>
                     </div>
@@ -350,67 +363,44 @@ export default function AdminLegalPage() {
             </CardContent>
           </Card>
 
-          {/* 공개 URL 안내 */}
-          <Card>
+          {/* 공개 주소 안내 */}
+          <Card className="min-w-0">
             <CardHeader>
-              <CardTitle className="text-base">{t('admin.legal.publicUrls')}</CardTitle>
+              <CardTitle>{t('admin.legal.publicUrls')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-2 text-sm">
+              <ul className="grid gap-2">
                 {LEGAL_DOCUMENT_TYPES.map(docType => (
-                  <div key={docType} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <code className="flex-1 text-xs break-all">
+                  <li key={docType} className="flex min-w-0 flex-col gap-1.5 rounded-field bg-secondary px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+                    <span className="shrink-0 text-13 font-semibold text-muted-foreground sm:order-2">{t(TAB_LABEL_KEYS[docType])}</span>
+                    <code className="min-w-0 flex-1 break-all text-13">
                       {typeof window !== 'undefined' ? window.location.origin : ''}/legal/{docType}?lang=ko
                     </code>
-                    <Badge variant="outline">{t(TAB_LABEL_KEYS[docType])}</Badge>
-                  </div>
+                  </li>
                 ))}
-                <p className="text-muted-foreground text-xs mt-2">
-                  {t('admin.legal.urlHint')}
-                </p>
-              </div>
+              </ul>
+              <p className="mt-3 text-13 text-muted-foreground">
+                {t('admin.legal.urlHint')}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* 미리보기 모달 */}
+        {/* 미리보기 (본문은 그래파이트 prose) */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle className="flex items-center justify-between">
-                <span>{title || t('admin.legal.preview')}</span>
-                <Badge variant="outline">v{version}</Badge>
+          <DialogContent className="flex flex-col overflow-hidden sm:max-w-4xl" closeLabel={t('common.close')}>
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                <span className="min-w-0 break-words">{title || t('admin.legal.preview')}</span>
+                <Badge variant="outline" className="tabular">v{version}</Badge>
               </DialogTitle>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <div
-                className="legal-preview p-4"
+                className="prose max-w-none type-body"
                 dangerouslySetInnerHTML={{ __html: content }}
               />
             </div>
-            <style jsx global>{`
-              .legal-preview { line-height: 1.7; }
-              .legal-preview h1 { font-size: 1.75em; font-weight: 700; margin: 1.5em 0 0.75em; }
-              .legal-preview h2 { font-size: 1.5em; font-weight: 600; margin: 1.25em 0 0.5em; }
-              .legal-preview h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; }
-              .legal-preview h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; }
-              .legal-preview p { margin: 0.75em 0; }
-              .legal-preview p:empty { min-height: 1em; }
-              .legal-preview ul, .legal-preview ol { margin: 0.75em 0; padding-left: 1.5em; }
-              .legal-preview ul { list-style-type: disc; }
-              .legal-preview ol { list-style-type: decimal; }
-              .legal-preview li { margin: 0.25em 0; }
-              .legal-preview a { color: #3b82f6; }
-              .legal-preview a:hover { text-decoration: underline; }
-              .legal-preview blockquote { border-left: 3px solid #d1d5db; padding-left: 1em; margin: 1em 0; color: #6b7280; }
-              .legal-preview code { background: #f3f4f6; padding: 0.125em 0.25em; border-radius: 0.25em; font-size: 0.875em; }
-              .legal-preview pre { background: #f3f4f6; padding: 1em; border-radius: 0.5em; overflow-x: auto; }
-              .legal-preview hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
-              .dark .legal-preview blockquote { border-left-color: #4b5563; color: #9ca3af; }
-              .dark .legal-preview code { background: #374151; }
-              .dark .legal-preview pre { background: #1f2937; }
-              .dark .legal-preview hr { border-top-color: #374151; }
-            `}</style>
           </DialogContent>
         </Dialog>
       </SidebarInset>
@@ -446,59 +436,59 @@ function LegalEditor({
 }: LegalEditorProps) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="title">{t('admin.legal.docTitle')}</Label>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px]">
+        <Field label={t('admin.legal.docTitle')} id="legal-title">
           <Input
-            id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('admin.legal.titlePlaceholder')}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="version">{t('admin.legal.version')}</Label>
+        </Field>
+        <Field label={t('admin.legal.version')} id="legal-version">
           <Input
-            id="version"
+            className="tabular"
             value={version}
             onChange={(e) => setVersion(e.target.value)}
             placeholder="1.0"
           />
-        </div>
+        </Field>
       </div>
 
-      <div className="space-y-2">
-        <Label>{t('admin.legal.content')}</Label>
+      <Field label={t('admin.legal.content')} id="legal-content" group>
         <WysiwygEditor
           content={content}
           onChange={setContent}
           placeholder={t('admin.legal.contentPlaceholder')}
         />
-      </div>
+      </Field>
 
-      <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+      <div className="flex flex-col gap-2 rounded-field bg-secondary px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Switch
             id="published"
             checked={isPublished}
             onCheckedChange={setIsPublished}
           />
-          <Label htmlFor="published" className="cursor-pointer">
+          <label htmlFor="published" className="cursor-pointer text-15 font-semibold">
             {t('admin.legal.publishStatus')}
-          </Label>
+          </label>
         </div>
         {currentDoc && (
-          <div className="text-xs text-muted-foreground">
+          <p className="tabular flex items-center gap-1.5 text-13 text-muted-foreground">
             {currentDoc.isPublished ? (
-              <span className="text-green-600">
+              <>
+                <CircleCheck className="size-4 text-foreground" aria-hidden="true" />
                 {t('admin.legal.publishedAt', {
                   date: new Date(currentDoc.publishedAt!).toLocaleDateString(),
                 })}
-              </span>
+              </>
             ) : (
-              <span>{t('admin.legal.notPublished')}</span>
+              <>
+                <CircleDashed className="size-4" aria-hidden="true" />
+                {t('admin.legal.notPublished')}
+              </>
             )}
-          </div>
+          </p>
         )}
       </div>
     </div>

@@ -11,6 +11,7 @@ import { FontFamily } from '@tiptap/extension-font-family';
 import Paragraph from '@tiptap/extension-paragraph';
 import Heading from '@tiptap/extension-heading';
 import { useEffect, useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Bold,
   Italic,
@@ -38,6 +39,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
   TooltipContent,
@@ -210,8 +212,9 @@ interface WysiwygEditorProps {
   className?: string;
 }
 
+// 'default' 항목의 이름은 화면에서 번역해서 넣는다
 const FONT_FAMILIES = [
-  { value: 'default', label: '기본 폰트' },
+  { value: 'default', label: '' },
   { value: 'Pretendard', label: 'Pretendard' },
   { value: 'Inter', label: 'Inter' },
   { value: 'Arial', label: 'Arial' },
@@ -222,7 +225,7 @@ const FONT_FAMILIES = [
 ];
 
 const FONT_SIZES = [
-  { value: 'default', label: '기본 크기' },
+  { value: 'default', label: '' },
   { value: '10px', label: '10px' },
   { value: '12px', label: '12px' },
   { value: '14px', label: '14px' },
@@ -237,7 +240,7 @@ const FONT_SIZES = [
 ];
 
 const LINE_HEIGHTS = [
-  { value: 'default', label: '기본' },
+  { value: 'default', label: '' },
   { value: '1', label: '1.0' },
   { value: '1.2', label: '1.2' },
   { value: '1.5', label: '1.5' },
@@ -264,15 +267,18 @@ declare module '@tiptap/core' {
 export function WysiwygEditor({
   content,
   onChange,
-  placeholder = '내용을 입력하세요...',
+  placeholder,
   className = '',
 }: WysiwygEditorProps) {
+  const t = useTranslations('admin.editor');
   // 현재 선택된 스타일 상태 추적
   const [currentFontFamily, setCurrentFontFamily] = useState('default');
   const [currentFontSize, setCurrentFontSize] = useState('default');
   const [currentLineHeight, setCurrentLineHeight] = useState('default');
 
   const editor = useEditor({
+    // Next.js 에서 서버 렌더와 어긋나지 않도록 브라우저에서만 그린다 (그 전에는 스켈레톤)
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         // 커스텀 Paragraph/Heading 사용을 위해 비활성화
@@ -287,7 +293,7 @@ export function WysiwygEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-500 underline',
+          class: 'underline',
         },
       }),
       Underline,
@@ -295,7 +301,7 @@ export function WysiwygEditor({
         types: ['heading', 'paragraph'],
       }),
       Placeholder.configure({
-        placeholder,
+        placeholder: placeholder ?? t('placeholder'),
       }),
       TextStyle,
       FontFamily,
@@ -305,7 +311,11 @@ export function WysiwygEditor({
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] p-4',
+        // 본문은 그래파이트 prose (공개 약관 페이지와 같은 모양)
+        class: 'prose max-w-none type-body focus:outline-none min-h-[300px] p-4',
+        role: 'textbox',
+        'aria-multiline': 'true',
+        'aria-label': t('contentLabel'),
       },
     },
     onUpdate: ({ editor }) => {
@@ -357,7 +367,7 @@ export function WysiwygEditor({
     if (!editor) return;
 
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL을 입력하세요:', previousUrl);
+    const url = window.prompt(t('linkPrompt'), previousUrl);
 
     if (url === null) return;
 
@@ -367,7 +377,7 @@ export function WysiwygEditor({
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
+  }, [editor, t]);
 
   const handleFontFamilyChange = (fontFamily: string) => {
     if (!editor) return;
@@ -401,38 +411,38 @@ export function WysiwygEditor({
 
   if (!editor) {
     return (
-      <div className="border rounded-md p-4 min-h-[400px] animate-pulse bg-muted" />
+      <Skeleton className="min-h-[400px] rounded-field" />
     );
   }
 
   return (
-    <div className={`border rounded-md overflow-hidden ${className}`}>
+    <div className={`overflow-hidden rounded-field border bg-card ${className}`}>
       {/* 툴바 */}
       <TooltipProvider delayDuration={300}>
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/50">
+        <div role="toolbar" aria-label={t('toolbar')} className="flex flex-wrap items-center gap-1 border-b bg-muted p-2">
           {/* 실행취소/다시실행 */}
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            tooltip="실행 취소"
+            tooltip={t('undo')}
           >
-            <Undo className="h-4 w-4" />
+            <Undo aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            tooltip="다시 실행"
+            tooltip={t('redo')}
           >
-            <Redo className="h-4 w-4" />
+            <Redo aria-hidden="true" />
           </ToolbarButton>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 폰트 선택 */}
           <Select value={currentFontFamily} onValueChange={handleFontFamilyChange}>
-            <SelectTrigger className="h-8 w-[120px] text-xs">
-              <Type className="h-3 w-3 mr-1" />
-              <SelectValue placeholder="폰트" />
+            <SelectTrigger className="h-[34px] w-[150px] rounded-full px-3 text-13" aria-label={t('font')}>
+              <Type className="size-3.5" aria-hidden="true" />
+              <SelectValue placeholder={t('font')} />
             </SelectTrigger>
             <SelectContent>
               {FONT_FAMILIES.map((font) => (
@@ -441,7 +451,7 @@ export function WysiwygEditor({
                   value={font.value}
                   style={{ fontFamily: font.value !== 'default' ? font.value : undefined }}
                 >
-                  {font.label}
+                  {font.value === 'default' ? t('fontDefault') : font.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -449,9 +459,9 @@ export function WysiwygEditor({
 
           {/* 글자 크기 선택 */}
           <Select value={currentFontSize} onValueChange={handleFontSizeChange}>
-            <SelectTrigger className="h-8 w-[90px] text-xs">
-              <ALargeSmall className="h-3 w-3 mr-1" />
-              <SelectValue placeholder="크기" />
+            <SelectTrigger className="h-[34px] w-[120px] rounded-full px-3 text-13" aria-label={t('size')}>
+              <ALargeSmall className="size-3.5" aria-hidden="true" />
+              <SelectValue placeholder={t('size')} />
             </SelectTrigger>
             <SelectContent>
               {FONT_SIZES.map((size) => (
@@ -460,7 +470,7 @@ export function WysiwygEditor({
                   value={size.value}
                   style={{ fontSize: size.value !== 'default' ? size.value : undefined }}
                 >
-                  {size.label}
+                  {size.value === 'default' ? t('sizeDefault') : size.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -468,20 +478,20 @@ export function WysiwygEditor({
 
           {/* 줄 간격 선택 */}
           <Select value={currentLineHeight} onValueChange={handleLineHeightChange}>
-            <SelectTrigger className="h-8 w-[80px] text-xs">
-              <WrapText className="h-3 w-3 mr-1" />
-              <SelectValue placeholder="줄간격" />
+            <SelectTrigger className="h-[34px] w-[96px] rounded-full px-3 text-13" aria-label={t('lineHeight')}>
+              <WrapText className="size-3.5" aria-hidden="true" />
+              <SelectValue placeholder={t('lineHeight')} />
             </SelectTrigger>
             <SelectContent>
               {LINE_HEIGHTS.map((height) => (
                 <SelectItem key={height.value} value={height.value}>
-                  {height.label}
+                  {height.value === 'default' ? t('lineHeightDefault') : height.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 헤딩 */}
           <ToolbarToggle
@@ -489,78 +499,78 @@ export function WysiwygEditor({
             onPressedChange={() =>
               editor.chain().focus().toggleHeading({ level: 1 }).run()
             }
-            tooltip="제목 1"
+            tooltip={t('heading', { level: 1 })}
           >
-            <Heading1 className="h-4 w-4" />
+            <Heading1 aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('heading', { level: 2 })}
             onPressedChange={() =>
               editor.chain().focus().toggleHeading({ level: 2 }).run()
             }
-            tooltip="제목 2"
+            tooltip={t('heading', { level: 2 })}
           >
-            <Heading2 className="h-4 w-4" />
+            <Heading2 aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('heading', { level: 3 })}
             onPressedChange={() =>
               editor.chain().focus().toggleHeading({ level: 3 }).run()
             }
-            tooltip="제목 3"
+            tooltip={t('heading', { level: 3 })}
           >
-            <Heading3 className="h-4 w-4" />
+            <Heading3 aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('heading', { level: 4 })}
             onPressedChange={() =>
               editor.chain().focus().toggleHeading({ level: 4 }).run()
             }
-            tooltip="제목 4"
+            tooltip={t('heading', { level: 4 })}
           >
-            <Heading4 className="h-4 w-4" />
+            <Heading4 aria-hidden="true" />
           </ToolbarToggle>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 텍스트 스타일 */}
           <ToolbarToggle
             pressed={editor.isActive('bold')}
             onPressedChange={() => editor.chain().focus().toggleBold().run()}
-            tooltip="굵게"
+            tooltip={t('bold')}
           >
-            <Bold className="h-4 w-4" />
+            <Bold aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('italic')}
             onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-            tooltip="기울임"
+            tooltip={t('italic')}
           >
-            <Italic className="h-4 w-4" />
+            <Italic aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('underline')}
             onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-            tooltip="밑줄"
+            tooltip={t('underline')}
           >
-            <UnderlineIcon className="h-4 w-4" />
+            <UnderlineIcon aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('strike')}
             onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-            tooltip="취소선"
+            tooltip={t('strike')}
           >
-            <Strikethrough className="h-4 w-4" />
+            <Strikethrough aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('code')}
             onPressedChange={() => editor.chain().focus().toggleCode().run()}
-            tooltip="인라인 코드"
+            tooltip={t('code')}
           >
-            <Code className="h-4 w-4" />
+            <Code aria-hidden="true" />
           </ToolbarToggle>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 정렬 */}
           <ToolbarToggle
@@ -568,30 +578,30 @@ export function WysiwygEditor({
             onPressedChange={() =>
               editor.chain().focus().setTextAlign('left').run()
             }
-            tooltip="왼쪽 정렬"
+            tooltip={t('alignLeft')}
           >
-            <AlignLeft className="h-4 w-4" />
+            <AlignLeft aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive({ textAlign: 'center' })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign('center').run()
             }
-            tooltip="가운데 정렬"
+            tooltip={t('alignCenter')}
           >
-            <AlignCenter className="h-4 w-4" />
+            <AlignCenter aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive({ textAlign: 'right' })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign('right').run()
             }
-            tooltip="오른쪽 정렬"
+            tooltip={t('alignRight')}
           >
-            <AlignRight className="h-4 w-4" />
+            <AlignRight aria-hidden="true" />
           </ToolbarToggle>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 리스트 */}
           <ToolbarToggle
@@ -599,21 +609,21 @@ export function WysiwygEditor({
             onPressedChange={() =>
               editor.chain().focus().toggleBulletList().run()
             }
-            tooltip="글머리 기호"
+            tooltip={t('bulletList')}
           >
-            <List className="h-4 w-4" />
+            <List aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarToggle
             pressed={editor.isActive('orderedList')}
             onPressedChange={() =>
               editor.chain().focus().toggleOrderedList().run()
             }
-            tooltip="번호 매기기"
+            tooltip={t('orderedList')}
           >
-            <ListOrdered className="h-4 w-4" />
+            <ListOrdered aria-hidden="true" />
           </ToolbarToggle>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
           {/* 블록 요소 */}
           <ToolbarToggle
@@ -621,22 +631,22 @@ export function WysiwygEditor({
             onPressedChange={() =>
               editor.chain().focus().toggleBlockquote().run()
             }
-            tooltip="인용구"
+            tooltip={t('blockquote')}
           >
-            <Quote className="h-4 w-4" />
+            <Quote aria-hidden="true" />
           </ToolbarToggle>
           <ToolbarButton
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            tooltip="구분선"
+            tooltip={t('hr')}
           >
-            <Minus className="h-4 w-4" />
+            <Minus aria-hidden="true" />
           </ToolbarButton>
           <ToolbarToggle
             pressed={editor.isActive('link')}
             onPressedChange={setLink}
-            tooltip="링크"
+            tooltip={t('link')}
           >
-            <LinkIcon className="h-4 w-4" />
+            <LinkIcon aria-hidden="true" />
           </ToolbarToggle>
         </div>
       </TooltipProvider>
@@ -646,92 +656,23 @@ export function WysiwygEditor({
         <EditorContent editor={editor} className="min-h-[300px]" />
       </div>
 
-      {/* 에디터 스타일 - 공개 페이지와 동일하게 */}
+      {/* 편집 영역: 글 모양은 prose(그래파이트 토큰)가 맡고, 여기서는 빈 칸 안내만 */}
       <style jsx global>{`
         .ProseMirror {
           min-height: 300px;
-          padding: 1rem;
-          line-height: 1.7;
         }
         .ProseMirror:focus {
           outline: none;
         }
         .ProseMirror p.is-editor-empty:first-child::before {
-          color: #adb5bd;
+          color: var(--faint);
           content: attr(data-placeholder);
           float: left;
           height: 0;
           pointer-events: none;
         }
-        .ProseMirror h1 {
-          font-size: 1.75em;
-          font-weight: 700;
-          margin: 1.5em 0 0.75em;
-        }
-        .ProseMirror h2 {
-          font-size: 1.5em;
-          font-weight: 600;
-          margin: 1.25em 0 0.5em;
-        }
-        .ProseMirror h3 {
-          font-size: 1.25em;
-          font-weight: 600;
-          margin: 1em 0 0.5em;
-        }
-        .ProseMirror h4 {
-          font-size: 1.1em;
-          font-weight: 600;
-          margin: 1em 0 0.5em;
-        }
-        .ProseMirror p {
-          margin: 0.75em 0;
-        }
         .ProseMirror p:empty {
           min-height: 1em;
-        }
-        .ProseMirror ul {
-          list-style-type: disc;
-          padding-left: 1.5em;
-          margin: 0.75em 0;
-        }
-        .ProseMirror ol {
-          list-style-type: decimal;
-          padding-left: 1.5em;
-          margin: 0.75em 0;
-        }
-        .ProseMirror li {
-          margin: 0.25em 0;
-        }
-        .ProseMirror blockquote {
-          border-left: 3px solid #d1d5db;
-          padding-left: 1em;
-          margin: 1em 0;
-          color: #6b7280;
-        }
-        .dark .ProseMirror blockquote {
-          border-left-color: #4b5563;
-          color: #9ca3af;
-        }
-        .ProseMirror hr {
-          border: none;
-          border-top: 1px solid #e5e7eb;
-          margin: 1.5em 0;
-        }
-        .dark .ProseMirror hr {
-          border-top-color: #374151;
-        }
-        .ProseMirror code {
-          background: #f3f4f6;
-          padding: 0.125em 0.25em;
-          border-radius: 0.25em;
-          font-size: 0.875em;
-        }
-        .dark .ProseMirror code {
-          background: #374151;
-        }
-        .ProseMirror a {
-          color: #3b82f6;
-          text-decoration: underline;
         }
       `}</style>
     </div>
@@ -756,15 +697,15 @@ function ToolbarButton({
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="icon-sm"
           onClick={onClick}
           disabled={disabled}
-          className="h-8 w-8 p-0"
+          aria-label={tooltip}
         >
           {children}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
+      <TooltipContent side="bottom">
         {tooltip}
       </TooltipContent>
     </Tooltip>
@@ -790,12 +731,13 @@ function ToolbarToggle({
           size="sm"
           pressed={pressed}
           onPressedChange={onPressedChange}
-          className="h-8 w-8 p-0"
+          aria-label={tooltip}
+          className="px-0"
         >
           {children}
         </Toggle>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
+      <TooltipContent side="bottom">
         {tooltip}
       </TooltipContent>
     </Tooltip>

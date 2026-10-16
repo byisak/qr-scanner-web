@@ -11,8 +11,11 @@ import {
   Area,
 } from "recharts"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { TrendingUp } from "lucide-react"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Segmented } from "@/components/ui/segmented"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface ChartData {
   date: string
@@ -65,7 +68,7 @@ function fillMissingDates(data: ChartData[], period: number): ChartData[] {
   return result
 }
 
-// 기간 탭 버튼
+// 기간 전환 (세그먼트)
 function PeriodTabs({
   period,
   onPeriodChange
@@ -76,28 +79,62 @@ function PeriodTabs({
   const t = useTranslations()
 
   const periods = [
-    { value: 90, label: t('admin.dashboard.period.3months') },
-    { value: 30, label: t('admin.dashboard.period.30days') },
-    { value: 7, label: t('admin.dashboard.period.7days') },
+    { value: "90", label: t('admin.dashboard.period.3months') },
+    { value: "30", label: t('admin.dashboard.period.30days') },
+    { value: "7", label: t('admin.dashboard.period.7days') },
   ]
 
   return (
-    <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-      {periods.map((p) => (
-        <button
-          key={p.value}
-          onClick={() => onPeriodChange(p.value)}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-            period === p.value
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {p.label}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      aria-label={t('admin.dashboard.periodLabel')}
+      value={String(period)}
+      onValueChange={(v) => onPeriodChange(Number(v))}
+      options={periods}
+    />
+  )
+}
+
+// 차트 공통: 색·글자는 모두 CSS 변수(라이트/다크 자동). 툴팁도 팝오버 토큰을 따른다
+const AXIS_TICK = { fontSize: 13, fill: 'var(--muted-foreground)' }
+const TOOLTIP_PROPS = {
+  contentStyle: {
+    backgroundColor: 'var(--popover)',
+    color: 'var(--popover-foreground)',
+    border: '1px solid var(--border)',
+    borderRadius: '14px',
+    fontSize: '13px',
+    fontVariantNumeric: 'tabular-nums',
+    boxShadow: 'var(--shadow-soft)',
+  },
+  labelStyle: { color: 'var(--muted-foreground)', marginBottom: '4px' },
+  itemStyle: { color: 'var(--popover-foreground)' },
+  cursor: { stroke: 'var(--tint-line)' },
+}
+
+// 움직임 줄이기 설정이면 차트 그리기 애니메이션을 끈다
+function useReducedMotion() {
+  return React.useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+      mq.addEventListener('change', cb)
+      return () => mq.removeEventListener('change', cb)
+    },
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => false
+  )
+}
+
+function ChartSkeleton({ height }: { height: number }) {
+  return (
+    <Card className="min-w-0" aria-busy="true">
+      <CardHeader>
+        <Skeleton className="h-5 w-32 rounded-full" />
+        <Skeleton className="mt-1 h-4 w-48 rounded-full" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="rounded-card" style={{ height }} />
+      </CardContent>
+    </Card>
   )
 }
 
@@ -144,6 +181,7 @@ export function AdminCharts({
   onPeriodChange
 }: AdminChartsProps) {
   const t = useTranslations()
+  const reduceMotion = useReducedMotion()
 
   const chartData = React.useMemo(() => {
     const signups = fillMissingDates(dailySignups, period)
@@ -156,106 +194,58 @@ export function AdminCharts({
     }))
   }, [dailySignups, dailyScans, period])
 
-  // 사용자 증가 차트 데이터
-  const userGrowthData = React.useMemo(() => {
-    const filled = fillUserGrowthDates(userGrowth, period)
-    return filled.map((d) => ({
-      displayDate: formatDate(d.date, period),
-      newUsers: d.newUsers,
-      totalUsers: d.totalUsers,
-    }))
-  }, [userGrowth, period])
-
   // 총합 계산
   const totalSignups = dailySignups.reduce((sum, d) => sum + d.count, 0)
   const totalScans = dailyScans.reduce((sum, d) => sum + d.count, 0)
-  const latestTotalUsers = userGrowthData.length > 0 ? userGrowthData[userGrowthData.length - 1].totalUsers : 0
 
   if (isLoading) {
-    return (
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <div className="h-5 w-32 bg-zinc-800 animate-pulse rounded" />
-            <div className="h-4 w-48 bg-zinc-800 animate-pulse rounded mt-1" />
-          </div>
-          <div className="h-8 w-64 bg-zinc-800 animate-pulse rounded" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] bg-zinc-800 animate-pulse rounded" />
-        </CardContent>
-      </Card>
-    )
+    return <ChartSkeleton height={300} />
   }
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle className="text-base text-zinc-100">
-            {t('admin.dashboard.totalVisitors')}
-          </CardTitle>
-          <p className="text-sm text-zinc-400 mt-1">
-            {t('admin.dashboard.totalForPeriod')}
-          </p>
+    <Card className="min-w-0">
+      <CardHeader className="flex flex-col gap-3 pb-2">
+        <div className="min-w-0">
+          <CardTitle>{t('admin.dashboard.totalVisitors')}</CardTitle>
+          <CardDescription className="mt-1">{t('admin.dashboard.totalForPeriod')}</CardDescription>
         </div>
         <PeriodTabs period={period} onPeriodChange={onPeriodChange} />
       </CardHeader>
       <CardContent className="pt-4">
-        {/* 범례 */}
-        <div className="flex gap-6 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-zinc-400" />
-            <span className="text-sm text-zinc-400">
-              {t('admin.dashboard.signups')}: {totalSignups}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-zinc-600" />
-            <span className="text-sm text-zinc-400">
-              {t('admin.dashboard.scans')}: {totalScans}
-            </span>
-          </div>
-        </div>
+        {/* 범례: 선 모양(실선/점선) + 글자로 구분 */}
+        <ul className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-15">
+          <li className="flex items-center gap-2">
+            <svg width="20" height="4" aria-hidden="true"><line x1="0" y1="2" x2="20" y2="2" stroke="var(--chart-1)" strokeWidth="2" /></svg>
+            <span className="text-muted-foreground">{t('admin.dashboard.scans')}</span>
+            <span className="tabular font-semibold">{totalScans.toLocaleString()}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <svg width="20" height="4" aria-hidden="true"><line x1="0" y1="2" x2="20" y2="2" stroke="var(--chart-3)" strokeWidth="2" strokeDasharray="4 3" /></svg>
+            <span className="text-muted-foreground">{t('admin.dashboard.signups')}</span>
+            <span className="tabular font-semibold">{totalSignups.toLocaleString()}</span>
+          </li>
+        </ul>
 
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="signupGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#a1a1aa" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#a1a1aa" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="scanGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#52525b" stopOpacity={0.6} />
-                  <stop offset="100%" stopColor="#52525b" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
+            <AreaChart data={chartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
               <XAxis
                 dataKey="displayDate"
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={AXIS_TICK}
                 tickLine={false}
                 axisLine={false}
                 interval={period <= 7 ? 0 : period <= 30 ? 4 : 14}
                 dy={10}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={AXIS_TICK}
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
-                width={30}
+                width={36}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#18181b',
-                  border: '1px solid #27272a',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                }}
-                labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
-                itemStyle={{ color: '#fafafa' }}
+                {...TOOLTIP_PROPS}
                 formatter={(value, name) => {
                   const label = name === 'signups'
                     ? t('admin.dashboard.signups')
@@ -265,17 +255,22 @@ export function AdminCharts({
               />
               <Area
                 type="monotone"
+                isAnimationActive={!reduceMotion}
                 dataKey="scans"
-                stroke="#52525b"
+                stroke="var(--chart-1)"
                 strokeWidth={2}
-                fill="url(#scanGradient)"
+                fill="var(--chart-1)"
+                fillOpacity={0.08}
               />
               <Area
                 type="monotone"
+                isAnimationActive={!reduceMotion}
                 dataKey="signups"
-                stroke="#a1a1aa"
+                stroke="var(--chart-3)"
                 strokeWidth={2}
-                fill="url(#signupGradient)"
+                strokeDasharray="4 3"
+                fill="var(--chart-3)"
+                fillOpacity={0.08}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -296,6 +291,7 @@ export function UserGrowthChart({
   period: number
 }) {
   const t = useTranslations()
+  const reduceMotion = useReducedMotion()
 
   const chartData = React.useMemo(() => {
     const filled = fillUserGrowthDates(userGrowth, period)
@@ -312,32 +308,22 @@ export function UserGrowthChart({
   const growthPercentage = firstTotalUsers > 0 ? Math.round((growthCount / firstTotalUsers) * 100) : 0
 
   if (isLoading) {
-    return (
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader>
-          <div className="h-5 w-32 bg-zinc-800 animate-pulse rounded" />
-          <div className="h-4 w-48 bg-zinc-800 animate-pulse rounded mt-1" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-[250px] bg-zinc-800 animate-pulse rounded" />
-        </CardContent>
-      </Card>
-    )
+    return <ChartSkeleton height={250} />
   }
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="min-w-0">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base text-zinc-100">
-          {t('admin.dashboard.userGrowth')}
-        </CardTitle>
-        <div className="flex items-center gap-4 mt-1">
-          <p className="text-sm text-zinc-400">
-            {t('admin.dashboard.currentUsers')}: <span className="text-zinc-100 font-medium">{latestTotalUsers.toLocaleString()}</span>
+        <CardTitle>{t('admin.dashboard.userGrowth')}</CardTitle>
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-15">
+          <p className="text-muted-foreground">
+            {t('admin.dashboard.currentUsers')}{' '}
+            <span className="tabular font-semibold text-foreground">{latestTotalUsers.toLocaleString()}</span>
           </p>
           {growthCount > 0 && (
-            <p className="text-sm text-emerald-500">
-              +{growthCount} ({growthPercentage}%)
+            <p className="tabular flex items-center gap-1 text-muted-foreground">
+              <TrendingUp className="size-4" aria-hidden="true" />
+              +{growthCount.toLocaleString()} ({growthPercentage}%)
             </p>
           )}
         </div>
@@ -345,39 +331,25 @@ export function UserGrowthChart({
       <CardContent className="pt-4">
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
+            <AreaChart data={chartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
               <XAxis
                 dataKey="displayDate"
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={AXIS_TICK}
                 tickLine={false}
                 axisLine={false}
                 interval={period <= 7 ? 0 : period <= 30 ? 4 : 14}
                 dy={10}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={AXIS_TICK}
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
-                width={40}
+                width={44}
                 domain={['dataMin - 5', 'dataMax + 5']}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#18181b',
-                  border: '1px solid #27272a',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                }}
-                labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
-                itemStyle={{ color: '#fafafa' }}
+                {...TOOLTIP_PROPS}
                 formatter={(value, name) => {
                   const label = name === 'totalUsers'
                     ? t('admin.dashboard.totalUsers')
@@ -387,10 +359,12 @@ export function UserGrowthChart({
               />
               <Area
                 type="monotone"
+                isAnimationActive={!reduceMotion}
                 dataKey="totalUsers"
-                stroke="#10b981"
+                stroke="var(--chart-1)"
                 strokeWidth={2}
-                fill="url(#userGrowthGradient)"
+                fill="var(--chart-1)"
+                fillOpacity={0.08}
               />
             </AreaChart>
           </ResponsiveContainer>
