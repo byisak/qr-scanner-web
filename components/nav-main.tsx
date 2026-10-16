@@ -411,8 +411,12 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                             {/* 드롭다운 메뉴 - 정렬 아이콘 위치와 정렬 */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1 hover:bg-accent rounded z-10">
-                                  <MoreHorizontal className="size-4" />
+                                <button
+                                  type="button"
+                                  aria-label={`${displayName} ${t('table.actions')}`}
+                                  className="absolute right-1 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-opacity outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/session:opacity-100 [@media(hover:hover)]:group-focus-within/session:opacity-100"
+                                >
+                                  <MoreHorizontal className="size-4" aria-hidden="true" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
