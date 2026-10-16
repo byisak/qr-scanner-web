@@ -66,7 +66,16 @@
    - Direct connection (5432): 스키마·데이터 이전(psql/pg_dump)용 → 아래에서 `$SUPABASE_DIRECT_URL` 로 부른다
    - Transaction pooler (6543): 앱 런타임용 → Vercel `DATABASE_URL`
    (Direct 가 IPv6 전용이라 접속이 안 되면 Session pooler(5432) 주소를 대신 쓴다)
-3. 스키마 + 마이그레이션 실행 (빈 DB 기준)
+3. **새로 시작(데이터 이전 없음)이면 `scripts/supabase-init.sql` 하나만 실행한다.**
+   Supabase 대시보드 → SQL Editor 에 파일 내용을 통째로 붙여 넣고 Run (또는
+   `psql "$SUPABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -f scripts/supabase-init.sql`).
+   - 스키마 전체(schema.sql 에 빠져 있던 `refresh_tokens.device_id` 포함) + legal_documents + realtime_key
+     + 약관 시드(개인정보 처리방침 ko/en, 계정 삭제 안내 5개 언어) + Data API 잠금(4단계 내용)까지 한 번에 한다.
+   - 여러 번 실행해도 안전하다. 약관 시드는 이미 있는 행을 덮어쓰지 않는다.
+   - **이용약관(terms)은 시드가 없다** → 관리자 화면(약관 관리)에서 작성·발행해야 `/legal/terms` 가 열린다.
+   - 이 경우 아래 3단계 나머지, 4단계, 3절(데이터 이전)은 건너뛴다(5·6단계는 그대로 한다).
+
+   데이터를 Vultr 에서 옮기는 경우에만 아래처럼 개별 실행한다 (빈 DB 기준)
    ```bash
    psql "$SUPABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -f schema.sql
    psql "$SUPABASE_DIRECT_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-legal-documents.sql   # 테이블만 만든다
