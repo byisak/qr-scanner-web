@@ -6,10 +6,11 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSettings } from '@/contexts/settings-context';
 import { AppSidebar } from '@/components/app-sidebar';
 import { QRCodeSVG } from 'qrcode.react';
-import { toast } from '@/components/ui/sonner';
+import { notify } from '@/lib/notify';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp } from 'lucide-react';
+import { Field } from '@/components/form/field';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp, CircleAlert } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -45,6 +46,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
@@ -177,8 +179,7 @@ export default function SessionPage() {
           // 설정이 없으면 기본적으로 접근 허용
           setAccessGranted(true);
         }
-      } catch (err) {
-        // console.error('Failed to fetch session settings:', err);
+      } catch {
         // 오류 시 기본적으로 접근 허용
         setAccessGranted(true);
       } finally {
@@ -194,8 +195,8 @@ export default function SessionPage() {
           const data = await res.json();
           setSessionName(data.session_name || null);
         }
-      } catch (err) {
-        // console.error('Failed to fetch session name:', err);
+      } catch {
+        // 이름이 없으면 세션 ID 로 표시
       }
     };
 
@@ -228,12 +229,11 @@ export default function SessionPage() {
         setSessionAccessToken(data.sessionAccessToken || null);
         setAccessGranted(true);
         setPasswordModalOpen(false);
-        toast.success(t('session.accessGranted'));
+        notify.success(t('session.accessGranted'));
       } else {
         setPasswordError(t('session.wrongPassword'));
       }
-    } catch (err) {
-      // console.error('Password verification failed:', err);
+    } catch {
       setPasswordError(t('session.verifyError'));
     } finally {
       setVerifyingPassword(false);
@@ -268,7 +268,7 @@ export default function SessionPage() {
       }
 
       // 토스트 알림
-      toast.success(t('session.newScanReceived'), {
+      notify.success(t('session.newScanReceived'), {
         description: scanDescription,
       });
     }
@@ -280,10 +280,10 @@ export default function SessionPage() {
     try {
       await navigator.clipboard.writeText(sessionId);
       setCopied(true);
-      toast.success(t('session.copied'));
+      notify.success(t('session.copied'));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error(t('session.copyFailed'));
+      notify.error(t('session.copyFailed'));
     }
   }, [sessionId, t]);
 
@@ -291,9 +291,9 @@ export default function SessionPage() {
   const handleCopyUrl = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      toast.success(t('session.urlCopied'));
+      notify.success(t('session.urlCopied'));
     } catch {
-      toast.error(t('session.copyFailed'));
+      notify.error(t('session.copyFailed'));
     }
   }, [t]);
 
@@ -306,14 +306,12 @@ export default function SessionPage() {
 
       if (res.ok) {
         removeScan(scanId);
-        toast.success(t('session.scanDeleted'));
+        notify.success(t('session.scanDeleted'));
       } else {
-        const data = await res.json();
-        toast.error(data.error || t('session.deleteFailed'));
+        notify.error(t('session.deleteFailed'));
       }
-    } catch (error) {
-      // console.error('Scan data delete failed:', error);
-      toast.error(t('session.deleteError'));
+    } catch {
+      notify.error(t('session.deleteError'));
     }
   }, [removeScan, t, authHeaders]);
 
@@ -333,14 +331,12 @@ export default function SessionPage() {
         // 서버는 권한이 있는 스캔만 삭제하고 실제 삭제된 ID를 돌려준다
         const deletedIds: number[] = Array.isArray(data.deletedIds) ? data.deletedIds : ids;
         removeScans(deletedIds);
-        toast.success(t('session.scansDeleted', { count: deletedIds.length }));
+        notify.success(t('session.scansDeleted', { count: deletedIds.length }));
       } else {
-        const data = await res.json();
-        toast.error(data.error || t('session.deleteFailed'));
+        notify.error(t('session.deleteFailed'));
       }
-    } catch (error) {
-      // console.error('Bulk scan data delete failed:', error);
-      toast.error(t('session.deleteError'));
+    } catch {
+      notify.error(t('session.deleteError'));
     }
   }, [removeScans, t, authHeaders]);
 
@@ -357,7 +353,7 @@ export default function SessionPage() {
   );
 
   const handleExport = async (format: 'csv' | 'xlsx') => {
-    const loadingToast = toast.loading(t('session.exporting'));
+    const loadingToast = notify.loading(t('session.exporting'));
     try {
       const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`, {
         headers: authHeaders,
@@ -377,14 +373,35 @@ export default function SessionPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.dismiss(loadingToast);
-      toast.success(t('session.exportSuccess'));
-    } catch (err) {
-      // console.error('Export error:', err);
-      toast.dismiss(loadingToast);
-      toast.error(t('session.exportError'));
+      notify.dismiss(loadingToast);
+      notify.success(t('session.exportSuccess'));
+    } catch {
+      notify.dismiss(loadingToast);
+      notify.error(t('session.exportError'));
     }
   };
+
+  const displayName = sessionName || sessionId;
+
+  const header = (
+    <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem className="shrink-0">
+              <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="block truncate">{displayName}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    </header>
+  );
 
   // 비공개 세션 차단 화면
   if (!settingsLoading && sessionSettings && !sessionSettings.isPublic) {
@@ -392,38 +409,19 @@ export default function SessionPage() {
       <SidebarProvider>
         <AppSidebar currentSessionId={sessionId} />
         <SidebarInset>
-          <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
-            <div className="flex items-center gap-2 px-4 flex-1">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-          </header>
-
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
-            <Card className="max-w-md w-full text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-                  <ShieldX className="h-8 w-8 text-destructive" />
+          {header}
+          <div className="page flex min-h-[60vh] flex-1 flex-col items-center justify-center py-10">
+            <Card className="enter w-full max-w-md text-center">
+              <CardHeader className="items-center">
+                <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-destructive-soft text-destructive">
+                  <ShieldX className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl">{t('session.privateSession')}</CardTitle>
-                <CardDescription className="mt-2">
-                  {t('session.privateSessionDesc')}
-                </CardDescription>
+                <CardTitle className="type-h2">{t('session.privateSession')}</CardTitle>
+                <CardDescription>{t('session.privateSessionDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {t('session.sessionId')}: <span className="font-mono font-medium">{sessionId}</span>
+                <p className="text-13 text-muted-foreground">
+                  {t('session.sessionId')}: <span className="break-all font-mono font-semibold text-foreground">{sessionId}</span>
                 </p>
               </CardContent>
             </Card>
@@ -439,65 +437,41 @@ export default function SessionPage() {
       <SidebarProvider>
         <AppSidebar currentSessionId={sessionId} />
         <SidebarInset>
-          <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
-            <div className="flex items-center gap-2 px-4 flex-1">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-          </header>
-
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
-            <Card className="max-w-md w-full">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <Lock className="h-8 w-8 text-primary" />
+          {header}
+          <div className="page flex min-h-[60vh] flex-1 flex-col items-center justify-center py-10">
+            <Card className="enter w-full max-w-md">
+              <CardHeader className="items-center text-center">
+                <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-secondary text-foreground">
+                  <Lock className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl">{t('session.passwordProtected')}</CardTitle>
-                <CardDescription className="mt-2">
-                  {t('session.passwordProtectedDesc')}
-                </CardDescription>
+                <CardTitle className="type-h2">{t('session.passwordProtected')}</CardTitle>
+                <CardDescription>{t('session.passwordProtectedDesc')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="session-password">{t('session.password')}</Label>
-                  <Input
-                    id="session-password"
-                    type="password"
-                    placeholder={t('session.passwordPlaceholder')}
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handlePasswordSubmit();
-                      }
-                    }}
-                    autoFocus
-                  />
-                  {passwordError && (
-                    <p className="text-sm text-destructive">{passwordError}</p>
-                  )}
-                </div>
-                <Button
-                  onClick={handlePasswordSubmit}
-                  disabled={verifyingPassword}
-                  className="w-full"
+              <CardContent>
+                <form
+                  className="grid gap-4"
+                  noValidate
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handlePasswordSubmit();
+                  }}
                 >
-                  {verifyingPassword ? t('common.loading') : t('session.unlock')}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  {t('session.sessionId')}: <span className="font-mono">{sessionId}</span>
-                </p>
+                  <Field label={t('session.password')} id="session-password" error={passwordError}>
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      autoFocus
+                    />
+                  </Field>
+                  <Button type="submit" size="xl" disabled={verifyingPassword} className="w-full">
+                    {verifyingPassword ? t('session.unlocking') : t('session.unlock')}
+                  </Button>
+                  <p className="text-center text-13 text-muted-foreground">
+                    {t('session.sessionId')}: <span className="break-all font-mono">{sessionId}</span>
+                  </p>
+                </form>
               </CardContent>
             </Card>
           </div>
@@ -510,104 +484,91 @@ export default function SessionPage() {
     <SidebarProvider>
       <AppSidebar currentSessionId={sessionId} />
       <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
-          <div className="flex items-center gap-2 px-4 flex-1">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="truncate max-w-[200px] sm:max-w-none">{sessionName || sessionId}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
+        {header}
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Card>
+        <div className="page grid gap-4 py-6 pb-16 sm:py-8">
+          <Card className="enter" style={{ '--i': 0 } as CSSProperties}>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">{sessionName || sessionId}</CardTitle>
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <h1 className="type-h2 min-w-0 flex-1 break-all">{displayName}</h1>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {/* 연결 상태: 색만이 아니라 글자로도 */}
+                  <span
+                    role="status"
+                    className={
+                      isConnected
+                        ? 'inline-flex h-[34px] items-center gap-1.5 rounded-full border px-3 text-13 font-semibold text-foreground'
+                        : 'inline-flex h-[34px] items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive-soft px-3 text-13 font-semibold text-destructive'
+                    }
+                  >
+                    {isConnected ? (
+                      <Plug className="size-4" aria-hidden="true" />
+                    ) : (
+                      <Unplug className="size-4" aria-hidden="true" />
+                    )}
+                    {isConnected ? t('session.connected') : t('session.disconnected')}
+                  </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() => updateSettings({ scanSound: !settings.scanSound })}
+                    aria-label={settings.scanSound ? t('session.soundOff') : t('session.soundOn')}
                     title={settings.scanSound ? t('session.soundOff') : t('session.soundOn')}
                   >
                     {settings.scanSound ? (
-                      <Volume2 className="h-4 w-4" />
+                      <Volume2 aria-hidden="true" />
                     ) : (
-                      <VolumeX className="h-4 w-4 text-muted-foreground" />
+                      <VolumeX className="text-muted-foreground" aria-hidden="true" />
                     )}
                   </Button>
-                  <div
-                    className="flex items-center gap-1.5"
-                    title={isConnected ? t('session.connected') : t('session.disconnected')}
-                  >
-                    {isConnected ? (
-                      <Plug className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Unplug className="h-5 w-5 text-destructive" />
-                    )}
-                  </div>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() => setIsSessionInfoCollapsed(!isSessionInfoCollapsed)}
-                    className="h-9 w-9"
+                    aria-expanded={!isSessionInfoCollapsed}
+                    aria-controls="session-info"
+                    aria-label={isSessionInfoCollapsed ? t('session.expandInfo') : t('session.collapseInfo')}
                   >
                     {isSessionInfoCollapsed ? (
-                      <ChevronDown className="h-5 w-5" />
+                      <ChevronDown aria-hidden="true" />
                     ) : (
-                      <ChevronUp className="h-5 w-5" />
+                      <ChevronUp aria-hidden="true" />
                     )}
                   </Button>
                 </div>
               </div>
 
-              {/* QR Code & Session ID - Collapsible */}
+              {/* QR 코드와 세션 ID (접기 가능) */}
               {!isSessionInfoCollapsed && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center gap-6">
-                  {/* QR Code */}
-                  <div className="p-4 bg-white rounded-lg shadow-sm">
+                <div id="session-info" className="mt-4 flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+                  {/* QR 은 어두운 화면에서도 인식되도록 흰 바탕을 유지 */}
+                  <div className="shrink-0 rounded-field border bg-white p-1">
                     <QRCodeSVG
                       value={`https://scanview.app/session/${sessionId}`}
                       size={160}
                       level="M"
                       includeMargin={true}
+                      role="img"
+                      aria-label={t('session.qrLabel', { id: sessionId })}
                     />
                   </div>
 
-                  {/* Session ID & Actions */}
-                  <div className="flex-1 text-center sm:text-left">
-                    <div className="p-4 bg-muted rounded-lg">
-                      <div className="flex items-center justify-center sm:justify-start gap-2">
-                        <span className="text-2xl sm:text-3xl font-mono font-bold tracking-wider">
-                          {sessionId}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleCopySessionId}
-                          className="h-8 w-8"
-                        >
-                          {copied ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
+                  <div className="w-full min-w-0 flex-1">
+                    <p className="mb-2 text-13 font-semibold text-muted-foreground">{t('session.sessionId')}</p>
+                    <div className="flex items-center gap-2 rounded-field bg-secondary px-4 py-3">
+                      <span className="type-h2 min-w-0 flex-1 break-all font-mono">{sessionId}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={handleCopySessionId}
+                        aria-label={t('session.copySessionId')}
+                      >
+                        {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                      </Button>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={handleCopyUrl}>
-                        <Copy className="mr-2 h-3 w-3" />
+                        <Copy aria-hidden="true" />
                         {t('session.copyUrl')}
                       </Button>
                     </div>
@@ -616,37 +577,42 @@ export default function SessionPage() {
               )}
 
               {error && (
-                <div className="mt-4 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
-                  {error}
-                </div>
+                <p role="alert" className="mt-4 flex items-start gap-2 rounded-field bg-destructive-soft p-3 text-13 font-semibold text-destructive">
+                  <CircleAlert className="mt-[2px] size-4 shrink-0" aria-hidden="true" />
+                  <span>{t('session.connectionError')}</span>
+                </p>
               )}
             </CardHeader>
           </Card>
 
-          <Card>
+          <Card className="enter min-w-0" style={{ '--i': 1 } as CSSProperties}>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{t('session.scanData')}</CardTitle>
-                <Badge variant="secondary">{scans.length} {t('session.items')}</Badge>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="type-h3">{t('session.scanData')}</h2>
+                <Badge variant="secondary" className="tabular">{scans.length} {t('session.items')}</Badge>
               </div>
             </CardHeader>
             <Separator />
-            <CardContent className="pt-6">
+            <CardContent className="min-w-0 pt-5 sm:pt-6">
               {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('common.loading')}
+                <div className="grid gap-3" aria-busy="true">
+                  <span className="sr-only" role="status">{t('common.loading')}</span>
+                  <Skeleton className="h-10 w-full max-w-sm rounded-full" />
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Skeleton key={i} className="h-11 w-full" />
+                  ))}
                 </div>
               ) : (
                 <>
                   {isAuthenticated && (
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="mb-4 flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleExport('csv')}
                         disabled={scans.length === 0}
                       >
-                        <Download className="mr-2 h-4 w-4" />
+                        <Download aria-hidden="true" />
                         {t('session.exportCsv')}
                       </Button>
                       <Button
@@ -655,7 +621,7 @@ export default function SessionPage() {
                         onClick={() => handleExport('xlsx')}
                         disabled={scans.length === 0}
                       >
-                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        <FileSpreadsheet aria-hidden="true" />
                         {t('session.exportExcel')}
                       </Button>
                     </div>

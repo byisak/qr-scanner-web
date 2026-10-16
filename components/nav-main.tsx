@@ -47,8 +47,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useConfirmDialog } from "@/components/confirm-dialog"
+import { notify } from "@/lib/notify"
 
 interface Session {
   session_id: string
@@ -128,8 +130,8 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         const data = await res.json()
         setSessions(data)
       }
-    } catch (error) {
-      // console.error('세션 목록 조회 실패:', error)
+    } catch {
+      // 목록을 못 받으면 이전 목록 유지
     } finally {
       setIsLoading(false)
     }
@@ -232,8 +234,8 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         ))
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
       }
-    } catch (error) {
-      // console.error('세션 이름 변경 실패:', error)
+    } catch {
+      // 이름 변경 실패 시 원래 이름 유지
     } finally {
       setEditingId(null)
       setEditValue("")
@@ -264,9 +266,11 @@ export function NavMain({ currentSessionId }: NavMainProps) {
         if (currentSessionId === sessionId) {
           router.push('/dashboard')
         }
+      } else {
+        notify.error(t('sidebar.deleteError'))
       }
-    } catch (error) {
-      // console.error('Session delete failed:', error)
+    } catch {
+      notify.error(t('sidebar.deleteError'))
     }
   }
 
@@ -361,16 +365,21 @@ export function NavMain({ currentSessionId }: NavMainProps) {
             <CollapsibleContent>
               <SidebarMenuSub>
                 {isLoading ? (
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton>
-                      <span className="text-muted-foreground">{t('common.loading')}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
+                  // 불러오는 동안 세션 행 모양 자리 표시
+                  <>
+                    <li className="sr-only" role="status">{t('common.loading')}</li>
+                    {[72, 56, 64].map((w) => (
+                      <SidebarMenuSubItem key={w} aria-hidden="true">
+                        <div className="flex h-7 items-center px-2">
+                          <Skeleton className="h-3.5 rounded-full" style={{ width: `${w}%` }} />
+                        </div>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </>
                 ) : sortedSessions.length === 0 ? (
+                  // 빈 상태: 누를 수 없는 안내 글자 (버튼 모양 아님)
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton>
-                      <span className="text-muted-foreground">{t('sidebar.noSessions')}</span>
-                    </SidebarMenuSubButton>
+                    <p className="px-2 py-1.5 text-13 text-muted-foreground">{t('sidebar.noSessions')}</p>
                   </SidebarMenuSubItem>
                 ) : (
                   sortedSessions.map((session) => {
@@ -387,7 +396,8 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={saveSessionName}
                             onKeyDown={handleKeyDown}
-                            className="h-7 text-sm px-2"
+                            className="h-7 px-2 text-13"
+                            aria-label={t('sidebar.renameLabel')}
                             placeholder={t('sidebar.sessionNamePlaceholder')}
                           />
                         ) : (
@@ -397,13 +407,13 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                               onClick={(e) => handleSessionClick(e, session)}
                               className="cursor-pointer pr-16"
                             >
-                              {isPinned && <Pin className="size-3 mr-1 text-primary shrink-0" />}
+                              {isPinned && <Pin className="mr-1 size-3 shrink-0 text-foreground" aria-label={t('sidebar.pin')} />}
                               <span className="truncate">{displayName}</span>
                             </SidebarMenuSubButton>
 
                             {/* 스캔 수 - 펼침 아이콘 위치와 정렬 */}
                             {session.scan_count > 0 && (
-                              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                              <span className="tabular pointer-events-none absolute right-9 top-1/2 -translate-y-1/2 text-13 text-muted-foreground">
                                 {session.scan_count}
                               </span>
                             )}

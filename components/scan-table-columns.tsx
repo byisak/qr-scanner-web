@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { Column, ColumnDef, Row, Table } from "@tanstack/react-table"
 import { ArrowUpDown, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   AlertDialog,
@@ -68,7 +69,67 @@ export interface DateTimeFormatOptions {
   timeFormat: "24h" | "12h"
 }
 
-// 삭제 버튼 셀 컴포넌트
+// 표 머리글·체크박스 이름은 next-intl 로 (컬럼 정의 함수는 훅을 쓸 수 없어 작은 컴포넌트로 감싼다)
+type TableKey = "number" | "qrCode" | "scanTime" | "saveTime"
+
+function HeaderLabel({ k }: { k: TableKey }) {
+  const t = useTranslations("table")
+  return <>{t(k)}</>
+}
+
+function SortHeader({ column, k }: { column: Column<ScanData, unknown>; k: TableKey }) {
+  const t = useTranslations("table")
+  const sorted = column.getIsSorted()
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-2.5"
+      onClick={() => column.toggleSorting(sorted === "asc")}
+    >
+      {t(k)}
+      <ArrowUpDown aria-hidden="true" />
+    </Button>
+  )
+}
+
+function SelectAllCheckbox({ table }: { table: Table<ScanData> }) {
+  const t = useTranslations("table")
+  return (
+    <Checkbox
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label={t("selectAll")}
+    />
+  )
+}
+
+function SelectRowCheckbox({ row }: { row: Row<ScanData> }) {
+  const t = useTranslations("table")
+  return (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => row.toggleSelected(!!value)}
+      aria-label={`${t("selectRow")} ${row.index + 1}`}
+    />
+  )
+}
+
+function DateCell({ value, formatOptions, className }: { value: number | string; formatOptions?: DateTimeFormatOptions; className?: string }) {
+  return (
+    <div className={`tabular whitespace-nowrap ${className ?? ""}`}>
+      {formatOptions
+        ? formatDateTime(new Date(value), formatOptions.dateFormat, formatOptions.timeFormat)
+        : new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+      }
+    </div>
+  )
+}
+
+// 삭제 버튼 셀 컴포넌트 (스캔 1건 삭제 = 일반 확인)
 function DeleteActionCell({
   scanId,
   code,
@@ -79,6 +140,7 @@ function DeleteActionCell({
   onDelete?: (id: number) => void
 }) {
   const [open, setOpen] = useState(false)
+  const t = useTranslations("table")
 
   const handleDelete = () => {
     onDelete?.(scanId)
@@ -90,31 +152,28 @@ function DeleteActionCell({
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-destructive"
+          aria-label={t("deleteScanLabel")}
         >
-          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+          <Trash2 aria-hidden="true" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>스캔 데이터 삭제</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteScanTitle")}</AlertDialogTitle>
           <AlertDialogDescription>
-            이 스캔 데이터를 삭제하시겠습니까?
-            <br />
-            <span className="font-mono font-medium text-foreground">{code}</span>
-            <br />
-            <br />
-            이 작업은 되돌릴 수 없습니다.
+            {t("deleteScanDesc")} {t("deleteWarning")}
           </AlertDialogDescription>
         </AlertDialogHeader>
+        <p className="break-all rounded-code bg-secondary px-3 py-2 font-mono text-13 text-foreground">{code}</p>
         <AlertDialogFooter>
-          <AlertDialogCancel>취소</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className={buttonVariants({ variant: "destructive" })}
           >
-            삭제
+            {t("delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -122,106 +181,49 @@ function DeleteActionCell({
   )
 }
 
+const indexColumn: ColumnDef<ScanData> = {
+  id: "index",
+  header: () => <HeaderLabel k="number" />,
+  cell: ({ row }) => {
+    return <div className="tabular font-medium">{row.index + 1}</div>
+  },
+}
+
+const codeColumn: ColumnDef<ScanData> = {
+  accessorKey: "code",
+  header: ({ column }) => <SortHeader column={column} k="qrCode" />,
+  cell: ({ row }) => {
+    return <div className="max-w-[28rem] break-all font-mono">{row.getValue("code")}</div>
+  },
+}
+
+const scanTimeColumn = (formatOptions?: DateTimeFormatOptions): ColumnDef<ScanData> => ({
+  accessorKey: "scan_timestamp",
+  header: ({ column }) => <SortHeader column={column} k="scanTime" />,
+  cell: ({ row }) => <DateCell value={row.getValue("scan_timestamp") as number} formatOptions={formatOptions} />,
+})
+
+const createdAtColumn = (formatOptions?: DateTimeFormatOptions): ColumnDef<ScanData> => ({
+  accessorKey: "createdAt",
+  header: ({ column }) => <SortHeader column={column} k="saveTime" />,
+  cell: ({ row }) => <DateCell value={row.getValue("createdAt") as string} formatOptions={formatOptions} className="text-right" />,
+})
+
 export const createColumns = (
   onDelete?: (id: number) => void,
   formatOptions?: DateTimeFormatOptions
 ): ColumnDef<ScanData>[] => [
   {
     id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="전체 선택"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="행 선택"
-      />
-    ),
+    header: ({ table }) => <SelectAllCheckbox table={table} />,
+    cell: ({ row }) => <SelectRowCheckbox row={row} />,
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    id: "index",
-    header: "번호",
-    cell: ({ row }) => {
-      return <div className="font-medium">{row.index + 1}</div>
-    },
-  },
-  {
-    accessorKey: "code",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          QR 코드
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return <div className="font-mono">{row.getValue("code")}</div>
-    },
-  },
-  {
-    accessorKey: "scan_timestamp",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          스캔 시간
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const timestamp = row.getValue("scan_timestamp") as number
-      return (
-        <div>
-          {formatOptions
-            ? formatDateTime(new Date(timestamp), formatOptions.dateFormat, formatOptions.timeFormat)
-            : new Date(timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-          }
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          저장 시간
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const createdAt = row.getValue("createdAt") as string
-      return (
-        <div className="text-right">
-          {formatOptions
-            ? formatDateTime(new Date(createdAt), formatOptions.dateFormat, formatOptions.timeFormat)
-            : new Date(createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-          }
-        </div>
-      )
-    },
-  },
+  indexColumn,
+  codeColumn,
+  scanTimeColumn(formatOptions),
+  createdAtColumn(formatOptions),
   {
     id: "actions",
     header: "",
@@ -239,80 +241,10 @@ export const createColumns = (
 
 // 읽기 전용 컬럼 (비회원용 - 선택/삭제 없음)
 export const createReadOnlyColumns = (formatOptions?: DateTimeFormatOptions): ColumnDef<ScanData>[] => [
-  {
-    id: "index",
-    header: "번호",
-    cell: ({ row }) => {
-      return <div className="font-medium">{row.index + 1}</div>
-    },
-  },
-  {
-    accessorKey: "code",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          QR 코드
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return <div className="font-mono">{row.getValue("code")}</div>
-    },
-  },
-  {
-    accessorKey: "scan_timestamp",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          스캔 시간
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const timestamp = row.getValue("scan_timestamp") as number
-      return (
-        <div>
-          {formatOptions
-            ? formatDateTime(new Date(timestamp), formatOptions.dateFormat, formatOptions.timeFormat)
-            : new Date(timestamp).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-          }
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          저장 시간
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const createdAt = row.getValue("createdAt") as string
-      return (
-        <div className="text-right">
-          {formatOptions
-            ? formatDateTime(new Date(createdAt), formatOptions.dateFormat, formatOptions.timeFormat)
-            : new Date(createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-          }
-        </div>
-      )
-    },
-  },
+  indexColumn,
+  codeColumn,
+  scanTimeColumn(formatOptions),
+  createdAtColumn(formatOptions),
 ]
 
 // 기존 columns 유지 (하위 호환성)

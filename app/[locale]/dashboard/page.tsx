@@ -15,13 +15,16 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ListRow, ListRowSkeleton } from '@/components/ui/list-row';
+import { Empty } from '@/components/ui/empty';
+import { TimeAgo } from '@/components/time-ago';
 import { useRouter } from 'next/navigation';
 import { Session } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { QrCode, ScanLine, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useConfirmDialog } from '@/components/confirm-dialog';
+import { notify } from '@/lib/notify';
 
 // 방문한 세션을 localStorage에 저장하는 유틸리티
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -60,8 +63,9 @@ export default function Dashboard() {
   const router = useRouter();
   const { isAuthenticated, isLoading, accessToken } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
+  // 처음 목록을 받아오기 전까지는 스켈레톤
+  const [loaded, setLoaded] = useState(false);
   const t = useTranslations();
-  const locale = useLocale();
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const fetchSessions = useCallback(async () => {
@@ -74,9 +78,11 @@ export default function Dashboard() {
         },
       });
       const data = await res.json();
-      setSessions(data);
-    } catch (err) {
-      // console.error('세션 목록 로드 실패:', err);
+      setSessions(Array.isArray(data) ? data : []);
+    } catch {
+      // 목록 로드 실패는 다음 폴링에서 다시 시도
+    } finally {
+      setLoaded(true);
     }
   }, [isAuthenticated, accessToken]);
 
@@ -129,21 +135,21 @@ export default function Dashboard() {
         fetchSessions();
         window.dispatchEvent(new CustomEvent('sidebar-refresh'));
       } else {
-        const data = await res.json();
-        alert(data.error || '삭제 실패');
+        notify.error(t('dashboard.deleteFailed'));
       }
-    } catch (error) {
-      // console.error('세션 삭제 실패:', error);
-      alert('세션 삭제 중 오류가 발생했습니다.');
+    } catch {
+      notify.error(t('dashboard.deleteFailed'));
     }
   };
+
+  const showSkeleton = isLoading || !isAuthenticated || !loaded;
 
   return (
     <SidebarProvider>
       <AppSidebar onSessionChange={fetchSessions} />
       <SidebarInset>
         <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
-          <div className="flex items-center gap-2 px-4 flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -156,64 +162,60 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {isLoading || !isAuthenticated ? (
-            <Card>
-              <CardContent className="py-8">
-                <p className="text-center text-muted-foreground">{t('common.loading')}</p>
-              </CardContent>
-            </Card>
+        <div className="page pb-16">
+          <div className="enter pb-6 pt-8 sm:pt-9" style={{ "--i": 0 } as React.CSSProperties}>
+            <h1 className="type-h1">{t('dashboard.activeSessions')}</h1>
+            <p className="mt-2 type-lead">{t('dashboard.mySessionsDesc')}</p>
+          </div>
+
+          {showSkeleton ? (
+            <div aria-busy="true">
+              <span className="sr-only" role="status">{t('common.loading')}</span>
+              <ListRowSkeleton count={4} />
+            </div>
+          ) : sessions.length === 0 ? (
+            <Empty
+              className="enter"
+              style={{ "--i": 1 } as React.CSSProperties}
+              icon={<ScanLine />}
+              title={t('dashboard.emptyTitle')}
+              description={t('dashboard.emptyDesc')}
+            />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">{t('dashboard.activeSessions')}</CardTitle>
-                <CardDescription>{t('dashboard.mySessionsDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {sessions.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    {t('dashboard.noSessions')}
-                  </p>
-                ) : (
-                  <div className="grid gap-4">
-                    {sessions.map((session) => (
-                      <Card key={session.session_id}>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div
-                              className="cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => viewSession(session.session_id)}
-                            >
-                              {session.session_name && (
-                                <p className="font-semibold text-base">{session.session_name}</p>
-                              )}
-                              <p className={`font-mono text-sm ${session.session_name ? 'text-muted-foreground' : 'font-semibold'}`}>
-                                {session.session_id}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {t('dashboard.scanCount')}: {session.scan_count} | {t('dashboard.created')}: {new Date(session.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button onClick={() => viewSession(session.session_id)}>
-                                {t('dashboard.view')}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleDeleteSession(session.session_id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ul className="swap grid gap-2" aria-label={t('dashboard.activeSessions')}>
+              {sessions.map((session, i) => {
+                const name = session.session_name || session.session_id;
+                return (
+                  <li key={session.session_id} style={{ "--i": Math.min(i, 12) } as React.CSSProperties}>
+                    <ListRow
+                      icon={<QrCode />}
+                      title={name}
+                      description={
+                        <>
+                          {session.session_name ? (
+                            <span className="font-mono">{session.session_id} · </span>
+                          ) : null}
+                          <span className="tabular">{t('dashboard.scans', { count: session.scan_count })}</span>
+                          {' · '}
+                          <TimeAgo iso={session.created_at} />
+                        </>
+                      }
+                      onSelect={() => viewSession(session.session_id)}
+                      action={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={t('dashboard.deleteSessionLabel', { name })}
+                          onClick={() => handleDeleteSession(session.session_id)}
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </Button>
+                      }
+                    />
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       </SidebarInset>
