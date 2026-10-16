@@ -9,7 +9,8 @@
     "es": "Español",
     "loading": "加载中...",
     "cancel": "取消",
-    "confirm": "确认"
+    "confirm": "确认",
+    "typeToConfirm": "请输入“{value}”以确认"
   },
   "dialog": {
     "deleteSession": "删除会话",

@@ -9,7 +9,8 @@
     "es": "Español",
     "loading": "로딩 중...",
     "cancel": "취소",
-    "confirm": "확인"
+    "confirm": "확인",
+    "typeToConfirm": "확인을 위해 {value} 입력해 주세요"
   },
   "dialog": {
     "deleteSession": "세션 삭제",

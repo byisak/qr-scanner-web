@@ -9,7 +9,8 @@
     "es": "Español",
     "loading": "Loading...",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "typeToConfirm": "Type {value} to confirm"
   },
   "dialog": {
     "deleteSession": "Delete Session",
