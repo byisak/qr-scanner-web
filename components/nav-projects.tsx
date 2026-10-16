@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import {
-  FileX,
   RotateCcw,
   Trash,
   Trash2,
@@ -11,7 +10,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
+import { notify } from "@/lib/notify"
 
 import {
   Collapsible,
@@ -66,8 +65,8 @@ export function NavProjects() {
         const data = await res.json()
         setDeletedSessions(data)
       }
-    } catch (error) {
-      // console.error('삭제된 세션 조회 실패:', error)
+    } catch {
+      // 목록을 못 받으면 이전 목록 유지
     }
   }, [isAuthenticated, accessToken])
 
@@ -92,24 +91,25 @@ export function NavProjects() {
       })
       if (res.ok) {
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
-        toast.success(t('sidebar.restore'))
+        notify.success(t('trash.restored'))
       } else {
-        const data = await res.json()
-        toast.error(data.error || t('trash.restoreFailed'))
+        // 서버 문구 대신 해요체 문구
+        notify.error(t('trash.restoreFailed'))
       }
-    } catch (error) {
-      // console.error('Session restore failed:', error)
-      toast.error(t('trash.restoreError'))
+    } catch {
+      notify.error(t('trash.restoreError'))
     }
   }
 
-  const handlePermanentDelete = async (sessionId: string, e: React.MouseEvent) => {
+  const handlePermanentDelete = async (sessionId: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    // 되돌릴 수 없는 작업: 세션 이름(없으면 ID)을 똑같이 입력해야 실행 (휴지통 화면과 같게)
     const confirmed = await confirm({
       title: t('dialog.permanentDelete'),
       description: t('trash.confirmPermanentDelete'),
       confirmText: t('sidebar.permanentDelete'),
-      variant: "destructive"
+      variant: "destructive",
+      typeToConfirm: name,
     })
     if (!confirmed) return
 
@@ -122,14 +122,12 @@ export function NavProjects() {
       })
       if (res.ok) {
         window.dispatchEvent(new CustomEvent('sidebar-refresh'))
-        toast.success(t('sidebar.permanentDelete'))
+        notify.success(t('trash.permanentlyDeleted'))
       } else {
-        const data = await res.json()
-        toast.error(data.error || t('trash.permanentDeleteFailed'))
+        notify.error(t('trash.permanentDeleteFailed'))
       }
-    } catch (error) {
-      // console.error('Session permanent delete failed:', error)
-      toast.error(t('trash.permanentDeleteError'))
+    } catch {
+      notify.error(t('trash.permanentDeleteError'))
     }
   }
 
@@ -148,43 +146,47 @@ export function NavProjects() {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip={t('sidebar.deletedSessions')} className="!text-destructive hover:!text-destructive [&>svg]:!text-destructive hover:[&>svg]:!text-destructive">
-                <Trash2 className="size-4" />
+              {/* 삭제대기는 경고가 아니므로 빨강 대신 기본 색 + 휴지통 아이콘 */}
+              <SidebarMenuButton tooltip={t('sidebar.deletedSessions')}>
+                <Trash2 className="size-4" aria-hidden="true" />
                 <span>{t('sidebar.deletedSessions')}</span>
-                <ChevronRight className="ml-auto mr-7 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                <ChevronRight aria-hidden="true" className="ml-auto mr-7 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
 
             <CollapsibleContent>
               <SidebarMenuSub>
                 {deletedSessions.length === 0 ? (
+                  // 빈 상태: 누를 수 없는 안내 글자 (버튼 모양 아님)
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton>
-                      <span className="text-muted-foreground">{t('sidebar.noDeletedSessions')}</span>
-                    </SidebarMenuSubButton>
+                    <p className="px-2 py-1.5 text-13 text-muted-foreground">{t('sidebar.noDeletedSessions')}</p>
                   </SidebarMenuSubItem>
                 ) : (
                   <>
-                    {deletedSessions.slice(0, 5).map((session) => (
+                    {deletedSessions.slice(0, 5).map((session) => {
+                      const displayName = session.session_name || session.session_id.slice(0, 8)
+                      return (
                       <SidebarMenuSubItem key={session.session_id} className="group/session relative">
                         <SidebarMenuSubButton
-                          className="opacity-60 cursor-pointer pr-16"
+                          className="cursor-pointer pr-10 text-muted-foreground"
                           onClick={() => router.push('/dashboard/trash')}
                         >
-                          <span className="line-through truncate">
-                            {session.session_name || session.session_id.slice(0, 8)}
-                          </span>
+                          <span className="truncate">{displayName}</span>
                         </SidebarMenuSubButton>
 
                         {/* 드롭다운 메뉴 */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 data-[state=open]:opacity-100 p-1 hover:bg-accent rounded z-10">
-                              <MoreHorizontal className="size-3.5" />
+                            <button
+                              type="button"
+                              aria-label={`${displayName} ${t('table.actions')}`}
+                              className="absolute right-1 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-opacity outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/session:opacity-100 [@media(hover:hover)]:group-focus-within/session:opacity-100"
+                            >
+                              <MoreHorizontal className="size-4" aria-hidden="true" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
-                            className="w-48 rounded-lg"
+                            className="w-48"
                             side={isMobile ? "bottom" : "right"}
                             align={isMobile ? "end" : "start"}
                           >
@@ -194,7 +196,7 @@ export function NavProjects() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={(e) => handlePermanentDelete(session.session_id, e)}
+                              onClick={(e) => handlePermanentDelete(session.session_id, session.session_name || session.session_id, e)}
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash className="mr-2 size-4" />
@@ -203,7 +205,8 @@ export function NavProjects() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </SidebarMenuSubItem>
-                    ))}
+                      )
+                    })}
                     {deletedSessions.length > 5 && (
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton

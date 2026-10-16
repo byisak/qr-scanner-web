@@ -4,10 +4,7 @@ import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -15,38 +12,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Segmented } from "@/components/ui/segmented";
+import { Field, focusFirstInvalid } from "@/components/form/field";
+import { PasswordInput } from "@/components/form/password-input";
 import { useSettings, SystemSettings } from "@/contexts/settings-context";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth, type AuthError } from "@/contexts/auth-context";
 import { routing } from "@/i18n/routing";
-import { toast } from "@/components/ui/sonner";
+import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
-import {
-  User,
-  Mail,
-  Shield,
-  Key,
-  Eye,
-  EyeOff,
-  Globe,
-  Palette,
-  Bell,
-  Volume2,
-  Table,
-  Calendar,
-  Clock,
-  Type,
-  RotateCcw,
-  Check,
-  X,
-  Settings,
-  Monitor,
-} from "lucide-react";
+import { User, Key, Bell, RotateCcw, Check, Settings, Monitor } from "lucide-react";
 
 interface UnifiedSettingsModalProps {
   open: boolean;
@@ -54,6 +34,38 @@ interface UnifiedSettingsModalProps {
 }
 
 type SettingsSection = "profile" | "general" | "notifications" | "display";
+
+type PasswordErrors = { current: string; next: string; confirm: string };
+const NO_PASSWORD_ERRORS: PasswordErrors = { current: "", next: "", confirm: "" };
+
+/** 설정 한 줄: 왼쪽 이름·설명, 오른쪽 스위치 (이름·설명이 스위치에 연결된다) */
+function SwitchRow({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0 space-y-0.5">
+        <label htmlFor={id} className="text-15 font-bold">
+          {label}
+        </label>
+        <p id={`${id}-desc`} className="text-13 text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <Switch id={id} aria-describedby={`${id}-desc`} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
 
 export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModalProps) {
   const t = useTranslations();
@@ -86,7 +98,8 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isChangingPassword, setIsChangingPassword] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState("");
+  const [passwordErrors, setPasswordErrors] = React.useState<PasswordErrors>(NO_PASSWORD_ERRORS);
+  const passwordFormRef = React.useRef<HTMLFormElement>(null);
 
   // Reset states when modal opens
   React.useEffect(() => {
@@ -103,7 +116,7 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordError("");
+      setPasswordErrors(NO_PASSWORD_ERRORS);
     }
   }, [open, settings, currentLocale, currentTheme, user]);
 
@@ -193,15 +206,14 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
       });
 
       if (res.ok) {
-        toast.success(t("profile.saveSuccess"));
+        notify.success(t("profile.saveSuccess"));
         refreshUser?.();
       } else {
-        const data = await res.json();
-        toast.error(data.error?.message || t("profile.saveError"));
+        // 서버 문구 대신 해요체 문구
+        notify.error(t("profile.saveError"));
       }
-    } catch (error) {
-      // console.error("Profile update error:", error);
-      toast.error(t("profile.saveError"));
+    } catch {
+      notify.error(t("profile.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -214,24 +226,29 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
     return true;
   };
 
+  const showPasswordErrors = (next: PasswordErrors) => {
+    setPasswordErrors(next);
+    requestAnimationFrame(() => focusFirstInvalid(passwordFormRef.current));
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError("");
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError(t("profile.passwordMismatch"));
+    // 유효성 검사 (오류는 해당 입력 아래에)
+    const next: PasswordErrors = {
+      current: currentPassword ? "" : t("profile.passwordRequired"),
+      next: !newPassword
+        ? t("profile.passwordRequired")
+        : !validatePassword(newPassword)
+          ? t("profile.passwordRequirements")
+          : "",
+      confirm: newPassword !== confirmPassword ? t("profile.passwordMismatch") : "",
+    };
+    if (next.current || next.next || next.confirm) {
+      showPasswordErrors(next);
       return;
     }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError(t("profile.passwordMismatch"));
-      return;
-    }
-
-    if (!validatePassword(newPassword)) {
-      setPasswordError(t("profile.passwordRequirements"));
-      return;
-    }
+    setPasswordErrors(NO_PASSWORD_ERRORS);
 
     setIsChangingPassword(true);
     try {
@@ -251,27 +268,33 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success(t("profile.passwordChangeSuccess"));
+        notify.success(t("profile.passwordChangeSuccess"));
         onOpenChange(false);
         setTimeout(() => {
           logout();
         }, 1500);
       } else {
-        setPasswordError(data.error?.message || t("profile.passwordChangeError"));
+        const code = (data as { error?: AuthError })?.error?.code;
+        if (code === "AUTH_INVALID_CREDENTIALS") {
+          showPasswordErrors({ ...NO_PASSWORD_ERRORS, current: t("profile.wrongCurrentPassword") });
+        } else if (code === "AUTH_VALIDATION_ERROR") {
+          showPasswordErrors({ ...NO_PASSWORD_ERRORS, next: t("profile.passwordRequirements") });
+        } else {
+          notify.error(t("profile.passwordChangeError"));
+        }
       }
-    } catch (error) {
-      // console.error("Password change error:", error);
-      setPasswordError(t("profile.passwordChangeError"));
+    } catch {
+      notify.error(t("profile.passwordChangeError"));
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   const sidebarItems: { id: SettingsSection; icon: React.ReactNode; label: string }[] = [
-    { id: "profile", icon: <User className="size-4" />, label: t("settings.profile") },
-    { id: "general", icon: <Settings className="size-4" />, label: t("settings.general") },
-    { id: "notifications", icon: <Bell className="size-4" />, label: t("settings.notifications") },
-    { id: "display", icon: <Monitor className="size-4" />, label: t("settings.display") },
+    { id: "profile", icon: <User aria-hidden="true" />, label: t("settings.profile") },
+    { id: "general", icon: <Settings aria-hidden="true" />, label: t("settings.general") },
+    { id: "notifications", icon: <Bell aria-hidden="true" />, label: t("settings.notifications") },
+    { id: "display", icon: <Monitor aria-hidden="true" />, label: t("settings.display") },
   ];
 
   const renderContent = () => {
@@ -289,68 +312,56 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
     }
   };
 
+  const sectionHead = (title: string, description: string) => (
+    <div>
+      <h3 className="type-h3">{title}</h3>
+      <p className="mt-1 text-15 text-muted-foreground">{description}</p>
+    </div>
+  );
+
   const renderProfileSection = () => {
     if (!user) {
       return (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
+        <div className="flex h-full items-center justify-center text-15 text-muted-foreground">
           {t("settings.loginRequired")}
         </div>
       );
     }
 
+    const toggleLabels = { showLabel: t("profile.showPassword"), hideLabel: t("profile.hidePassword") };
+
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">{t("settings.profile")}</h2>
-          <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>
-        </div>
+        {sectionHead(t("settings.profile"), t("profile.subtitle"))}
 
         <Separator />
 
-        {/* Name */}
-        <div className="space-y-2">
-          <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium">
-            <User className="h-4 w-4" />
-            {t("profile.name")}
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("profile.namePlaceholder")}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSaveProfile}
-              disabled={isSaving || !name.trim()}
-              size="sm"
-            >
-              {isSaving ? t("profile.saving") : t("profile.save")}
-            </Button>
-          </div>
-        </div>
+        <Field label={t("profile.name")} id="settings-name">
+          {(p) => (
+            <div className="flex gap-2">
+              <Input
+                {...p}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("profile.namePlaceholder")}
+                autoComplete="name"
+                className="min-w-0 flex-1"
+              />
+              <Button onClick={handleSaveProfile} disabled={isSaving || !name.trim()}>
+                {isSaving ? t("profile.saving") : t("profile.save")}
+              </Button>
+            </div>
+          )}
+        </Field>
 
-        {/* Email */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-sm font-medium">
-            <Mail className="h-4 w-4" />
-            {t("profile.email")}
-          </Label>
-          <Input value={user.email} disabled className="bg-muted" />
-          <p className="text-xs text-muted-foreground">{t("profile.emailDesc")}</p>
-        </div>
+        <Field label={t("profile.email")} id="settings-email" help={t("profile.emailDesc")}>
+          <Input value={user.email} disabled readOnly className="bg-secondary" />
+        </Field>
 
-        {/* Provider */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-sm font-medium">
-            <Shield className="h-4 w-4" />
-            {t("profile.provider")}
-          </Label>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-              {getProviderLabel(user.provider)}
-            </span>
+        <div className="grid gap-2">
+          <p className="text-15 font-bold">{t("profile.provider")}</p>
+          <div>
+            <Badge variant="secondary">{getProviderLabel(user.provider)}</Badge>
           </div>
         </div>
 
@@ -360,127 +371,64 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
             <Separator />
 
             {!showPasswordSection ? (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowPasswordSection(true)}
-              >
-                <Key className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full" onClick={() => setShowPasswordSection(true)}>
+                <Key aria-hidden="true" />
                 {t("profile.changePassword")}
               </Button>
             ) : (
-              <form onSubmit={handleChangePassword} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2 text-sm font-medium">
-                    <Key className="h-4 w-4" />
+              <form ref={passwordFormRef} onSubmit={handleChangePassword} noValidate className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="flex items-center gap-2 text-15 font-bold">
+                    <Key className="size-4" aria-hidden="true" />
                     {t("profile.changePassword")}
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPasswordSection(false)}
-                  >
+                  </h4>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowPasswordSection(false)}>
                     {t("common.cancel")}
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword" className="text-xs">
-                    {t("profile.currentPassword")}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder={t("profile.currentPasswordPlaceholder")}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                <Field label={t("profile.currentPassword")} id="currentPassword" error={passwordErrors.current}>
+                  <PasswordInput
+                    {...toggleLabels}
+                    shown={showCurrentPassword}
+                    onToggle={() => setShowCurrentPassword(!showCurrentPassword)}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder={t("profile.currentPasswordPlaceholder")}
+                    autoComplete="current-password"
+                  />
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-xs">
-                    {t("profile.newPassword")}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder={t("profile.newPasswordPlaceholder")}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("profile.passwordRequirements")}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-xs">
-                    {t("profile.confirmPassword")}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder={t("profile.confirmPasswordPlaceholder")}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {passwordError && (
-                  <p className="text-sm text-destructive">{passwordError}</p>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                <Field
+                  label={t("profile.newPassword")}
+                  id="newPassword"
+                  error={passwordErrors.next}
+                  help={t("profile.passwordRequirements")}
                 >
+                  <PasswordInput
+                    {...toggleLabels}
+                    shown={showNewPassword}
+                    onToggle={() => setShowNewPassword(!showNewPassword)}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={t("profile.newPasswordPlaceholder")}
+                    autoComplete="new-password"
+                  />
+                </Field>
+
+                <Field label={t("profile.confirmPassword")} id="confirmPassword" error={passwordErrors.confirm}>
+                  <PasswordInput
+                    {...toggleLabels}
+                    shown={showConfirmPassword}
+                    onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder={t("profile.confirmPasswordPlaceholder")}
+                    autoComplete="new-password"
+                  />
+                </Field>
+
+                <Button type="submit" className="w-full" disabled={isChangingPassword}>
                   {isChangingPassword ? t("profile.saving") : t("profile.changePassword")}
                 </Button>
               </form>
@@ -494,57 +442,44 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
   const renderGeneralSection = () => {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">{t("settings.general")}</h2>
-          <p className="text-sm text-muted-foreground">{t("systemSettings.description")}</p>
-        </div>
+        {sectionHead(t("settings.general"), t("systemSettings.description"))}
 
         <Separator />
 
-        {/* Language */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.language")}</Label>
-          </div>
-          <Select
-            value={localSettings.language}
-            onValueChange={(value) => updateLocalSettings({ language: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {routing.locales.map((loc) => (
-                <SelectItem key={loc} value={loc}>
-                  {t(`common.${loc}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Field label={t("systemSettings.language")} id="settings-language">
+          {(p) => (
+            <Select value={localSettings.language} onValueChange={(value) => updateLocalSettings({ language: value })}>
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {routing.locales.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {t(`common.${loc}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
 
-        {/* Theme */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.theme")}</Label>
-          </div>
-          <Select
-            value={localSettings.theme}
-            onValueChange={(value) => updateLocalSettings({ theme: value as "light" | "dark" | "system" })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="light">{t("systemSettings.themeLight")}</SelectItem>
-              <SelectItem value="dark">{t("systemSettings.themeDark")}</SelectItem>
-              <SelectItem value="system">{t("systemSettings.themeSystem")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">{t("settings.themeDescription")}</p>
-        </div>
+        <Field label={t("systemSettings.theme")} id="settings-theme" help={t("settings.themeDescription")}>
+          {(p) => (
+            <Select
+              value={localSettings.theme}
+              onValueChange={(value) => updateLocalSettings({ theme: value as "light" | "dark" | "system" })}
+            >
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">{t("systemSettings.themeLight")}</SelectItem>
+                <SelectItem value="dark">{t("systemSettings.themeDark")}</SelectItem>
+                <SelectItem value="system">{t("systemSettings.themeSystem")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
       </div>
     );
   };
@@ -552,51 +487,37 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
   const renderNotificationsSection = () => {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">{t("settings.notifications")}</h2>
-          <p className="text-sm text-muted-foreground">{t("settings.notificationsDescription")}</p>
-        </div>
+        {sectionHead(t("settings.notifications"), t("settings.notificationsDescription"))}
 
         <Separator />
 
-        {/* Scan Sound */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label className="text-sm font-medium">{t("systemSettings.scanSound")}</Label>
-            <p className="text-xs text-muted-foreground">{t("settings.scanSoundDescription")}</p>
-          </div>
-          <Switch
-            checked={localSettings.scanSound}
-            onCheckedChange={(checked) => updateLocalSettings({ scanSound: checked })}
-          />
-        </div>
+        <SwitchRow
+          id="settings-scan-sound"
+          label={t("systemSettings.scanSound")}
+          description={t("settings.scanSoundDescription")}
+          checked={localSettings.scanSound}
+          onCheckedChange={(checked) => updateLocalSettings({ scanSound: checked })}
+        />
 
-        {/* Browser Notification */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label className="text-sm font-medium">{t("systemSettings.browserNotification")}</Label>
-            <p className="text-xs text-muted-foreground">{t("settings.browserNotificationDescription")}</p>
-          </div>
-          <Switch
-            checked={localSettings.browserNotification}
-            onCheckedChange={(checked) => updateLocalSettings({ browserNotification: checked })}
-          />
-        </div>
+        <SwitchRow
+          id="settings-browser-notification"
+          label={t("systemSettings.browserNotification")}
+          description={t("settings.browserNotificationDescription")}
+          checked={localSettings.browserNotification}
+          onCheckedChange={(checked) => updateLocalSettings({ browserNotification: checked })}
+        />
 
         <Separator />
 
-        {/* Sound Volume */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Volume2 className="h-4 w-4" />
-              <Label className="text-sm font-medium">{t("systemSettings.soundVolume")}</Label>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {localSettings.soundVolume}%
+        <div className="grid gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <span id="settings-volume-label" className="text-15 font-bold">
+              {t("systemSettings.soundVolume")}
             </span>
+            <span className="tabular text-15 text-muted-foreground">{localSettings.soundVolume}%</span>
           </div>
           <Slider
+            aria-label={t("systemSettings.soundVolume")}
             value={[localSettings.soundVolume]}
             onValueChange={(value) => updateLocalSettings({ soundVolume: value[0] })}
             max={100}
@@ -606,24 +527,24 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
           />
         </div>
 
-        {/* Sound Type */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">{t("systemSettings.soundType")}</Label>
-          <Select
-            value={localSettings.soundType}
-            onValueChange={(value) => updateLocalSettings({ soundType: value as "default" | "beep" | "none" })}
-            disabled={!localSettings.scanSound}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">{t("systemSettings.soundDefault")}</SelectItem>
-              <SelectItem value="beep">{t("systemSettings.soundBeep")}</SelectItem>
-              <SelectItem value="none">{t("systemSettings.soundNone")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Field label={t("systemSettings.soundType")} id="settings-sound-type">
+          {(p) => (
+            <Select
+              value={localSettings.soundType}
+              onValueChange={(value) => updateLocalSettings({ soundType: value as "default" | "beep" | "none" })}
+              disabled={!localSettings.scanSound}
+            >
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">{t("systemSettings.soundDefault")}</SelectItem>
+                <SelectItem value="beep">{t("systemSettings.soundBeep")}</SelectItem>
+                <SelectItem value="none">{t("systemSettings.soundNone")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
       </div>
     );
   };
@@ -631,171 +552,162 @@ export function UnifiedSettingsModal({ open, onOpenChange }: UnifiedSettingsModa
   const renderDisplaySection = () => {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">{t("settings.display")}</h2>
-          <p className="text-sm text-muted-foreground">{t("settings.displayDescription")}</p>
-        </div>
+        {sectionHead(t("settings.display"), t("settings.displayDescription"))}
 
         <Separator />
 
-        {/* Table Rows Per Page */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Table className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.tableRowsPerPage")}</Label>
-          </div>
-          <Select
-            value={String(localSettings.tableRowsPerPage)}
-            onValueChange={(value) => updateLocalSettings({ tableRowsPerPage: Number(value) })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Field label={t("systemSettings.tableRowsPerPage")} id="settings-rows">
+          {(p) => (
+            <Select
+              value={String(localSettings.tableRowsPerPage)}
+              onValueChange={(value) => updateLocalSettings({ tableRowsPerPage: Number(value) })}
+            >
+              <SelectTrigger {...p} className="tabular">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
 
-        {/* Date Format */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.dateFormat")}</Label>
-          </div>
-          <Select
-            value={localSettings.dateFormat}
-            onValueChange={(value) => updateLocalSettings({ dateFormat: value as SystemSettings["dateFormat"] })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-              <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-              <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Field label={t("systemSettings.dateFormat")} id="settings-date-format">
+          {(p) => (
+            <Select
+              value={localSettings.dateFormat}
+              onValueChange={(value) => updateLocalSettings({ dateFormat: value as SystemSettings["dateFormat"] })}
+            >
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
 
-        {/* Time Format */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.timeFormat")}</Label>
-          </div>
-          <Select
-            value={localSettings.timeFormat}
-            onValueChange={(value) => updateLocalSettings({ timeFormat: value as "24h" | "12h" })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="24h">{t("systemSettings.time24h")}</SelectItem>
-              <SelectItem value="12h">{t("systemSettings.time12h")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Field label={t("systemSettings.timeFormat")} id="settings-time-format">
+          {(p) => (
+            <Select
+              value={localSettings.timeFormat}
+              onValueChange={(value) => updateLocalSettings({ timeFormat: value as "24h" | "12h" })}
+            >
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24h">{t("systemSettings.time24h")}</SelectItem>
+                <SelectItem value="12h">{t("systemSettings.time12h")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
 
-        {/* Font Size */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Type className="h-4 w-4" />
-            <Label className="text-sm font-medium">{t("systemSettings.fontSize")}</Label>
-          </div>
-          <Select
-            value={localSettings.fontSize}
-            onValueChange={(value) => updateLocalSettings({ fontSize: value as "small" | "medium" | "large" })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="small">{t("systemSettings.fontSmall")}</SelectItem>
-              <SelectItem value="medium">{t("systemSettings.fontMedium")}</SelectItem>
-              <SelectItem value="large">{t("systemSettings.fontLarge")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* 글자 크기 (모든 글자 단계에 배율로 적용) */}
+        <Field label={t("systemSettings.fontSize")} id="settings-font-size">
+          {(p) => (
+            <Select
+              value={localSettings.fontSize}
+              onValueChange={(value) => updateLocalSettings({ fontSize: value as "small" | "medium" | "large" })}
+            >
+              <SelectTrigger {...p}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">{t("systemSettings.fontSmall")}</SelectItem>
+                <SelectItem value="medium">{t("systemSettings.fontMedium")}</SelectItem>
+                <SelectItem value="large">{t("systemSettings.fontLarge")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </Field>
       </div>
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1050px] sm:max-w-[1050px] h-[600px] p-0 gap-0 overflow-hidden [&>button]:hidden">
-        <div className="flex h-full min-h-0">
-          {/* Sidebar */}
-          <div className="w-[220px] border-r bg-muted/30 flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b">
-              <h2 className="font-semibold text-lg">{t("settings.title")}</h2>
-            </div>
+      {/* 넓은 화면: 왼쪽 메뉴 + 내용 (높이 640 이내). 좁은 화면(<640): 화면 전체를 채우고 메뉴는 위쪽 세그먼트 */}
+      <DialogContent
+        aria-describedby={undefined}
+        closeLabel={t("common.close")}
+        className={cn(
+          "flex flex-col gap-0 overflow-hidden p-0",
+          "max-sm:inset-0 max-sm:h-dvh max-sm:max-h-dvh max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-0",
+          "sm:h-[min(640px,calc(100dvh-2rem))] sm:max-w-[880px] sm:flex-row"
+        )}
+      >
+        {/* 메뉴 (640px 이상) */}
+        <div className="hidden w-[220px] shrink-0 flex-col border-r bg-background/60 sm:flex">
+          <div className="px-5 pb-3 pt-5">
+            <DialogTitle className="type-h3">{t("settings.title")}</DialogTitle>
+          </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 p-3 space-y-1">
-              {sidebarItems.map((item) => (
+          <nav aria-label={t("settings.title")} className="flex-1 space-y-1 px-3">
+            {sidebarItems.map((item) => {
+              const current = activeSection === item.id;
+              return (
                 <button
                   key={item.id}
+                  type="button"
+                  aria-current={current ? "page" : undefined}
                   onClick={() => setActiveSection(item.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-colors",
-                    activeSection === item.id
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    "press flex h-10 w-full items-center gap-3 rounded-field px-3 text-15 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&_svg]:size-4 [&_svg]:shrink-0",
+                    current
+                      ? "bg-secondary font-bold text-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
                   {item.icon}
                   {item.label}
                 </button>
-              ))}
-            </nav>
+              );
+            })}
+          </nav>
 
-            {/* Footer with action buttons */}
-            <div className="p-3 border-t space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={handleReset}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                {t("systemSettings.resetToDefault")}
-              </Button>
-            </div>
+          <div className="border-t p-3">
+            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleReset}>
+              <RotateCcw aria-hidden="true" />
+              {t("systemSettings.resetToDefault")}
+            </Button>
+          </div>
+        </div>
+
+        {/* 내용 */}
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* 좁은 화면 머리: 제목 + 닫기, 아래 세그먼트 메뉴 */}
+          <div className="border-b px-4 pb-3 pt-3 sm:hidden">
+            <p className="type-h3 pr-10" aria-hidden="true">
+              {t("settings.title")}
+            </p>
+            <Segmented
+              aria-label={t("settings.title")}
+              className="mt-3 w-full"
+              value={activeSection}
+              onValueChange={setActiveSection}
+              options={sidebarItems.map((item) => ({ value: item.id, label: item.label }))}
+            />
           </div>
 
-          {/* Content */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Close button */}
-            <div className="absolute right-4 top-4 z-10">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:p-6 sm:pr-14">{renderContent()}</div>
 
-            {/* Scrollable content area */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-6">
-              {renderContent()}
-            </div>
-
-            {/* Apply button */}
-            <div className="p-4 border-t bg-background">
-              <Button onClick={handleApplySettings} className="w-full">
-                <Check className="h-4 w-4 mr-2" />
-                {t("systemSettings.applySettings")}
-              </Button>
-            </div>
+          <div className="flex gap-2 border-t bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <Button variant="outline" className="sm:hidden" onClick={handleReset}>
+              <RotateCcw aria-hidden="true" />
+              {t("systemSettings.resetShort")}
+            </Button>
+            <Button onClick={handleApplySettings} className="flex-1">
+              <Check aria-hidden="true" />
+              {t("systemSettings.applySettings")}
+            </Button>
           </div>
         </div>
       </DialogContent>
