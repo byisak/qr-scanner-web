@@ -10,7 +10,8 @@
     "loading": "読み込み中",
     "cancel": "キャンセル",
     "confirm": "確認",
-    "typeToConfirm": "確認のため「{value}」と入力してください"
+    "typeToConfirm": "確認のため「{value}」と入力してください",
+    "close": "閉じる"
   },
   "dialog": {
     "deleteSession": "セッションを削除",
@@ -24,15 +25,17 @@
     "faq": "よくある質問",
     "openWebApp": "ウェブアプリを開く",
     "login": "ログイン",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "menu": "メニュー",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
   },
   "home": {
-    "heroTitle1": "最速・最高精度の",
+    "heroTitle1": "大量スキャンからPC転送まで",
     "heroTitle2": "QRコード・バーコードスキャナー",
     "heroDescription": "数千のバーコードを一度にスキャンし、リアルタイムでPCに転送。在庫管理、物流、倉庫業務に最適化されたプロフェッショナルスキャナー。",
     "downloadAppStore": "App Store でダウンロード",
     "downloadGooglePlay": "Google Play でダウンロード",
-    "rating": "4.8点 · 1,250+ レビュー",
     "whyChoose": "なぜ QR Scanner Pro を選ぶのか？",
     "whoUses": "こんな方におすすめ",
     "faqTitle": "よくある質問",
@@ -44,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "超高速一括スキャン",
-      "description": "連続スキャンモードで数千のバーコードを素早くスキャン。棚卸し時間を90%削減。"
+      "description": "連続スキャンモードで数千のバーコードを素早くスキャン。"
     },
     "realtime": {
       "title": "リアルタイムPC転送",
@@ -386,6 +389,61 @@
     "fontMedium": "中",
     "fontLarge": "大",
     "resetToDefault": "デフォルトに戻す",
-    "applySettings": "設定を適用"
+    "applySettings": "設定を適用",
+    "resetShort": "リセット"
+  },
+  "adRecords": {
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
+  },
+  "admin": {
+    "dashboard": {
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
+    },
+    "users": {
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+    },
+    "legal": {
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
+    }
   }
 }

@@ -10,7 +10,8 @@
     "loading": "Cargando",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
-    "typeToConfirm": "Escribe {value} para confirmar"
+    "typeToConfirm": "Escribe {value} para confirmar",
+    "close": "Cerrar"
   },
   "dialog": {
     "deleteSession": "Eliminar Sesión",
@@ -24,15 +25,17 @@
     "faq": "FAQ",
     "openWebApp": "Abrir App Web",
     "login": "Iniciar Sesión",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "menu": "Menú",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "home": {
-    "heroTitle1": "El Más Rápido y Preciso",
+    "heroTitle1": "Del escaneo masivo a tu PC",
     "heroTitle2": "Escáner de Códigos QR y Barras",
     "heroDescription": "Escanea miles de códigos de barras a la vez y transmite a PC en tiempo real. Escáner profesional optimizado para gestión de inventario, logística y operaciones de almacén.",
     "downloadAppStore": "Descargar en App Store",
     "downloadGooglePlay": "Descargar en Google Play",
-    "rating": "4.8 estrellas · 1,250+ reseñas",
     "whyChoose": "¿Por qué QR Scanner Pro?",
     "whoUses": "Quién lo Usa",
     "faqTitle": "Preguntas Frecuentes",
@@ -44,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "Escaneo Masivo Ultrarrápido",
-      "description": "Escanea miles de códigos de barras rápidamente en modo continuo. Reduce el tiempo de inventario en un 90%."
+      "description": "Escanea miles de códigos de barras rápidamente en modo continuo."
     },
     "realtime": {
       "title": "Transferencia PC en Tiempo Real",
@@ -386,6 +389,61 @@
     "fontMedium": "Mediano",
     "fontLarge": "Grande",
     "resetToDefault": "Restablecer Valores",
-    "applySettings": "Aplicar Configuración"
+    "applySettings": "Aplicar Configuración",
+    "resetShort": "Restablecer"
+  },
+  "adRecords": {
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
+  },
+  "admin": {
+    "dashboard": {
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
+    },
+    "users": {
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+    },
+    "legal": {
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
+    }
   }
 }

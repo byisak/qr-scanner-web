@@ -10,7 +10,8 @@
     "loading": "Loading",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "typeToConfirm": "Type {value} to confirm"
+    "typeToConfirm": "Type {value} to confirm",
+    "close": "Close"
   },
   "dialog": {
     "deleteSession": "Delete Session",
@@ -24,15 +25,17 @@
     "faq": "FAQ",
     "openWebApp": "Open Web App",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "home": {
-    "heroTitle1": "The Fastest and Most Accurate",
+    "heroTitle1": "From Bulk Scanning to Your PC",
     "heroTitle2": "QR Code Barcode Scanner",
     "heroDescription": "Scan thousands of barcodes at once and transmit to PC in real-time. Professional scanner optimized for inventory management, logistics, and warehouse operations.",
     "downloadAppStore": "Download on App Store",
     "downloadGooglePlay": "Download on Google Play",
-    "rating": "4.8 stars · 1,250+ reviews",
     "whyChoose": "Why QR Scanner Pro?",
     "whoUses": "Who Uses This",
     "faqTitle": "Frequently Asked Questions",
@@ -44,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "Ultra-Fast Bulk Scanning",
-      "description": "Scan thousands of barcodes quickly in continuous scan mode. Reduce inventory time by 90%."
+      "description": "Scan thousands of barcodes quickly in continuous scan mode."
     },
     "realtime": {
       "title": "Real-time PC Transfer",
@@ -390,7 +393,8 @@
     "fontMedium": "Medium",
     "fontLarge": "Large",
     "resetToDefault": "Reset to Default",
-    "applySettings": "Apply Settings"
+    "applySettings": "Apply Settings",
+    "resetShort": "Reset"
   },
   "adRecords": {
     "title": "Ad Records Management",
@@ -410,7 +414,7 @@
     "resetSuccess": "Ad records have been reset",
     "resetError": "Failed to reset ad records",
     "save": "Save",
-    "saving": "Saving...",
+    "saving": "Saving",
     "saveSuccess": "Ad records saved successfully",
     "saveError": "Failed to save ad records",
     "loadError": "Failed to load ad records",
@@ -424,7 +428,12 @@
     "times": "times",
     "addFeature": "Add Feature",
     "removeFeature": "Remove Feature",
-    "editCount": "Edit Count"
+    "editCount": "Edit Count",
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
   },
   "admin": {
     "dashboard": {
@@ -445,13 +454,15 @@
         "3months": "Last 3 months",
         "30days": "Last 30 days",
         "7days": "Last 7 days"
-      }
+      },
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
     },
     "users": {
       "title": "User Management",
       "userList": "User List",
       "userListDesc": "Manage all registered users",
-      "searchPlaceholder": "Search by email or name...",
+      "searchPlaceholder": "Search by email or name",
       "search": "Search",
       "allProviders": "All Providers",
       "allRoles": "All Roles",
@@ -525,7 +536,14 @@
       "bulkDeleteConfirmTitle": "Bulk Delete",
       "bulkDeleteConfirmDesc": "Are you sure you want to delete {count} users?",
       "bulkDeleteSuccess": "Bulk Delete Successful",
-      "bulkDeleteSuccessDesc": "{count} users have been deleted"
+      "bulkDeleteSuccessDesc": "{count} users have been deleted",
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
     },
     "stats": {
       "totalUsers": "Total Users",
@@ -559,7 +577,7 @@
       "docTitle": "Title",
       "titlePlaceholder": "Enter document title",
       "content": "Content",
-      "contentPlaceholder": "Enter content in markdown format...",
+      "contentPlaceholder": "Enter content in markdown format",
       "version": "Version",
       "markdownSupport": "Markdown supported",
       "publishStatus": "Publish Status",
@@ -575,7 +593,37 @@
       "preview": "Preview",
       "openPage": "Open Page",
       "publicUrls": "Public URLs",
-      "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)"
+      "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)",
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
     }
   }
 }

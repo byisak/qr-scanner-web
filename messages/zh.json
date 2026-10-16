@@ -10,7 +10,8 @@
     "loading": "加载中",
     "cancel": "取消",
     "confirm": "确认",
-    "typeToConfirm": "请输入“{value}”以确认"
+    "typeToConfirm": "请输入“{value}”以确认",
+    "close": "关闭"
   },
   "dialog": {
     "deleteSession": "删除会话",
@@ -24,15 +25,17 @@
     "faq": "常见问题",
     "openWebApp": "打开网页应用",
     "login": "登录",
-    "logout": "退出"
+    "logout": "退出",
+    "menu": "菜单",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   },
   "home": {
-    "heroTitle1": "最快速、最精准的",
+    "heroTitle1": "从批量扫描到电脑同步",
     "heroTitle2": "二维码条形码扫描器",
     "heroDescription": "一次扫描数千个条形码并实时传输到电脑。专为库存管理、物流和仓储业务优化的专业扫描器。",
     "downloadAppStore": "App Store 下载",
     "downloadGooglePlay": "Google Play 下载",
-    "rating": "4.8星 · 1,250+ 评价",
     "whyChoose": "为什么选择 QR Scanner Pro？",
     "whoUses": "谁在使用",
     "faqTitle": "常见问题",
@@ -44,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "超快批量扫描",
-      "description": "连续扫描模式快速扫描数千个条形码。库存盘点时间减少90%。"
+      "description": "连续扫描模式快速扫描数千个条形码。"
     },
     "realtime": {
       "title": "实时电脑传输",
@@ -386,6 +389,61 @@
     "fontMedium": "中",
     "fontLarge": "大",
     "resetToDefault": "恢复默认设置",
-    "applySettings": "应用设置"
+    "applySettings": "应用设置",
+    "resetShort": "重置"
+  },
+  "adRecords": {
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
+  },
+  "admin": {
+    "dashboard": {
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
+    },
+    "users": {
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+    },
+    "legal": {
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
+    }
   }
 }
