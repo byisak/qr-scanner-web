@@ -41,7 +41,7 @@ function buildSslConfig(): false | { rejectUnauthorized: boolean; ca?: string } 
 
 /**
  * PostgreSQL Database 연결 풀 초기화
- * - DATABASE_URL 이 있으면 우선 사용 (Supabase: 트랜잭션 풀러 6543 포트 권장)
+ * - DATABASE_URL(없으면 POSTGRES_URL)이 있으면 우선 사용 (Supabase: 트랜잭션 풀러 6543 포트 권장)
  * - 없으면 POSTGRES_HOST/PORT/DATABASE/USER/PASSWORD (기존 Vultr 설정)
  * - Vercel(서버리스)에서는 인스턴스마다 풀이 생기므로 연결 수를 작게 유지한다
  */
@@ -59,7 +59,8 @@ export async function initializePool(): Promise<Pool | null> {
     connectionTimeoutMillis: 10000,
   };
 
-  const databaseUrl = process.env.DATABASE_URL;
+  // POSTGRES_URL: Vercel의 Supabase 연동이 자동으로 넣어 주는 풀러 주소
+  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
   if (databaseUrl) {
     pool = new Pool({
