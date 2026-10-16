@@ -295,7 +295,8 @@
     "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
     "registerFailed": "No se pudo completar el registro. Inténtalo de nuevo en un momento.",
     "emailExists": "Este correo ya está registrado.",
-    "invalidEmail": "Revisa el formato del correo."
+    "invalidEmail": "Revisa el formato del correo.",
+    "nameRequired": "Introduce tu nombre."
   },
   "profile": {
     "title": "Configuración de Perfil",

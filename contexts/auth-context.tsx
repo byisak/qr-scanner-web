@@ -42,6 +42,15 @@ export function useAuth() {
   return context
 }
 
+/**
+ * 서버 오류 응답 → Error. 메시지는 그대로 두고 오류 코드(AUTH_EMAIL_EXISTS 등)를 code 로 붙여,
+ * 화면이 서버 문구 대신 로케일별 해요체 문구를 고를 수 있게 한다.
+ */
+export type AuthError = Error & { code?: string }
+function authError(data: { error?: { message?: string; code?: string } }, fallback: string): AuthError {
+  return Object.assign(new Error(data.error?.message || fallback), { code: data.error?.code })
+}
+
 const ACCESS_TOKEN_KEY = "qr_access_token"
 const REFRESH_TOKEN_KEY = "qr_refresh_token"
 
@@ -144,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error?.message || "로그인에 실패했습니다.")
+      throw authError(data, "로그인에 실패했습니다.")
     }
 
     saveTokens(data.accessToken, data.refreshToken)
@@ -162,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error?.message || "회원가입에 실패했습니다.")
+      throw authError(data, "회원가입에 실패했습니다.")
     }
 
     saveTokens(data.accessToken, data.refreshToken)
@@ -180,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error?.message || "Google 로그인에 실패했습니다.")
+      throw authError(data, "Google 로그인에 실패했습니다.")
     }
 
     saveTokens(data.accessToken, data.refreshToken)
@@ -198,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error?.message || "Apple 로그인에 실패했습니다.")
+      throw authError(data, "Apple 로그인에 실패했습니다.")
     }
 
     saveTokens(data.accessToken, data.refreshToken)

@@ -1,22 +1,51 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import * as React from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { ArrowLeft, Key, Eye, EyeOff } from "lucide-react"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth, type AuthError } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field, focusFirstInvalid } from "@/components/form/field"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import { toast } from "@/components/ui/sonner"
+import { notify } from "@/lib/notify"
+
+/** 비밀번호 입력 + 보기/숨기기 토글 (토글 버튼에 이름과 눌림 상태) */
+function PasswordInput({
+  shown,
+  onToggle,
+  showLabel,
+  hideLabel,
+  ...props
+}: React.ComponentProps<"input"> & { shown: boolean; onToggle: () => void; showLabel: string; hideLabel: string }) {
+  return (
+    <div className="relative">
+      <Input {...props} type={shown ? "text" : "password"} className="pr-12" />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        onClick={onToggle}
+        aria-label={shown ? hideLabel : showLabel}
+        aria-pressed={shown}
+      >
+        {shown ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+      </Button>
+    </div>
+  )
+}
+
+type Errors = { current: string; next: string; confirm: string }
+const NO_ERRORS: Errors = { current: "", next: "", confirm: "" }
 
 export default function ChangePasswordPage() {
   const router = useRouter()
@@ -30,7 +59,8 @@ export default function ChangePasswordPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState<Errors>(NO_ERRORS)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -50,25 +80,31 @@ export default function ChangePasswordPage() {
     return true
   }
 
+  const showErrors = (next: Errors) => {
+    setErrors(next)
+    requestAnimationFrame(() => focusFirstInvalid(formRef.current))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
 
-    // 유효성 검사
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setError(t("profile.passwordMismatch"))
+    // 유효성 검사 (오류는 해당 입력 아래에)
+    const next: Errors = {
+      current: currentPassword ? "" : t("profile.passwordRequired"),
+      next: !newPassword
+        ? t("profile.passwordRequired")
+        : !validatePassword(newPassword)
+          ? t("profile.passwordRequirements")
+          : newPassword === currentPassword
+            ? t("profile.samePassword")
+            : "",
+      confirm: newPassword !== confirmPassword ? t("profile.passwordMismatch") : "",
+    }
+    if (next.current || next.next || next.confirm) {
+      showErrors(next)
       return
     }
-
-    if (newPassword !== confirmPassword) {
-      setError(t("profile.passwordMismatch"))
-      return
-    }
-
-    if (!validatePassword(newPassword)) {
-      setError(t("profile.passwordRequirements"))
-      return
-    }
+    setErrors(NO_ERRORS)
 
     setIsSaving(true)
     try {
@@ -88,17 +124,24 @@ export default function ChangePasswordPage() {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        toast.success(t("profile.passwordChangeSuccess"))
+        notify.success(t("profile.passwordChangeSuccess"))
         // 로그아웃 후 로그인 페이지로 이동
         setTimeout(() => {
           logout()
         }, 1500)
       } else {
-        setError(data.error?.message || t("profile.passwordChangeError"))
+        // 서버 문구 대신 상황별 해요체 문구
+        const code = (data as { error?: AuthError })?.error?.code
+        if (code === "AUTH_INVALID_CREDENTIALS") {
+          showErrors({ ...NO_ERRORS, current: t("profile.wrongCurrentPassword") })
+        } else if (code === "AUTH_VALIDATION_ERROR") {
+          showErrors({ ...NO_ERRORS, next: t("profile.passwordRequirements") })
+        } else {
+          notify.error(t("profile.passwordChangeError"))
+        }
       }
-    } catch (error) {
-      // console.error("Password change error:", error)
-      setError(t("profile.passwordChangeError"))
+    } catch {
+      notify.error(t("profile.passwordChangeError"))
     } finally {
       setIsSaving(false)
     }
@@ -108,115 +151,80 @@ export default function ChangePasswordPage() {
     return null
   }
 
+  const toggleLabels = { showLabel: t("profile.showPassword"), hideLabel: t("profile.hidePassword") }
+
   return (
-    <div className="container max-w-2xl py-8">
+    <main id="main" className="page-narrow pb-16 pt-6 sm:pt-8">
       <Button
         variant="ghost"
         size="sm"
-        className="mb-6"
+        className="-ml-2.5 mb-4"
         onClick={() => router.push("/dashboard/profile")}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft aria-hidden="true" />
         {t("profile.back")}
       </Button>
 
-      <Card>
+      <Card className="enter">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
+          <h1 className="type-h2 flex items-center gap-2">
+            <Key className="size-5" aria-hidden="true" />
             {t("profile.changePassword")}
-          </CardTitle>
+          </h1>
           <CardDescription>{t("profile.changePasswordDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">{t("profile.currentPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="currentPassword"
-                  type={showCurrentPassword ? "text" : "password"}
+          <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4" noValidate>
+            <Field label={t("profile.currentPassword")} id="currentPassword" error={errors.current}>
+              {(control) => (
+                <PasswordInput
+                  {...control}
+                  {...toggleLabels}
+                  autoComplete="current-password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder={t("profile.currentPasswordPlaceholder")}
+                  shown={showCurrentPassword}
+                  onToggle={() => setShowCurrentPassword(!showCurrentPassword)}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-            </div>
+              )}
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">{t("profile.newPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
+            <Field
+              label={t("profile.newPassword")}
+              id="newPassword"
+              error={errors.next}
+              help={t("profile.passwordRequirements")}
+            >
+              {(control) => (
+                <PasswordInput
+                  {...control}
+                  {...toggleLabels}
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t("profile.newPasswordPlaceholder")}
+                  shown={showNewPassword}
+                  onToggle={() => setShowNewPassword(!showNewPassword)}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("profile.passwordRequirements")}
-              </p>
-            </div>
+              )}
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t("profile.confirmPassword")}</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
+            <Field label={t("profile.confirmPassword")} id="confirmPassword" error={errors.confirm}>
+              {(control) => (
+                <PasswordInput
+                  {...control}
+                  {...toggleLabels}
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t("profile.confirmPasswordPlaceholder")}
+                  shown={showConfirmPassword}
+                  onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+              )}
+            </Field>
 
             <Button
               type="submit"
+              size="xl"
               className="w-full"
               disabled={isSaving || !currentPassword || !newPassword || !confirmPassword}
             >
@@ -225,6 +233,6 @@ export default function ChangePasswordPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }

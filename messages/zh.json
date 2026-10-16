@@ -295,7 +295,8 @@
     "passwordTooShort": "密码至少需要 8 个字符。",
     "registerFailed": "注册失败，请稍后重试。",
     "emailExists": "该邮箱已注册。",
-    "invalidEmail": "请检查邮箱格式。"
+    "invalidEmail": "请检查邮箱格式。",
+    "nameRequired": "请输入姓名。"
   },
   "profile": {
     "title": "个人设置",

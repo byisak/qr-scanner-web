@@ -295,7 +295,8 @@
     "passwordTooShort": "パスワードは8文字以上にしてください。",
     "registerFailed": "登録できませんでした。しばらくしてからもう一度お試しください。",
     "emailExists": "このメールアドレスは既に登録されています。",
-    "invalidEmail": "メールアドレスの形式を確認してください。"
+    "invalidEmail": "メールアドレスの形式を確認してください。",
+    "nameRequired": "名前を入力してください。"
   },
   "profile": {
     "title": "プロフィール設定",

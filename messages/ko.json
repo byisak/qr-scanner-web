@@ -299,7 +299,8 @@
     "passwordTooShort": "비밀번호는 8자 이상이어야 해요",
     "registerFailed": "가입하지 못했어요. 잠시 뒤 다시 해주세요",
     "emailExists": "이미 가입한 이메일이에요",
-    "invalidEmail": "이메일 형식을 확인해 주세요"
+    "invalidEmail": "이메일 형식을 확인해 주세요",
+    "nameRequired": "이름을 입력해 주세요"
   },
   "profile": {
     "title": "프로필 설정",

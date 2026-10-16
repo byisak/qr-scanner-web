@@ -299,7 +299,8 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "registerFailed": "Couldn't sign up. Please try again shortly.",
     "emailExists": "This email is already registered.",
-    "invalidEmail": "Please check the email format."
+    "invalidEmail": "Please check the email format.",
+    "nameRequired": "Please enter your name."
   },
   "profile": {
     "title": "Profile Settings",
