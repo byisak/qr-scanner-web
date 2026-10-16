@@ -21,12 +21,14 @@ import { notify } from "@/lib/notify"
 export default function ProfilePage() {
   const router = useRouter()
   const t = useTranslations()
-  const { user, accessToken, isAuthenticated, refreshUser } = useAuth()
+  const { user, accessToken, isAuthenticated, isLoading, refreshUser } = useAuth()
 
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
+    // 로그인 정보를 불러오는 중에는 기다린다 (주소로 바로 들어오면 /login 으로 튕겼다가 /dashboard 로 가던 문제)
+    if (isLoading) return
     if (!isAuthenticated) {
       router.push("/login")
       return
@@ -34,7 +36,7 @@ export default function ProfilePage() {
     if (user) {
       setName(user.name || "")
     }
-  }, [isAuthenticated, user, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   const getProviderLabel = (provider: string) => {
     switch (provider) {

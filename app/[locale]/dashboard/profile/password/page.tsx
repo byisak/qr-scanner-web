@@ -50,7 +50,7 @@ const NO_ERRORS: Errors = { current: "", next: "", confirm: "" }
 export default function ChangePasswordPage() {
   const router = useRouter()
   const t = useTranslations()
-  const { user, accessToken, isAuthenticated, logout } = useAuth()
+  const { user, accessToken, isAuthenticated, isLoading, logout } = useAuth()
 
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -63,6 +63,8 @@ export default function ChangePasswordPage() {
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
+    // 로그인 정보를 불러오는 중에는 기다린다 (주소로 바로 들어오면 /login 으로 튕겼다가 /dashboard 로 가던 문제)
+    if (isLoading) return
     if (!isAuthenticated) {
       router.push("/login")
       return
@@ -71,7 +73,7 @@ export default function ChangePasswordPage() {
     if (user && user.provider !== "email") {
       router.push("/dashboard/profile")
     }
-  }, [isAuthenticated, user, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   const validatePassword = (password: string): boolean => {
     if (password.length < 8) return false
