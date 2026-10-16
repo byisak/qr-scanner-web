@@ -4,12 +4,12 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { ArrowLeft, Key, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Key } from "lucide-react"
 
 import { useAuth, type AuthError } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Field, focusFirstInvalid } from "@/components/form/field"
+import { PasswordInput } from "@/components/form/password-input"
 import {
   Card,
   CardContent,
@@ -17,32 +17,6 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import { notify } from "@/lib/notify"
-
-/** 비밀번호 입력 + 보기/숨기기 토글 (토글 버튼에 이름과 눌림 상태) */
-function PasswordInput({
-  shown,
-  onToggle,
-  showLabel,
-  hideLabel,
-  ...props
-}: React.ComponentProps<"input"> & { shown: boolean; onToggle: () => void; showLabel: string; hideLabel: string }) {
-  return (
-    <div className="relative">
-      <Input {...props} type={shown ? "text" : "password"} className="pr-12" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-        onClick={onToggle}
-        aria-label={shown ? hideLabel : showLabel}
-        aria-pressed={shown}
-      >
-        {shown ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-      </Button>
-    </div>
-  )
-}
 
 type Errors = { current: string; next: string; confirm: string }
 const NO_ERRORS: Errors = { current: "", next: "", confirm: "" }

@@ -49,8 +49,12 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  closeLabel = "Close",
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  /** 닫기(X) 버튼의 읽어주는 이름. next-intl 밖에서도 쓰이므로 화면에서 t("common.close")를 넘긴다 */
+  closeLabel?: string
+}) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -65,7 +69,7 @@ function DialogContent({
         {children}
         <DialogPrimitive.Close className="text-muted-foreground hover:bg-secondary hover:text-foreground absolute top-3 right-3 inline-flex size-[34px] items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
           <XIcon />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

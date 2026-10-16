@@ -48,9 +48,12 @@ function SheetContent({
   className,
   children,
   side = "right",
+  closeLabel = "Close",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
+  /** 닫기(X) 버튼의 읽어주는 이름. 화면에서 t("common.close")를 넘긴다 */
+  closeLabel?: string
 }) {
   return (
     <SheetPortal>
@@ -75,7 +78,7 @@ function SheetContent({
         {children}
         <SheetPrimitive.Close className="text-muted-foreground hover:bg-secondary hover:text-foreground absolute top-3 right-3 inline-flex size-[34px] items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none">
           <XIcon className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
