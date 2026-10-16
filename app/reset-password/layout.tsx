@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import '../globals.css';
+import { pretendard, themeColor } from '@/lib/fonts';
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#667eea',
+  themeColor,
 };
 
 export const metadata: Metadata = {
@@ -18,14 +19,8 @@ export default function ResetPasswordLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        />
-      </head>
-      <body className="font-inter antialiased">
+    <html lang="en" className={pretendard.variable} suppressHydrationWarning>
+      <body className="min-h-dvh antialiased">
         {children}
       </body>
     </html>
