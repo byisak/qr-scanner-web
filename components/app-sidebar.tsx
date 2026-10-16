@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ScanLine } from "lucide-react"
 import { useTranslations } from "next-intl"
+import Link from "next/link"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
@@ -24,7 +25,9 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onSessionChange?: () => void
 }
 
-export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
+export function AppSidebar({ currentSessionId, onSessionChange, ...props }: AppSidebarProps) {
+  // onSessionChange 는 아직 쓰지 않지만, DOM(Sidebar)으로 흘러가면 React 경고가 나므로 여기서 걸러낸다
+  void onSessionChange
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const t = useTranslations()
 
@@ -34,15 +37,15 @@ export function AppSidebar({ currentSessionId, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/dashboard">
-                <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <ScanLine className="size-4" />
+              <Link href="/dashboard">
+                <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-code">
+                  <ScanLine className="size-4" aria-hidden="true" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{t('sidebar.appTitle')}</span>
-                  <span className="truncate text-xs">{t('sidebar.appSubtitle')}</span>
+                <div className="grid flex-1 text-left leading-tight">
+                  <span className="truncate text-15 font-bold">{t('sidebar.appTitle')}</span>
+                  <span className="truncate text-13 text-muted-foreground">{t('sidebar.appSubtitle')}</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

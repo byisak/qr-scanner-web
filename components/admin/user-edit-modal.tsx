@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Loader2 } from "lucide-react"
 
 import {
   Dialog,
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field } from "@/components/form/field"
 import {
   Select,
   SelectContent,
@@ -23,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { toast } from "@/components/ui/sonner"
+import { notify } from "@/lib/notify"
 import type { AdminUser } from "@/types"
 
 interface UserEditModalProps {
@@ -77,22 +76,18 @@ export function UserEditModal({
         }),
       })
 
-      const data = await res.json()
-
       if (!res.ok) {
-        throw new Error(data.error?.message || 'Failed to update user')
+        // 서버 문구 대신 해요체 문구
+        notify.error(t('admin.users.updateErrorDesc'))
+        return
       }
 
-      toast.success(t('admin.users.updateSuccess'), {
-        description: t('admin.users.updateSuccessDesc'),
-      })
+      notify.success(t('admin.users.updateSuccessDesc'))
 
       onSuccess()
       onOpenChange(false)
-    } catch (err) {
-      toast.error(t('admin.users.updateError'), {
-        description: err instanceof Error ? err.message : t('admin.users.updateErrorDesc'),
-      })
+    } catch {
+      notify.error(t('admin.users.updateErrorDesc'))
     } finally {
       setIsLoading(false)
     }
@@ -102,8 +97,8 @@ export function UserEditModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[440px]" closeLabel={t('common.close')}>
+        <form onSubmit={handleSubmit} className="grid gap-5">
           <DialogHeader>
             <DialogTitle>{t('admin.users.editUser')}</DialogTitle>
             <DialogDescription>
@@ -111,61 +106,46 @@ export function UserEditModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">{t('admin.users.email')}</Label>
-              <Input
-                id="email"
-                value={user?.email || ''}
-                disabled
-                className="bg-muted"
-              />
-            </div>
+          <div className="grid gap-4">
+            <Field label={t('admin.users.email')} id="admin-edit-email">
+              <Input value={user?.email || ''} disabled readOnly className="bg-secondary" />
+            </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="name">{t('admin.users.name')}</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+            <Field label={t('admin.users.name')} id="admin-edit-name">
+              <Input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" />
+            </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="role">{t('admin.users.role')}</Label>
-              <Select
-                value={role}
-                onValueChange={setRole}
-                disabled={!canChangeRole}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('admin.users.selectRole')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">{t('admin.users.roleUser')}</SelectItem>
-                  <SelectItem value="admin">{t('admin.users.roleAdmin')}</SelectItem>
-                  {isSuperAdmin && (
-                    <SelectItem value="super_admin">{t('admin.users.roleSuperAdmin')}</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              {!canChangeRole && (
-                <p className="text-xs text-muted-foreground">
-                  {t('admin.users.roleChangeRestricted')}
-                </p>
+            <Field
+              label={t('admin.users.role')}
+              id="admin-edit-role"
+              help={!canChangeRole ? t('admin.users.roleChangeRestricted') : undefined}
+            >
+              {(p) => (
+                <Select value={role} onValueChange={setRole} disabled={!canChangeRole}>
+                  <SelectTrigger {...p}>
+                    <SelectValue placeholder={t('admin.users.selectRole')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">{t('admin.users.roleUser')}</SelectItem>
+                    <SelectItem value="admin">{t('admin.users.roleAdmin')}</SelectItem>
+                    {isSuperAdmin && (
+                      <SelectItem value="super_admin">{t('admin.users.roleSuperAdmin')}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               )}
-            </div>
+            </Field>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="isActive">{t('admin.users.activeStatus')}</Label>
-                <p className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 space-y-0.5">
+                <label htmlFor="admin-edit-active" className="text-15 font-bold">{t('admin.users.activeStatus')}</label>
+                <p id="admin-edit-active-desc" className="text-13 text-muted-foreground">
                   {t('admin.users.activeStatusDesc')}
                 </p>
               </div>
               <Switch
-                id="isActive"
+                id="admin-edit-active"
+                aria-describedby="admin-edit-active-desc"
                 checked={isActive}
                 onCheckedChange={setIsActive}
               />
@@ -182,8 +162,7 @@ export function UserEditModal({
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t('admin.users.save')}
+              {isLoading ? t('profile.saving') : t('admin.users.save')}
             </Button>
           </DialogFooter>
         </form>

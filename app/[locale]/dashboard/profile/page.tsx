@@ -8,25 +8,27 @@ import { ArrowLeft, User, Mail, Shield, Key } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Field } from "@/components/form/field"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import { toast } from "@/components/ui/sonner"
+import { notify } from "@/lib/notify"
 
 export default function ProfilePage() {
   const router = useRouter()
   const t = useTranslations()
-  const { user, accessToken, isAuthenticated, refreshUser } = useAuth()
+  const { user, accessToken, isAuthenticated, isLoading, refreshUser } = useAuth()
 
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
+    // 로그인 정보를 불러오는 중에는 기다린다 (주소로 바로 들어오면 /login 으로 튕겼다가 /dashboard 로 가던 문제)
+    if (isLoading) return
     if (!isAuthenticated) {
       router.push("/login")
       return
@@ -34,7 +36,7 @@ export default function ProfilePage() {
     if (user) {
       setName(user.name || "")
     }
-  }, [isAuthenticated, user, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   const getProviderLabel = (provider: string) => {
     switch (provider) {
@@ -66,15 +68,13 @@ export default function ProfilePage() {
       })
 
       if (res.ok) {
-        toast.success(t("profile.saveSuccess"))
+        notify.success(t("profile.saveSuccess"))
         refreshUser?.()
       } else {
-        const data = await res.json()
-        toast.error(data.error?.message || t("profile.saveError"))
+        notify.error(t("profile.saveError"))
       }
-    } catch (error) {
-      // console.error("Profile update error:", error)
-      toast.error(t("profile.saveError"))
+    } catch {
+      notify.error(t("profile.saveError"))
     } finally {
       setIsSaving(false)
     }
@@ -85,82 +85,85 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container max-w-2xl py-8">
+    <main id="main" className="page-narrow pb-16 pt-6 sm:pt-8">
       <Button
         variant="ghost"
         size="sm"
-        className="mb-6"
+        className="-ml-2.5 mb-4"
         onClick={() => router.push("/dashboard")}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft aria-hidden="true" />
         {t("profile.back")}
       </Button>
 
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
-          <p className="text-muted-foreground">{t("profile.subtitle")}</p>
+      <div className="grid gap-4">
+        <div className="enter pb-2" style={{ "--i": 0 } as React.CSSProperties}>
+          <h1 className="type-h1">{t("profile.title")}</h1>
+          <p className="mt-2 type-lead">{t("profile.subtitle")}</p>
         </div>
 
-        <Card>
+        <Card className="enter" style={{ "--i": 1 } as React.CSSProperties}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+            <h2 className="type-h3 flex items-center gap-2">
+              <User className="size-5" aria-hidden="true" />
               {t("profile.name")}
-            </CardTitle>
+            </h2>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t("profile.name")}</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("profile.namePlaceholder")}
-              />
-            </div>
-            <Button onClick={handleSave} disabled={isSaving || !name.trim()}>
-              {isSaving ? t("profile.saving") : t("profile.save")}
-            </Button>
+          <CardContent>
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSave()
+              }}
+            >
+              <Field label={t("profile.name")} id="name">
+                <Input
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </Field>
+              <Button type="submit" className="justify-self-start" disabled={isSaving || !name.trim()}>
+                {isSaving ? t("profile.saving") : t("profile.save")}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="enter" style={{ "--i": 2 } as React.CSSProperties}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
+            <h2 className="type-h3 flex items-center gap-2">
+              <Mail className="size-5" aria-hidden="true" />
               {t("profile.email")}
-            </CardTitle>
-            <CardDescription>{t("profile.emailDesc")}</CardDescription>
+            </h2>
           </CardHeader>
           <CardContent>
-            <Input value={user.email} disabled />
+            <Field label={t("profile.email")} id="email" help={t("profile.emailDesc")}>
+              <Input value={user.email} disabled readOnly className="break-all" />
+            </Field>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="enter" style={{ "--i": 3 } as React.CSSProperties}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
+            <h2 className="type-h3 flex items-center gap-2">
+              <Shield className="size-5" aria-hidden="true" />
               {t("profile.provider")}
-            </CardTitle>
+            </h2>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                {getProviderLabel(user.provider)}
-              </span>
-            </div>
+            <Badge variant="secondary">{getProviderLabel(user.provider)}</Badge>
           </CardContent>
         </Card>
 
         {user.provider === "email" && (
-          <Card>
+          <Card className="enter" style={{ "--i": 4 } as React.CSSProperties}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
+              <h2 className="type-h3 flex items-center gap-2">
+                <Key className="size-5" aria-hidden="true" />
                 {t("profile.changePassword")}
-              </CardTitle>
+              </h2>
               <CardDescription>{t("profile.changePasswordDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -174,6 +177,6 @@ export default function ProfilePage() {
           </Card>
         )}
       </div>
-    </div>
+    </main>
   )
 }

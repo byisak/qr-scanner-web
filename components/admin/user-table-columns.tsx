@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown, Shield, ShieldCheck, User, Mail, Check, X, Tv } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Shield, ShieldCheck, User, Mail, Check, Ban, Trash2, Tv } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -24,7 +24,7 @@ interface ColumnProps {
   onToggleActive: (user: AdminUser) => void
   onResetPassword: (user: AdminUser) => void
   onManageAdRecords: (user: AdminUser) => void
-  t: (key: string) => string
+  t: (key: string, values?: Record<string, string | number>) => string
   dateFormat: string
   timeFormat: string
   isSuperAdmin: boolean
@@ -65,44 +65,55 @@ const formatDateTime = (
   return `${dateStr} ${String(hours).padStart(2, '0')}:${minutes}`
 }
 
+// 역할: 아이콘 + 글자 (색만으로 구분하지 않음, 빨강은 쓰지 않음)
 const getRoleBadge = (role: string, t: (key: string) => string) => {
   switch (role) {
     case 'super_admin':
       return (
-        <Badge variant="destructive" className="gap-1 whitespace-nowrap">
-          <ShieldCheck className="h-3 w-3 flex-shrink-0" />
+        <Badge variant="default">
+          <ShieldCheck aria-hidden="true" />
           {t('admin.users.roleSuperAdmin')}
         </Badge>
       )
     case 'admin':
       return (
-        <Badge variant="default" className="gap-1 whitespace-nowrap">
-          <Shield className="h-3 w-3 flex-shrink-0" />
+        <Badge variant="outline">
+          <Shield aria-hidden="true" />
           {t('admin.users.roleAdmin')}
         </Badge>
       )
     default:
       return (
-        <Badge variant="secondary" className="gap-1 whitespace-nowrap">
-          <User className="h-3 w-3 flex-shrink-0" />
+        <Badge variant="secondary">
+          <User aria-hidden="true" />
           {t('admin.users.roleUser')}
         </Badge>
       )
   }
 }
 
-const getProviderBadge = (provider: string) => {
-  const colors: Record<string, string> = {
-    email: 'bg-gray-100 text-gray-800',
-    google: 'bg-red-100 text-red-800',
-    apple: 'bg-black text-white',
-    kakao: 'bg-yellow-100 text-yellow-800',
+// 로그인 방식: 브랜드 색 대신 같은 모양 + 이름
+const getProviderBadge = (provider: string, t: (key: string) => string) => {
+  const labels: Record<string, string> = {
+    email: t('profile.providerEmail'),
+    google: 'Google',
+    apple: 'Apple',
+    kakao: t('profile.providerKakao'),
   }
 
   return (
-    <Badge variant="outline" className={`${colors[provider] || ''} whitespace-nowrap`}>
-      {provider.charAt(0).toUpperCase() + provider.slice(1)}
+    <Badge variant="outline">
+      {labels[provider] ?? provider.charAt(0).toUpperCase() + provider.slice(1)}
     </Badge>
+  )
+}
+
+function SortHeader({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button variant="ghost" size="sm" className="-ml-2.5" onClick={onClick}>
+      {label}
+      <ArrowUpDown aria-hidden="true" />
+    </Button>
   )
 }
 
@@ -126,14 +137,14 @@ export function createUserColumns({
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t('table.selectAll')}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={`${t('table.selectRow')} ${row.original.name || row.original.email}`}
         />
       ),
       enableSorting: false,
@@ -142,27 +153,20 @@ export function createUserColumns({
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4"
-        >
-          {t('admin.users.name')}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <SortHeader label={t('admin.users.name')} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
       ),
       cell: ({ row }) => {
         const user = row.original
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user.profileImage || undefined} />
-              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <Avatar className="size-8">
+              <AvatarImage src={user.profileImage || undefined} alt="" />
+              <AvatarFallback>{(user.name || user.email).charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
-              <span className="font-medium">{user.name}</span>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Mail className="h-3 w-3" />
+            <div className="flex min-w-0 flex-col">
+              <span className="font-semibold">{user.name}</span>
+              <span className="flex items-center gap-1 text-13 text-muted-foreground">
+                <Mail className="size-3" aria-hidden="true" />
                 {user.email}
               </span>
             </div>
@@ -178,24 +182,30 @@ export function createUserColumns({
     {
       accessorKey: "provider",
       header: t('admin.users.provider'),
-      cell: ({ row }) => getProviderBadge(row.original.provider),
+      cell: ({ row }) => getProviderBadge(row.original.provider, t),
     },
     {
       accessorKey: "isActive",
       header: t('admin.users.status'),
       cell: ({ row }) => {
         const user = row.original
+        // 상태: 아이콘 + 글자. 삭제됨만 경고색
         if (user.deletedAt) {
-          return <Badge variant="destructive" className="whitespace-nowrap">{t('admin.users.deleted')}</Badge>
+          return (
+            <Badge variant="destructive">
+              <Trash2 aria-hidden="true" />
+              {t('admin.users.deleted')}
+            </Badge>
+          )
         }
         return user.isActive ? (
-          <Badge variant="outline" className="text-green-600 border-green-600 whitespace-nowrap">
-            <Check className="h-3 w-3 mr-1 flex-shrink-0" />
+          <Badge variant="outline">
+            <Check aria-hidden="true" />
             {t('admin.users.active')}
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-red-600 border-red-600 whitespace-nowrap">
-            <X className="h-3 w-3 mr-1 flex-shrink-0" />
+          <Badge variant="secondary" className="text-muted-foreground">
+            <Ban aria-hidden="true" />
             {t('admin.users.inactive')}
           </Badge>
         )
@@ -204,45 +214,24 @@ export function createUserColumns({
     {
       accessorKey: "sessionCount",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4"
-        >
-          {t('admin.users.sessions')}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <SortHeader label={t('admin.users.sessions')} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
       ),
-      cell: ({ row }) => <span className="text-center">{row.original.sessionCount}</span>,
+      cell: ({ row }) => <span className="tabular">{row.original.sessionCount.toLocaleString()}</span>,
     },
     {
       accessorKey: "scanCount",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4"
-        >
-          {t('admin.users.scans')}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <SortHeader label={t('admin.users.scans')} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
       ),
-      cell: ({ row }) => <span className="text-center">{row.original.scanCount}</span>,
+      cell: ({ row }) => <span className="tabular">{row.original.scanCount.toLocaleString()}</span>,
     },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4"
-        >
-          {t('admin.users.createdAt')}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <SortHeader label={t('admin.users.createdAt')} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
       ),
       cell: ({ row }) => (
-        <span className="text-sm">
+        <span className="tabular">
           {formatDateTime(row.original.createdAt, dateFormat, timeFormat)}
         </span>
       ),
@@ -251,7 +240,7 @@ export function createUserColumns({
       accessorKey: "lastLoginAt",
       header: t('admin.users.lastLogin'),
       cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="tabular text-muted-foreground">
           {row.original.lastLoginAt
             ? formatDateTime(row.original.lastLoginAt, dateFormat, timeFormat)
             : '-'}
@@ -267,11 +256,11 @@ export function createUserColumns({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1 text-sm font-medium hover:bg-primary/10"
             onClick={() => onManageAdRecords(user)}
+            aria-label={t('admin.users.adRecordsLabel', { name: user.name || user.email, watched: user.adWatchedCount, unlocked: user.adUnlockedCount })}
           >
-            <Tv className="h-3 w-3" />
-            <span>{user.adWatchedCount}/{user.adUnlockedCount}</span>
+            <Tv aria-hidden="true" />
+            <span className="tabular">{user.adWatchedCount}/{user.adUnlockedCount}</span>
           </Button>
         )
       },
@@ -287,9 +276,8 @@ export function createUserColumns({
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon-sm" aria-label={`${user.name || user.email} ${t('admin.users.actions')}`}>
+                <MoreHorizontal aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

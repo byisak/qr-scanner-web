@@ -7,9 +7,11 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "読み込み中...",
+    "loading": "読み込み中",
     "cancel": "キャンセル",
-    "confirm": "確認"
+    "confirm": "確認",
+    "typeToConfirm": "確認のため「{value}」と入力してください",
+    "close": "閉じる"
   },
   "dialog": {
     "deleteSession": "セッションを削除",
@@ -23,15 +25,17 @@
     "faq": "よくある質問",
     "openWebApp": "ウェブアプリを開く",
     "login": "ログイン",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "menu": "メニュー",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
   },
   "home": {
-    "heroTitle1": "最速・最高精度の",
+    "heroTitle1": "大量スキャンからPC転送まで",
     "heroTitle2": "QRコード・バーコードスキャナー",
     "heroDescription": "数千のバーコードを一度にスキャンし、リアルタイムでPCに転送。在庫管理、物流、倉庫業務に最適化されたプロフェッショナルスキャナー。",
     "downloadAppStore": "App Store でダウンロード",
     "downloadGooglePlay": "Google Play でダウンロード",
-    "rating": "4.8点 · 1,250+ レビュー",
     "whyChoose": "なぜ QR Scanner Pro を選ぶのか？",
     "whoUses": "こんな方におすすめ",
     "faqTitle": "よくある質問",
@@ -43,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "超高速一括スキャン",
-      "description": "連続スキャンモードで数千のバーコードを素早くスキャン。棚卸し時間を90%削減。"
+      "description": "連続スキャンモードで数千のバーコードを素早くスキャン。"
     },
     "realtime": {
       "title": "リアルタイムPC転送",
@@ -58,8 +62,8 @@
       "description": "インターネットなしでもスキャン可能。倉庫、地下など電波の届きにくい場所でもOK。"
     },
     "allBarcodes": {
-      "title": "全バーコード対応",
-      "description": "QR、EAN-13、Code128、UPC-A、DataMatrixなど30種類以上のバーコード形式を認識。"
+      "title": "主要13種類のバーコードに対応",
+      "description": "QR、EAN-13、Code128、UPC-A、DataMatrixなど13種類のバーコード形式を認識。"
     },
     "validation": {
       "title": "バーコード検証",
@@ -87,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "QR Scanner Pro は無料ですか？",
-      "answer": "はい、QR Scanner Pro は無料でダウンロードして使用できます。基本的なスキャン機能はすべて無料で、プレミアム機能を利用したい場合はPro版にアップグレードできます。"
+      "answer": "はい、QR Scanner Pro は無料でダウンロードして使用できます。スキャン、履歴、コード作成、PCへのリアルタイム送信まですべて無料です。"
     },
     "q2": {
       "question": "在庫管理に QR Scanner Pro をどのように活用できますか？",
@@ -103,7 +107,7 @@
     },
     "q5": {
       "question": "どのバーコード形式に対応していますか？",
-      "answer": "QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417、Aztecなど30種類以上のバーコード形式に対応しています。"
+      "answer": "QR Code、EAN-13、EAN-8、UPC-A、UPC-E、Code128、Code39、Code93、ITF、Codabar、DataMatrix、PDF417、Aztecの13種類のバーコード形式に対応しています。"
     }
   },
   "footer": {
@@ -114,7 +118,7 @@
     "webApp": "ウェブアプリ",
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
-    "copyright": "© 2024 ScanView. All rights reserved."
+    "copyright": "© {year} ScanView. All rights reserved."
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -130,7 +134,12 @@
     "visitedAt": "訪問日時",
     "loginRequired": "ログインが必要です",
     "loginRequiredDesc": "セッションの管理とスキャンデータの保存にはログインしてください",
-    "confirmDelete": "このセッションを削除しますか？"
+    "confirmDelete": "このセッションを削除しますか？",
+    "emptyTitle": "まだセッションがありません",
+    "emptyDesc": "アプリで作成したセッションがここに表示されます。",
+    "scans": "スキャン {count}件",
+    "deleteSessionLabel": "{name} を削除",
+    "deleteFailed": "セッションを削除できませんでした。しばらくしてからもう一度お試しください。"
   },
   "session": {
     "title": "セッション",
@@ -142,7 +151,7 @@
     "items": "件",
     "exportCsv": "CSV エクスポート",
     "exportExcel": "Excel エクスポート",
-    "exporting": "エクスポート中...",
+    "exporting": "エクスポート中",
     "exportSuccess": "エクスポートが完了しました",
     "exportFailed": "エクスポート失敗",
     "exportError": "データのエクスポートに失敗しました。",
@@ -150,7 +159,7 @@
     "deleteError": "スキャンデータの削除中にエラーが発生しました。",
     "scanDeleted": "スキャンが削除されました",
     "scansDeleted": "{count}件のスキャンが削除されました",
-    "newScanReceived": "新しいスキャンを受信しました！",
+    "newScanReceived": "新しいスキャンを受信しました。",
     "newScansCount": "{count}件の新しいスキャンを受信",
     "copied": "セッションIDをコピーしました",
     "copyFailed": "コピーに失敗しました",
@@ -170,7 +179,13 @@
     "passwordRequired": "パスワードを入力してください",
     "wrongPassword": "パスワードが正しくありません",
     "verifyError": "パスワードの確認に失敗しました",
-    "accessGranted": "アクセスが許可されました"
+    "accessGranted": "アクセスが許可されました",
+    "connectionError": "リアルタイム接続に問題があります。ページを再読み込みしてください。",
+    "copySessionId": "セッションIDをコピー",
+    "collapseInfo": "セッション情報を閉じる",
+    "expandInfo": "セッション情報を開く",
+    "qrLabel": "セッション {id} のQRコード",
+    "unlocking": "確認中"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -179,7 +194,7 @@
     "dashboard": "ダッシュボード",
     "addSession": "セッション追加",
     "newSession": "新規セッション",
-    "sessionIdPlaceholder": "セッションID...",
+    "sessionIdPlaceholder": "セッションID",
     "sessionList": "セッション",
     "noSessions": "セッションを追加してください",
     "deletedSessions": "削除済み",
@@ -189,7 +204,7 @@
     "login": "ログイン",
     "restore": "復元",
     "permanentDelete": "削除",
-    "moreItems": "件追加...",
+    "moreItems": "件追加",
     "deleteFailed": "削除失敗",
     "deleteError": "セッションの削除に失敗しました。",
     "viewSession": "セッションを表示",
@@ -205,7 +220,8 @@
     "rename": "名前を変更",
     "pin": "ピン留め",
     "unpin": "ピン留め解除",
-    "sessionNamePlaceholder": "セッション名を入力..."
+    "sessionNamePlaceholder": "セッション名を入力",
+    "renameLabel": "セッション名"
   },
   "settings": {
     "title": "設定",
@@ -235,12 +251,21 @@
     "noData": "スキャンデータがありません",
     "noDataDesc": "モバイルアプリからのスキャンデータがここにリアルタイムで表示されます",
     "selected": "件選択中",
-    "searchPlaceholder": "QRコード検索...",
+    "searchPlaceholder": "QRコード検索",
     "totalScans": "総スキャン数",
     "showingOf": "{total}件中 {showing}件表示",
     "page": "ページ",
     "previous": "前へ",
-    "next": "次へ"
+    "next": "次へ",
+    "deleteScanTitle": "スキャンを削除",
+    "deleteScanDesc": "このスキャンを削除しますか？",
+    "deleteScanLabel": "スキャンを削除",
+    "selectAll": "このページをすべて選択",
+    "selectRow": "行を選択",
+    "searchLabel": "QRコード検索",
+    "noResults": "一致するスキャンがありません",
+    "noResultsDesc": "検索語を変えるか、消してみてください。",
+    "clearSearch": "検索をクリア"
   },
   "auth": {
     "login": "ログイン",
@@ -256,14 +281,25 @@
     "signIn": "ログイン",
     "loginDescription": "QR Scanner Webにログイン",
     "loginFailed": "ログインに失敗しました",
-    "loggingIn": "ログイン中...",
+    "loggingIn": "ログイン中",
     "or": "または",
     "loginWithGoogleComingSoon": "Google でログイン (準備中)",
     "loginWithAppleComingSoon": "Apple でログイン (準備中)",
     "googleLoginFailed": "Google ログインに失敗しました",
     "appleLoginFailed": "Apple ログインに失敗しました",
     "appleNotAvailable": "Apple ログインは利用できません",
-    "backToHome": "ホームに戻る"
+    "backToHome": "ホームに戻る",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
+    "registerDescription": "QR Scanner Web のアカウントを作成します",
+    "registering": "登録中",
+    "confirmPassword": "パスワード確認",
+    "passwordHint": "8文字以上",
+    "passwordMismatch": "パスワードが一致しません。",
+    "passwordTooShort": "パスワードは8文字以上にしてください。",
+    "registerFailed": "登録できませんでした。しばらくしてからもう一度お試しください。",
+    "emailExists": "このメールアドレスは既に登録されています。",
+    "invalidEmail": "メールアドレスの形式を確認してください。",
+    "nameRequired": "名前を入力してください。"
   },
   "profile": {
     "title": "プロフィール設定",
@@ -278,7 +314,7 @@
     "providerApple": "Apple",
     "providerKakao": "Kakao",
     "save": "変更を保存",
-    "saving": "保存中...",
+    "saving": "保存中",
     "saveSuccess": "プロフィールが更新されました",
     "saveError": "プロフィールの更新に失敗しました",
     "changePassword": "パスワード変更",
@@ -294,7 +330,12 @@
     "passwordChangeSuccess": "パスワードが変更されました。再度ログインしてください。",
     "passwordChangeError": "パスワードの変更に失敗しました",
     "socialAccountNote": "ソーシャルログインアカウントはパスワードを変更できません",
-    "back": "戻る"
+    "back": "戻る",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを隠す",
+    "wrongCurrentPassword": "現在のパスワードが正しくありません。",
+    "samePassword": "現在とは異なるパスワードを設定してください。",
+    "passwordRequired": "パスワードを入力してください。"
   },
   "trash": {
     "title": "削除済みセッション",
@@ -315,7 +356,10 @@
     "confirmDeleteExpired": "期限切れのセッションをすべて完全削除しますか？",
     "expiredDeleted": "{count} 件の期限切れセッションが削除されました。",
     "cleanupFailed": "整理失敗",
-    "cleanupError": "期限切れセッションの整理に失敗しました。"
+    "cleanupError": "期限切れセッションの整理に失敗しました。",
+    "restored": "セッションを復元しました",
+    "permanentlyDeleted": "セッションを完全に削除しました",
+    "typeExpiredCount": "確認のため、期限切れのセッション数（{count}）を入力してください"
   },
   "systemSettings": {
     "title": "システム設定",
@@ -345,6 +389,61 @@
     "fontMedium": "中",
     "fontLarge": "大",
     "resetToDefault": "デフォルトに戻す",
-    "applySettings": "設定を適用"
+    "applySettings": "設定を適用",
+    "resetShort": "リセット"
+  },
+  "adRecords": {
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
+  },
+  "admin": {
+    "dashboard": {
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
+    },
+    "users": {
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+    },
+    "legal": {
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
+    }
   }
 }

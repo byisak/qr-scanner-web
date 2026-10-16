@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireSessionOwner } from '@/lib/session-access';
 import type { PoolClient } from 'pg';
 
 // PUT - 세션 이름 변경
@@ -19,14 +20,11 @@ export async function PUT(
 
     client = await getConnection();
 
-    // 세션 존재 확인
-    const checkResult = await client.query(
-      `SELECT session_id FROM sessions WHERE session_id = $1`,
-      [sessionId]
-    );
-
-    if (checkResult.rows.length === 0) {
-      return NextResponse.json({ error: '세션을 찾을 수 없습니다.' }, { status: 404 });
+    // 보안: 이전에는 인증 없이 누구나 세션 이름을 바꿀 수 있었다.
+    // 로그인 + 세션 소유자(또는 관리자)만 변경 가능.
+    const access = await requireSessionOwner(client, request, sessionId, '세션 이름을 변경하려면');
+    if (!access.ok) {
+      return access.response;
     }
 
     // 세션 이름 업데이트

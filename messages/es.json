@@ -7,9 +7,11 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "Cargando...",
+    "loading": "Cargando",
     "cancel": "Cancelar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "typeToConfirm": "Escribe {value} para confirmar",
+    "close": "Cerrar"
   },
   "dialog": {
     "deleteSession": "Eliminar Sesión",
@@ -23,15 +25,17 @@
     "faq": "FAQ",
     "openWebApp": "Abrir App Web",
     "login": "Iniciar Sesión",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "menu": "Menú",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "home": {
-    "heroTitle1": "El Más Rápido y Preciso",
+    "heroTitle1": "Del escaneo masivo a tu PC",
     "heroTitle2": "Escáner de Códigos QR y Barras",
     "heroDescription": "Escanea miles de códigos de barras a la vez y transmite a PC en tiempo real. Escáner profesional optimizado para gestión de inventario, logística y operaciones de almacén.",
     "downloadAppStore": "Descargar en App Store",
     "downloadGooglePlay": "Descargar en Google Play",
-    "rating": "4.8 estrellas · 1,250+ reseñas",
     "whyChoose": "¿Por qué QR Scanner Pro?",
     "whoUses": "Quién lo Usa",
     "faqTitle": "Preguntas Frecuentes",
@@ -43,7 +47,7 @@
   "features": {
     "bulkScan": {
       "title": "Escaneo Masivo Ultrarrápido",
-      "description": "Escanea miles de códigos de barras rápidamente en modo continuo. Reduce el tiempo de inventario en un 90%."
+      "description": "Escanea miles de códigos de barras rápidamente en modo continuo."
     },
     "realtime": {
       "title": "Transferencia PC en Tiempo Real",
@@ -58,8 +62,8 @@
       "description": "Escanea sin internet. Funciona en almacenes, sótanos y áreas con mala conectividad."
     },
     "allBarcodes": {
-      "title": "Soporte para Todos los Códigos",
-      "description": "Reconoce más de 30 formatos de código de barras incluyendo QR, EAN-13, Code128, UPC-A, DataMatrix."
+      "title": "13 formatos principales",
+      "description": "Reconoce 13 formatos de código de barras, incluidos QR, EAN-13, Code128, UPC-A y DataMatrix."
     },
     "validation": {
       "title": "Validación de Códigos",
@@ -87,7 +91,7 @@
   "faq": {
     "q1": {
       "question": "¿Es gratis QR Scanner Pro?",
-      "answer": "Sí, QR Scanner Pro es gratis para descargar y usar. Todas las funciones básicas de escaneo son gratuitas, y puedes actualizar a la versión Pro para funciones premium."
+      "answer": "Sí. QR Scanner Pro es gratis para descargar y usar, incluido el escaneo, el historial, la creación de códigos y el envío en tiempo real al PC."
     },
     "q2": {
       "question": "¿Cómo puedo usar QR Scanner Pro para gestión de inventario?",
@@ -103,7 +107,7 @@
     },
     "q5": {
       "question": "¿Qué formatos de código de barras son compatibles?",
-      "answer": "Soportamos más de 30 formatos de código de barras incluyendo QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417 y Aztec."
+      "answer": "Soportamos 13 formatos de código de barras: QR Code, EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39, Code93, ITF, Codabar, DataMatrix, PDF417 y Aztec."
     }
   },
   "footer": {
@@ -114,7 +118,7 @@
     "webApp": "App Web",
     "privacy": "Política de Privacidad",
     "terms": "Términos de Servicio",
-    "copyright": "© 2024 ScanView. Todos los derechos reservados."
+    "copyright": "© {year} ScanView. Todos los derechos reservados."
   },
   "dashboard": {
     "title": "Panel",
@@ -130,7 +134,12 @@
     "visitedAt": "Visitado",
     "loginRequired": "Inicio de Sesión Requerido",
     "loginRequiredDesc": "Inicia sesión para gestionar sesiones y guardar datos de escaneo",
-    "confirmDelete": "¿Estás seguro de que quieres eliminar esta sesión?"
+    "confirmDelete": "¿Estás seguro de que quieres eliminar esta sesión?",
+    "emptyTitle": "Aún no hay sesiones",
+    "emptyDesc": "Las sesiones que crees en la app aparecerán aquí.",
+    "scans": "{count, plural, one {# escaneo} other {# escaneos}}",
+    "deleteSessionLabel": "Eliminar {name}",
+    "deleteFailed": "No se pudo eliminar la sesión. Inténtalo de nuevo en un momento."
   },
   "session": {
     "title": "Sesión",
@@ -142,7 +151,7 @@
     "items": "elementos",
     "exportCsv": "Exportar CSV",
     "exportExcel": "Exportar Excel",
-    "exporting": "Exportando...",
+    "exporting": "Exportando",
     "exportSuccess": "Exportación completada",
     "exportFailed": "Exportación fallida",
     "exportError": "Error al exportar datos.",
@@ -150,7 +159,7 @@
     "deleteError": "Error al eliminar datos de escaneo.",
     "scanDeleted": "Escaneo eliminado",
     "scansDeleted": "{count} escaneos eliminados",
-    "newScanReceived": "¡Nuevo escaneo recibido!",
+    "newScanReceived": "Nuevo escaneo recibido",
     "newScansCount": "{count} nuevos escaneos recibidos",
     "copied": "ID de sesión copiado",
     "copyFailed": "Error al copiar",
@@ -170,7 +179,13 @@
     "passwordRequired": "Por favor ingresa una contraseña",
     "wrongPassword": "Contraseña incorrecta",
     "verifyError": "Error al verificar la contraseña",
-    "accessGranted": "Acceso concedido"
+    "accessGranted": "Acceso concedido",
+    "connectionError": "Hay un problema con la conexión en tiempo real. Prueba a recargar la página.",
+    "copySessionId": "Copiar ID de sesión",
+    "collapseInfo": "Ocultar información de la sesión",
+    "expandInfo": "Mostrar información de la sesión",
+    "qrLabel": "Código QR de la sesión {id}",
+    "unlocking": "Comprobando"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -179,7 +194,7 @@
     "dashboard": "Panel",
     "addSession": "Agregar Sesión",
     "newSession": "Nueva Sesión",
-    "sessionIdPlaceholder": "ID de Sesión...",
+    "sessionIdPlaceholder": "ID de Sesión",
     "sessionList": "Sesiones",
     "noSessions": "Agrega una sesión",
     "deletedSessions": "Eliminadas",
@@ -189,7 +204,7 @@
     "login": "Iniciar Sesión",
     "restore": "Restaurar",
     "permanentDelete": "Eliminar",
-    "moreItems": "más...",
+    "moreItems": "más",
     "deleteFailed": "Eliminación fallida",
     "deleteError": "Error al eliminar sesión.",
     "viewSession": "Ver Sesión",
@@ -205,7 +220,8 @@
     "rename": "Renombrar",
     "pin": "Fijar",
     "unpin": "Desfijar",
-    "sessionNamePlaceholder": "Ingrese el nombre de sesión..."
+    "sessionNamePlaceholder": "Ingrese el nombre de sesión",
+    "renameLabel": "Nombre de la sesión"
   },
   "settings": {
     "title": "Configuración",
@@ -235,12 +251,21 @@
     "noData": "Aún no hay datos de escaneo",
     "noDataDesc": "Los datos escaneados desde tu app móvil aparecerán aquí en tiempo real",
     "selected": "seleccionados",
-    "searchPlaceholder": "Buscar códigos QR...",
+    "searchPlaceholder": "Buscar códigos QR",
     "totalScans": "Total de escaneos",
     "showingOf": "Mostrando {showing} de {total}",
     "page": "Página",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "deleteScanTitle": "Eliminar escaneo",
+    "deleteScanDesc": "¿Eliminar este escaneo?",
+    "deleteScanLabel": "Eliminar escaneo",
+    "selectAll": "Seleccionar todo en esta página",
+    "selectRow": "Seleccionar fila",
+    "searchLabel": "Buscar códigos QR",
+    "noResults": "No hay escaneos que coincidan",
+    "noResultsDesc": "Prueba otra búsqueda o bórrala.",
+    "clearSearch": "Borrar búsqueda"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -256,14 +281,25 @@
     "signIn": "Iniciar Sesión",
     "loginDescription": "Inicia sesión en QR Scanner Web",
     "loginFailed": "Error al iniciar sesión",
-    "loggingIn": "Iniciando sesión...",
+    "loggingIn": "Iniciando sesión",
     "or": "o",
     "loginWithGoogleComingSoon": "Iniciar Sesión con Google (Próximamente)",
     "loginWithAppleComingSoon": "Iniciar Sesión con Apple (Próximamente)",
     "googleLoginFailed": "Error al iniciar sesión con Google",
     "appleLoginFailed": "Error al iniciar sesión con Apple",
     "appleNotAvailable": "Inicio de sesión con Apple no disponible",
-    "backToHome": "Volver al Inicio"
+    "backToHome": "Volver al Inicio",
+    "invalidCredentials": "El correo o la contraseña no son correctos.",
+    "registerDescription": "Crea tu cuenta de QR Scanner Web",
+    "registering": "Registrando",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordHint": "Al menos 8 caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+    "registerFailed": "No se pudo completar el registro. Inténtalo de nuevo en un momento.",
+    "emailExists": "Este correo ya está registrado.",
+    "invalidEmail": "Revisa el formato del correo.",
+    "nameRequired": "Introduce tu nombre."
   },
   "profile": {
     "title": "Configuración de Perfil",
@@ -278,7 +314,7 @@
     "providerApple": "Apple",
     "providerKakao": "Kakao",
     "save": "Guardar Cambios",
-    "saving": "Guardando...",
+    "saving": "Guardando",
     "saveSuccess": "Perfil actualizado correctamente",
     "saveError": "Error al actualizar el perfil",
     "changePassword": "Cambiar Contraseña",
@@ -294,7 +330,12 @@
     "passwordChangeSuccess": "Contraseña cambiada correctamente. Por favor, inicia sesión de nuevo.",
     "passwordChangeError": "Error al cambiar la contraseña",
     "socialAccountNote": "Las cuentas de inicio de sesión social no pueden cambiar la contraseña",
-    "back": "Volver"
+    "back": "Volver",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "wrongCurrentPassword": "La contraseña actual no es correcta.",
+    "samePassword": "Elige una contraseña distinta de la actual.",
+    "passwordRequired": "Introduce una contraseña."
   },
   "trash": {
     "title": "Sesiones Eliminadas",
@@ -315,7 +356,10 @@
     "confirmDeleteExpired": "¿Estás seguro de que quieres eliminar permanentemente todas las sesiones expiradas?",
     "expiredDeleted": "{count} sesión(es) expirada(s) eliminada(s).",
     "cleanupFailed": "Limpieza fallida",
-    "cleanupError": "Error al limpiar sesiones expiradas."
+    "cleanupError": "Error al limpiar sesiones expiradas.",
+    "restored": "Sesión restaurada",
+    "permanentlyDeleted": "Sesión eliminada permanentemente",
+    "typeExpiredCount": "Escribe el número de sesiones caducadas ({count}) para confirmar"
   },
   "systemSettings": {
     "title": "Configuración del Sistema",
@@ -345,6 +389,61 @@
     "fontMedium": "Mediano",
     "fontLarge": "Grande",
     "resetToDefault": "Restablecer Valores",
-    "applySettings": "Aplicar Configuración"
+    "applySettings": "Aplicar Configuración",
+    "resetShort": "Restablecer"
+  },
+  "adRecords": {
+    "required": "needs {count}",
+    "decrease": "Decrease {name}",
+    "increase": "Increase {name}",
+    "bannerOn": "Shown",
+    "bannerOff": "Hidden"
+  },
+  "admin": {
+    "dashboard": {
+      "periodLabel": "Period",
+      "loadError": "Couldn't load the stats. Please try again in a moment"
+    },
+    "users": {
+      "searchLabel": "Search users",
+      "filters": "Filters",
+      "refresh": "Reload",
+      "noUsersDesc": "Try a different search or filter",
+      "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
+      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+    },
+    "legal": {
+      "loadError": "Couldn't load the documents. Please try again in a moment",
+      "language": "Document language"
+    },
+    "editor": {
+      "toolbar": "Formatting",
+      "contentLabel": "Document content",
+      "placeholder": "Write the content",
+      "undo": "Undo",
+      "redo": "Redo",
+      "font": "Font",
+      "fontDefault": "Default font",
+      "size": "Font size",
+      "sizeDefault": "Default size",
+      "lineHeight": "Line height",
+      "lineHeightDefault": "Default",
+      "heading": "Heading {level}",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "hr": "Divider",
+      "link": "Link",
+      "linkPrompt": "Enter the link URL"
+    }
   }
 }

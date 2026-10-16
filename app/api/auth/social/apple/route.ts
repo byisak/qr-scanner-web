@@ -10,28 +10,42 @@ import {
   AuthErrorCodes,
   createAuthErrorResponse,
 } from '@/lib/auth';
+import { verifyAppleIdToken } from '@/lib/social-verify';
 import type { User } from '@/types';
+
+interface AppleNameParts {
+  firstName?: string;
+  lastName?: string;
+  givenName?: string | null;   // expo-apple-authentication fullName 형식
+  familyName?: string | null;
+}
 
 interface AppleLoginRequest {
   idToken: string;
+  // 웹: { name: { firstName, lastName } | string, email }
   user?: {
-    name?: {
-      firstName?: string;
-      lastName?: string;
-    };
+    name?: AppleNameParts | string;
     email?: string;
+  };
+  // 모바일 앱: { id, email, fullName: { givenName, familyName } }
+  appleUser?: {
+    fullName?: AppleNameParts | null;
+    email?: string | null;
   };
   deviceId?: string;  // 다중 기기 지원: 'web' | 앱 기기 ID
 }
 
-interface AppleJWTPayload {
-  iss: string;
-  aud: string;
-  exp: number;
-  iat: number;
-  sub: string;
-  email?: string;
-  email_verified?: boolean;
+/**
+ * 클라이언트가 보낸 이름 정보에서 표시 이름 구성
+ * (Apple은 첫 로그인 시에만 이름을 주며, 이름은 토큰에 포함되지 않는다)
+ */
+function buildAppleDisplayName(body: AppleLoginRequest): string | null {
+  const raw = body.user?.name ?? body.appleUser?.fullName ?? null;
+  if (!raw) return null;
+  if (typeof raw === 'string') return raw.trim() || null;
+  const first = raw.firstName || raw.givenName || '';
+  const last = raw.lastName || raw.familyName || '';
+  return `${first} ${last}`.trim() || null;
 }
 
 interface UserRow {
@@ -45,34 +59,12 @@ interface UserRow {
   created_at: Date;
 }
 
-/**
- * Apple ID 토큰 디코딩 (단순 Base64 디코딩)
- * 주의: 실제 프로덕션에서는 Apple의 공개 키로 서명 검증 필요
- */
-function decodeAppleIdToken(idToken: string): AppleJWTPayload | null {
-  try {
-    const parts = idToken.split('.');
-    if (parts.length !== 3) return null;
-
-    const payload = parts[1];
-    let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) {
-      base64 += '=';
-    }
-
-    const decoded = Buffer.from(base64, 'base64').toString('utf-8');
-    return JSON.parse(decoded) as AppleJWTPayload;
-  } catch {
-    return null;
-  }
-}
-
 export async function POST(request: NextRequest) {
   let client: PoolClient | null = null;
 
   try {
     const body = (await request.json()) as AppleLoginRequest;
-    const { idToken, user: appleUser, deviceId = 'web' } = body;
+    const { idToken, deviceId = 'web' } = body;
 
     if (!idToken) {
       return NextResponse.json(
@@ -84,10 +76,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ID 토큰 디코딩
-    const decoded = decodeAppleIdToken(idToken);
-
-    if (!decoded) {
+    // 보안: Apple 공개키(JWKS)로 서명을 검증하고 iss/aud(번들 ID)/exp를 확인한다.
+    // 검증되지 않은 클레임(sub, email)은 절대 신뢰하지 않는다.
+    let verified;
+    try {
+      verified = await verifyAppleIdToken(idToken);
+    } catch {
       return NextResponse.json(
         createAuthErrorResponse(
           AuthErrorCodes.PROVIDER_ERROR,
@@ -97,29 +91,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 토큰 만료 확인
-    const now = Math.floor(Date.now() / 1000);
-    if (decoded.exp < now) {
-      return NextResponse.json(
-        createAuthErrorResponse(
-          AuthErrorCodes.TOKEN_EXPIRED,
-          '애플 ID 토큰이 만료되었습니다.'
-        ),
-        { status: 401 }
-      );
-    }
+    const providerId = verified.sub;
+    // 이메일은 서명 검증된 토큰의 값만 사용 (클라이언트가 보낸 email은 위조 가능하므로 사용하지 않음)
+    const email = verified.email || `apple_${providerId}@privaterelay.appleid.com`;
 
-    const providerId = decoded.sub;
-    // Apple은 첫 로그인 시에만 이메일과 이름을 제공
-    const email = decoded.email || appleUser?.email || `apple_${providerId}@privaterelay.appleid.com`;
-
-    // 이름 구성 (첫 로그인 시에만 제공됨)
-    let name = 'Apple User';
-    if (appleUser?.name) {
-      const firstName = appleUser.name.firstName || '';
-      const lastName = appleUser.name.lastName || '';
-      name = `${firstName} ${lastName}`.trim() || 'Apple User';
-    }
+    // 이름 구성 (첫 로그인 시에만 클라이언트가 제공)
+    const providedName = buildAppleDisplayName(body);
+    const name = providedName || 'Apple User';
 
     client = await getConnection();
 
@@ -180,7 +158,7 @@ export async function POST(request: NextRequest) {
 
       // 이름이 제공된 경우 이름도 업데이트 (Apple은 첫 로그인 시에만 이름 제공)
       // 마지막 로그인 시간은 항상 업데이트
-      if (appleUser?.name) {
+      if (providedName) {
         await client.query(
           `UPDATE users SET name = $1, last_login_at = $2, updated_at = $2
            WHERE id = $3`,

@@ -1,14 +1,16 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+// 큰 카드: 반경 22, 얇은 테두리, 그림자 하나(shadow-soft)
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-slot="card"
     className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
+      "rounded-card border bg-card text-card-foreground shadow-soft",
       className
     )}
     {...props}
@@ -22,7 +24,8 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    data-slot="card-header"
+    className={cn("flex flex-col gap-1.5 p-5 sm:p-6", className)}
     {...props}
   />
 ))
@@ -34,7 +37,8 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
+    data-slot="card-title"
+    className={cn("type-h3", className)}
     {...props}
   />
 ))
@@ -46,7 +50,8 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    data-slot="card-description"
+    className={cn("text-15 text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -56,7 +61,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} data-slot="card-content" className={cn("p-5 pt-0 sm:p-6 sm:pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -66,7 +71,8 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    data-slot="card-footer"
+    className={cn("flex items-center p-5 pt-0 sm:p-6 sm:pt-0", className)}
     {...props}
   />
 ))

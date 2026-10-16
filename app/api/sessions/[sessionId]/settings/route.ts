@@ -1,7 +1,16 @@
 // app/api/sessions/[sessionId]/settings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { getUserFromRequest, hashPassword, verifyPassword } from '@/lib/auth';
+import { hashPassword, verifyPassword, generateSessionAccessToken, verifySessionAccessToken } from '@/lib/auth';
+import { ensureRealtimeKey } from '@/lib/session-service';
+import {
+  getRequestUser,
+  isAdminUser,
+  requireSessionOwner,
+  isPasswordAttemptLimited,
+  recordPasswordFailure,
+  clearPasswordFailures,
+} from '@/lib/session-access';
 import type { PoolClient } from 'pg';
 
 interface SessionSettings {
@@ -14,6 +23,7 @@ interface SessionSettings {
   expires_at: string | null;
   created_at: string;
   updated_at: string;
+  realtime_key: string | null;
 }
 
 // GET - 세션 설정 조회
@@ -40,7 +50,7 @@ export async function GET(
       `SELECT session_id,
               CASE WHEN password_hash IS NOT NULL THEN true ELSE false END as has_password,
               is_public, access_code, max_participants, allow_anonymous,
-              expires_at, created_at, updated_at
+              expires_at, created_at, updated_at, realtime_key
        FROM session_settings
        WHERE session_id = $1`,
       [sessionId]
@@ -61,6 +71,34 @@ export async function GET(
     }
 
     const settings = result.rows[0];
+
+    // 보안: 접근 코드는 소유자/관리자에게만 노출 (공개 열람 페이지에는 공개 여부/비밀번호 유무만 필요)
+    let canSeeSecrets = false;
+    const requestUser = getRequestUser(request);
+    if (requestUser) {
+      const ownerResult = await client.query(
+        `SELECT user_id FROM sessions WHERE session_id = $1`,
+        [sessionId]
+      );
+      canSeeSecrets =
+        ownerResult.rows[0]?.user_id === requestUser.userId ||
+        (await isAdminUser(client, requestUser.userId));
+    }
+
+    // 실시간 채널 키: 열람 권한이 확인된 경우에만 (docs/REALTIME_REST_CONTRACT.md 3절)
+    // - 소유자/관리자: 항상
+    // - 비공개: 그 외 불가
+    // - 비밀번호: X-Session-Access-Token 헤더(비밀번호 검증 후 발급된 토큰)가 유효할 때
+    // - 공개: 누구나
+    const canSeeRealtimeKey =
+      canSeeSecrets ||
+      (settings.is_public !== false &&
+        (!settings.has_password ||
+          verifySessionAccessToken(request.headers.get('x-session-access-token'), sessionId)));
+    let realtimeKey: string | null = null;
+    if (canSeeRealtimeKey) {
+      realtimeKey = settings.realtime_key || (await ensureRealtimeKey(client, sessionId));
+    }
     // console.log('📖 세션 설정 조회:', {
     //   sessionId,
     //   raw: settings,
@@ -71,7 +109,8 @@ export async function GET(
       sessionId: settings.session_id,
       hasPassword: settings.has_password,
       isPublic: settings.is_public,
-      accessCode: settings.access_code,
+      accessCode: canSeeSecrets ? settings.access_code : null,
+      realtimeKey,
       maxParticipants: settings.max_participants,
       allowAnonymous: settings.allow_anonymous,
       expiresAt: settings.expires_at,
@@ -109,45 +148,14 @@ export async function PUT(
       );
     }
 
-    // 인증 확인 (선택적)
-    const authHeader = request.headers.get('authorization');
-    // console.log('🔑 인증 헤더:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
-    const user = getUserFromRequest(authHeader);
-    // console.log('👤 인증된 사용자:', user ? { userId: user.userId, email: user.email } : null);
-
     client = await getConnection();
 
-    // 세션 존재 여부 및 소유자 확인
-    const sessionResult = await client.query(
-      `SELECT session_id, user_id FROM sessions WHERE session_id = $1`,
-      [sessionId]
-    );
-
-    if (sessionResult.rows.length === 0) {
-      return NextResponse.json(
-        { error: '세션을 찾을 수 없습니다.' },
-        { status: 404 }
-      );
-    }
-
-    const session = sessionResult.rows[0];
-
-    // 세션 소유자가 있는 경우 인증 필수
-    if (session.user_id) {
-      // 로그인하지 않은 경우
-      if (!user) {
-        return NextResponse.json(
-          { error: '이 세션의 설정을 변경하려면 로그인이 필요합니다.' },
-          { status: 401 }
-        );
-      }
-      // 소유자가 아닌 경우
-      if (session.user_id !== user.userId) {
-        return NextResponse.json(
-          { error: '이 세션의 설정을 변경할 권한이 없습니다.' },
-          { status: 403 }
-        );
-      }
+    // 보안: 로그인 + 세션 소유자(또는 관리자)만 설정 변경 가능.
+    // 이전에는 소유자 없는 세션의 설정(비밀번호/공개 여부)을 누구나 바꿀 수 있었다.
+    // 앱은 이미 Authorization: Bearer 헤더를 보내므로 호환된다.
+    const access = await requireSessionOwner(client, request, sessionId, '이 세션의 설정을 변경하려면');
+    if (!access.ok) {
+      return access.response;
     }
 
     // 업데이트할 필드 준비
@@ -353,6 +361,19 @@ export async function POST(
       );
     }
 
+    // 보안: 비밀번호 무차별 대입 방지 (IP + 세션 단위 시도 제한)
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
+    const attemptKey = `${ip}:${sessionId}`;
+    if (isPasswordAttemptLimited(attemptKey)) {
+      return NextResponse.json(
+        { success: false, accessGranted: false, error: '시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 429 }
+      );
+    }
+
     client = await getConnection();
 
     // 세션 설정 조회
@@ -378,7 +399,12 @@ export async function POST(
       return NextResponse.json({ success: false, accessGranted: false, error: '비공개 세션입니다.' }, { status: 403 });
     }
 
-    // 비밀번호가 있으면 검증 필요 (공개/비공개 상관없이)
+    // 보안: 비공개 세션은 비밀번호가 있어도 소유자 외에는 열람 불가 (소켓 join-session과 동일한 규칙)
+    if (!settings.is_public) {
+      return NextResponse.json({ success: false, accessGranted: false, error: '비공개 세션입니다.' }, { status: 403 });
+    }
+
+    // 비밀번호가 있으면 검증 필요
     // console.log('🔐 비밀번호 검증 시작:', { sessionId, hasPasswordHash: !!settings.password_hash, inputPassword: password ? '***' : null });
 
     // 비밀번호 검증
@@ -393,6 +419,7 @@ export async function POST(
     // console.log('🔐 비밀번호 검증 결과:', { isValid });
 
     if (!isValid) {
+      recordPasswordFailure(attemptKey);
       // console.log('❌ 비밀번호 불일치');
       return NextResponse.json(
         { success: false, accessGranted: false, error: '비밀번호가 올바르지 않습니다.' },
@@ -401,7 +428,16 @@ export async function POST(
     }
 
     // console.log('✅ 비밀번호 검증 성공');
-    return NextResponse.json({ success: true, accessGranted: true });
+    clearPasswordFailures(attemptKey);
+    // 비밀번호 검증 성공 시 세션 접근 토큰 발급 → 소켓 join-session 에 sessionAccessToken 으로 제시
+    // 실시간 채널 키도 함께 돌려준다 (Supabase Realtime 구독용)
+    const realtimeKey = await ensureRealtimeKey(client, sessionId);
+    return NextResponse.json({
+      success: true,
+      accessGranted: true,
+      sessionAccessToken: generateSessionAccessToken(sessionId),
+      realtimeKey,
+    });
   } catch (error) {
     // console.error('비밀번호 검증 오류:', error);
     return NextResponse.json(

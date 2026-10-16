@@ -20,11 +20,18 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/auth-context';
 import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
-import { AdminCharts } from '@/components/admin/admin-charts';
+import { AdminCharts, UserGrowthChart } from '@/components/admin/admin-charts';
+import { notify } from '@/lib/notify';
 
 interface ChartData {
   date: string;
   count: number;
+}
+
+interface UserGrowthData {
+  date: string;
+  newUsers: number;
+  totalUsers: number;
 }
 
 interface AdminStats {
@@ -34,6 +41,7 @@ interface AdminStats {
     newToday: number;
     newWeek: number;
     activeWeek: number;
+    dormant: number;
   };
   sessions: {
     total: number;
@@ -54,6 +62,7 @@ interface AdminStats {
   charts: {
     dailySignups: ChartData[];
     dailyScans: ChartData[];
+    userGrowth: UserGrowthData[];
   };
 }
 
@@ -86,13 +95,15 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);
+      } else {
+        notify.error(t('admin.dashboard.loadError'));
       }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
+    } catch {
+      notify.error(t('admin.dashboard.loadError'));
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     if (isAdmin && accessToken) {
@@ -113,8 +124,8 @@ export default function AdminDashboardPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4 flex-1">
+        <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -131,21 +142,33 @@ export default function AdminDashboardPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="page flex flex-col gap-4 pb-16">
+          <div className="enter pb-2 pt-8 sm:pt-9" style={{ "--i": 0 } as React.CSSProperties}>
+            <h1 className="type-h1">{t('admin.dashboard.title')}</h1>
+          </div>
+
           {/* 통계 카드 */}
           <AdminStatsCards stats={stats} isLoading={isLoading} />
 
           {/* 그래프 */}
-          <AdminCharts
-            dailySignups={stats?.charts?.dailySignups || []}
-            dailyScans={stats?.charts?.dailyScans || []}
-            isLoading={isLoading}
-            period={chartPeriod}
-            onPeriodChange={handlePeriodChange}
-          />
+          <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+            <AdminCharts
+              dailySignups={stats?.charts?.dailySignups || []}
+              dailyScans={stats?.charts?.dailyScans || []}
+              userGrowth={stats?.charts?.userGrowth || []}
+              isLoading={isLoading}
+              period={chartPeriod}
+              onPeriodChange={handlePeriodChange}
+            />
+            <UserGrowthChart
+              userGrowth={stats?.charts?.userGrowth || []}
+              isLoading={isLoading}
+              period={chartPeriod}
+            />
+          </div>
 
           {/* 제공자 통계 */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <ProviderStatsCard providers={stats?.providers} isLoading={isLoading} />
           </div>
         </div>

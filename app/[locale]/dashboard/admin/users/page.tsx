@@ -18,10 +18,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useConfirmDialog } from '@/components/confirm-dialog';
-import { toast } from '@/components/ui/sonner';
+import { notify } from '@/lib/notify';
 
 import { UserManagementTable } from '@/components/admin/user-management-table';
 import { UserDetailModal } from '@/components/admin/user-detail-modal';
@@ -89,13 +88,15 @@ export default function AdminUsersPage() {
         const data = await res.json();
         setUsers(data.users);
         setPagination(data.pagination);
+      } else {
+        notify.error(t('admin.users.loadError'));
       }
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
+    } catch {
+      notify.error(t('admin.users.loadError'));
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, pagination.page, pagination.limit, search, providerFilter, roleFilter, statusFilter]);
+  }, [accessToken, pagination.page, pagination.limit, search, providerFilter, roleFilter, statusFilter, t]);
 
   useEffect(() => {
     if (isAdmin && accessToken) {
@@ -129,11 +130,13 @@ export default function AdminUsersPage() {
   };
 
   const handleDeleteUser = async (user: AdminUser) => {
+    // 되돌리기 어려운 작업: 사용자 이름(없으면 이메일)을 똑같이 입력해야 실행
     const confirmed = await confirm({
       title: t('admin.users.deleteConfirmTitle'),
-      description: t('admin.users.deleteConfirmDesc', { name: user.name }),
+      description: t('admin.users.deleteConfirmDesc', { name: user.name || user.email }),
       confirmText: t('admin.users.delete'),
       variant: 'destructive',
+      typeToConfirm: user.name || user.email,
     });
 
     if (!confirmed) return;
@@ -145,20 +148,14 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast.success(t('admin.users.deleteSuccess'), {
-          description: t('admin.users.deleteSuccessDesc'),
-        });
+        notify.success(t('admin.users.deleteSuccessDesc'));
         fetchUsers();
       } else {
-        const data = await res.json();
-        toast.error(t('admin.users.deleteError'), {
-          description: data.error?.message || t('admin.users.deleteErrorDesc'),
-        });
+        // 서버 문구 대신 해요체 문구
+        notify.error(t('admin.users.deleteErrorDesc'));
       }
-    } catch (error) {
-      toast.error(t('admin.users.deleteError'), {
-        description: t('admin.users.deleteErrorDesc'),
-      });
+    } catch {
+      notify.error(t('admin.users.deleteErrorDesc'));
     }
   };
 
@@ -170,20 +167,13 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast.success(t('admin.users.restoreSuccess'), {
-          description: t('admin.users.restoreSuccessDesc'),
-        });
+        notify.success(t('admin.users.restoreSuccessDesc'));
         fetchUsers();
       } else {
-        const data = await res.json();
-        toast.error(t('admin.users.restoreError'), {
-          description: data.error?.message || t('admin.users.restoreErrorDesc'),
-        });
+        notify.error(t('admin.users.restoreErrorDesc'));
       }
-    } catch (error) {
-      toast.error(t('admin.users.restoreError'), {
-        description: t('admin.users.restoreErrorDesc'),
-      });
+    } catch {
+      notify.error(t('admin.users.restoreErrorDesc'));
     }
   };
 
@@ -199,16 +189,13 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        toast.success(user.isActive ? t('admin.users.deactivateSuccess') : t('admin.users.activateSuccess'));
+        notify.success(user.isActive ? t('admin.users.deactivateSuccess') : t('admin.users.activateSuccess'));
         fetchUsers();
       } else {
-        const data = await res.json();
-        toast.error(t('admin.users.updateError'), {
-          description: data.error?.message,
-        });
+        notify.error(t('admin.users.updateErrorDesc'));
       }
-    } catch (error) {
-      toast.error(t('admin.users.updateError'));
+    } catch {
+      notify.error(t('admin.users.updateErrorDesc'));
     }
   };
 
@@ -227,19 +214,13 @@ export default function AdminUsersPage() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      const data = await res.json();
-
       if (res.ok) {
-        toast.success(t('admin.users.resetPasswordSuccess'), {
-          description: t('admin.users.resetPasswordSuccessDesc'),
-        });
+        notify.success(t('admin.users.resetPasswordSuccessDesc'));
       } else {
-        toast.error(t('admin.users.resetPasswordError'), {
-          description: data.error?.message,
-        });
+        notify.error(t('admin.users.resetPasswordErrorDesc'));
       }
-    } catch (error) {
-      toast.error(t('admin.users.resetPasswordError'));
+    } catch {
+      notify.error(t('admin.users.resetPasswordErrorDesc'));
     }
   };
 
@@ -249,6 +230,9 @@ export default function AdminUsersPage() {
       description: t('admin.users.bulkDeleteConfirmDesc', { count: selectedUsers.length }),
       confirmText: t('admin.users.bulkDelete'),
       variant: 'destructive',
+      // 일괄 삭제: 선택한 사람 수를 숫자로 입력해야 실행
+      typeToConfirm: String(selectedUsers.length),
+      typeToConfirmLabel: t('admin.users.typeBulkCount', { count: selectedUsers.length }),
     });
 
     if (!confirmed) return;
@@ -264,14 +248,12 @@ export default function AdminUsersPage() {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (res.ok) successCount++;
-      } catch (error) {
+      } catch {
         // Continue with other users
       }
     }
 
-    toast.success(t('admin.users.bulkDeleteSuccess'), {
-      description: t('admin.users.bulkDeleteSuccessDesc', { count: successCount }),
-    });
+    notify.success(t('admin.users.bulkDeleteSuccessDesc', { count: successCount }));
 
     fetchUsers();
   };
@@ -309,8 +291,8 @@ export default function AdminUsersPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4 flex-1">
+        <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -331,14 +313,14 @@ export default function AdminUsersPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="page pb-16">
+          <div className="enter pb-6 pt-8 sm:pt-9" style={{ "--i": 0 } as React.CSSProperties}>
+            <h1 className="type-h1">{t('admin.users.title')}</h1>
+            <p className="mt-2 type-lead">{t('admin.users.userListDesc')}</p>
+          </div>
+
           {/* 사용자 테이블 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.users.userList')}</CardTitle>
-              <CardDescription>{t('admin.users.userListDesc')}</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="min-w-0">
               <UserManagementTable
                 users={users}
                 isLoading={isLoading}
@@ -360,8 +342,7 @@ export default function AdminUsersPage() {
                 onExport={handleExport}
                 isSuperAdmin={isSuperAdmin}
               />
-            </CardContent>
-          </Card>
+          </div>
         </div>
 
         {/* 모달 */}

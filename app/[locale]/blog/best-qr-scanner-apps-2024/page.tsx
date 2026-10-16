@@ -1,6 +1,28 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Calendar, Clock, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Clock, ArrowLeft, Check, Minus } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { SiteHeader, SiteFooter } from '@/components/site-header'
+
+// 비교표 칸: 아이콘 + 읽어 주는 글자 (색으로만 구분하지 않음)
+function Yes() {
+  return (
+    <>
+      <Check className="mx-auto size-5" aria-hidden="true" />
+      <span className="sr-only">지원</span>
+    </>
+  )
+}
+function No() {
+  return (
+    <>
+      <Minus className="mx-auto size-5 text-faint" aria-hidden="true" />
+      <span className="sr-only">미지원</span>
+    </>
+  )
+}
 
 export const metadata: Metadata = {
   title: '2024년 최고의 QR코드 스캐너 앱 비교 - 재고관리용 추천',
@@ -51,40 +73,41 @@ export default function BlogPost() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
 
-      <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
-        {/* 네비게이션 */}
-        <header className="container mx-auto px-6 py-8">
-          <Link href="/blog" className="text-blue-400 hover:text-blue-300 flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            블로그로 돌아가기
-          </Link>
-        </header>
+      <SiteHeader active="blog" />
 
-        {/* 아티클 헤더 */}
-        <article className="container mx-auto px-6 max-w-4xl">
-          <header className="py-8">
-            <div className="flex items-center gap-4 text-sm text-slate-400 mb-4">
-              <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">앱 비교</span>
+      <main id="main" className="min-h-screen">
+        <article className="page-narrow pt-8">
+          <Button asChild variant="ghost" size="sm" className="-ml-2.5">
+            <Link href="/blog">
+              <ArrowLeft aria-hidden="true" />
+              블로그로 돌아가기
+            </Link>
+          </Button>
+
+          {/* 글 머리 */}
+          <header className="pb-6 pt-6">
+            <div className="tabular flex flex-wrap items-center gap-x-3 gap-y-1.5 text-13 text-muted-foreground">
+              <Badge variant="secondary">앱 비교</Badge>
               <span className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                2024년 1월 15일
+                <Calendar className="size-3.5" aria-hidden="true" />
+                <time dateTime="2024-01-15">2024년 1월 15일</time>
               </span>
               <span className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+                <Clock className="size-3.5" aria-hidden="true" />
                 8분 읽기
               </span>
             </div>
-            <h1 className="text-4xl font-bold mb-6">
+            <h1 className="mt-4 type-h1">
               2024년 최고의 QR코드 스캐너 앱 비교 - 재고관리용 추천
             </h1>
-            <p className="text-xl text-slate-300">
+            <p className="mt-4 type-lead">
               재고관리, 물류, 창고 업무에 적합한 QR코드 스캐너 앱 5개를 비교합니다.
               대량 스캔, PC 연동, 오프라인 모드 등 핵심 기능을 기준으로 평가했습니다.
             </p>
           </header>
 
           {/* 본문 */}
-          <div className="prose prose-invert prose-lg max-w-none py-8">
+          <div className="prose max-w-none py-6 type-body sm:prose-lg">
 
             <h2>재고관리용 스캐너 앱, 어떻게 선택해야 할까?</h2>
             <p>
@@ -108,10 +131,10 @@ export default function BlogPost() {
             </ol>
 
             <h2>기능별 비교표</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="not-prose relative overflow-x-auto rounded-field border bg-card">
+              <table className="w-full min-w-[640px] text-15">
                 <thead>
-                  <tr className="border-b border-slate-700">
+                  <tr className="border-b bg-muted">
                     <th className="text-left py-3 px-4">기능</th>
                     <th className="text-center py-3 px-4">QR Scanner Pro</th>
                     <th className="text-center py-3 px-4">Orca Scan</th>
@@ -120,46 +143,46 @@ export default function BlogPost() {
                     <th className="text-center py-3 px-4">Gamma Play</th>
                   </tr>
                 </thead>
-                <tbody className="text-slate-300">
-                  <tr className="border-b border-slate-800">
+                <tbody>
+                  <tr className="border-b last:border-0">
                     <td className="py-3 px-4">대량 연속 스캔</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
                   </tr>
-                  <tr className="border-b border-slate-800">
+                  <tr className="border-b last:border-0">
                     <td className="py-3 px-4">실시간 PC 전송</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
                   </tr>
-                  <tr className="border-b border-slate-800">
+                  <tr className="border-b last:border-0">
                     <td className="py-3 px-4">오프라인 모드</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
                   </tr>
-                  <tr className="border-b border-slate-800">
+                  <tr className="border-b last:border-0">
                     <td className="py-3 px-4">CSV/엑셀 내보내기</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><XCircle className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><No /></td>
                   </tr>
-                  <tr className="border-b border-slate-800">
+                  <tr className="border-b last:border-0">
                     <td className="py-3 px-4">무료 사용</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
                     <td className="text-center py-3 px-4">제한적</td>
                     <td className="text-center py-3 px-4">엔터프라이즈</td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
-                    <td className="text-center py-3 px-4"><CheckCircle className="w-5 h-5 text-green-400 mx-auto" /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
+                    <td className="text-center py-3 px-4"><Yes /></td>
                   </tr>
                 </tbody>
               </table>
@@ -176,14 +199,14 @@ export default function BlogPost() {
               <li>대량 연속 스캔 모드로 빠른 재고 실사</li>
               <li>실시간 PC 전송 (웹브라우저 기반, 소프트웨어 설치 불필요)</li>
               <li>완전한 오프라인 모드 지원</li>
-              <li>30+ 바코드 형식 인식</li>
+              <li>주요 바코드 13종 인식</li>
               <li>바코드 유효성 자동 검증</li>
               <li>무료로 모든 핵심 기능 사용 가능</li>
             </ul>
             <h3>단점</h3>
             <ul>
               <li>ERP 직접 연동은 API로 별도 구현 필요</li>
-              <li>팀 협업 기능은 Pro 버전에서 제공</li>
+              <li>여러 사람이 한 세션을 함께 관리하는 팀 기능은 아직 없음</li>
             </ul>
             <p>
               <strong>추천 대상:</strong> 중소규모 창고, 소매점, 물류 스타트업,
@@ -227,8 +250,8 @@ export default function BlogPost() {
             </ul>
 
             <h2>결론: 어떤 앱을 선택해야 할까?</h2>
-            <div className="bg-blue-900/30 border border-blue-500/30 rounded-xl p-6 my-6">
-              <h3 className="text-blue-400 mt-0">상황별 추천</h3>
+            <div className="my-6 rounded-card border bg-card p-6">
+              <h3 className="mt-0">상황별 추천</h3>
               <ul className="mb-0">
                 <li><strong>중소규모 창고/소매점:</strong> QR Scanner Pro - 무료로 핵심 기능 모두 사용 가능</li>
                 <li><strong>팀 협업이 중요한 곳:</strong> Orca Scan - 클라우드 동기화 편리</li>
@@ -243,50 +266,44 @@ export default function BlogPost() {
             </p>
           </div>
 
-          {/* CTA */}
-          <div className="bg-slate-800 rounded-2xl p-8 my-12">
-            <h3 className="text-2xl font-bold mb-4">QR Scanner Pro 무료 체험</h3>
-            <p className="text-slate-300 mb-6">
-              지금 바로 앱을 다운로드하고 재고관리 효율을 높여보세요.
+          {/* 안내 */}
+          <div className="my-12 rounded-card border bg-card p-6 sm:p-8">
+            <h2 className="type-h2">QR Scanner Pro 무료로 써 보기</h2>
+            <p className="mt-2 type-body text-muted-foreground">
+              앱을 내려받고 재고관리를 더 쉽게 해 보세요
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a
-                href="https://apps.apple.com/app/qr-scanner-pro"
-                className="bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold text-center hover:bg-slate-100 transition"
-              >
-                App Store 다운로드
-              </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner"
-                className="bg-blue-500 px-6 py-3 rounded-lg font-semibold text-center hover:bg-blue-600 transition"
-              >
-                Google Play 다운로드
-              </a>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button asChild>
+                <a href="https://apps.apple.com/app/qr-scanner-pro">App Store 다운로드</a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner">Google Play 다운로드</a>
+              </Button>
             </div>
           </div>
 
           {/* 관련 글 */}
-          <div className="border-t border-slate-700 py-12">
-            <h3 className="text-xl font-bold mb-6">관련 글</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Link
-                href="/blog"
-                className="bg-slate-800/50 p-6 rounded-xl hover:bg-slate-800 transition"
-              >
-                <h4 className="font-semibold mb-2">바코드를 활용한 재고관리 완벽 가이드</h4>
-                <p className="text-slate-400 text-sm">바코드 시스템으로 재고관리를 효율화하는 방법</p>
-              </Link>
-              <Link
-                href="/blog"
-                className="bg-slate-800/50 p-6 rounded-xl hover:bg-slate-800 transition"
-              >
-                <h4 className="font-semibold mb-2">모바일 스캐닝으로 창고 효율성 300% 높이기</h4>
-                <p className="text-slate-400 text-sm">스마트폰 앱을 활용한 창고 운영 사례</p>
-              </Link>
-            </div>
-          </div>
+          <section className="border-t py-12" aria-labelledby="related-title">
+            <h2 id="related-title" className="type-h3">관련 글</h2>
+            <ul className="mt-6 grid gap-4 md:grid-cols-2">
+              <li>
+                <Link href="/blog" className="lift block h-full rounded-card border bg-card p-6">
+                  <span className="block text-15 font-bold">바코드를 활용한 재고관리 완벽 가이드</span>
+                  <span className="mt-1 block text-15 text-muted-foreground">바코드 시스템으로 재고관리를 효율화하는 방법</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="lift block h-full rounded-card border bg-card p-6">
+                  <span className="block text-15 font-bold">모바일 스캐닝으로 창고 효율 높이기</span>
+                  <span className="mt-1 block text-15 text-muted-foreground">스마트폰 앱을 활용한 창고 운영 사례</span>
+                </Link>
+              </li>
+            </ul>
+          </section>
         </article>
       </main>
+
+      <SiteFooter />
     </>
   )
 }

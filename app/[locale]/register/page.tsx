@@ -3,14 +3,23 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { QrCode, Mail, Lock, User, Loader2 } from "lucide-react"
+import { QrCode, CircleAlert } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { useAuth } from "@/contexts/auth-context"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Field, focusFirstInvalid } from "@/components/form/field"
+import { Card, CardContent, CardDescription, CardHeader, CardFooter } from "@/components/ui/card"
+import { useAuth, type AuthError } from "@/contexts/auth-context"
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+type Errors = { name: string; email: string; password: string; confirmPassword: string }
+const NO_ERRORS: Errors = { name: "", email: "", password: "", confirmPassword: "" }
 
 export default function RegisterPage() {
   const router = useRouter()
+  const t = useTranslations()
   const { register, isAuthenticated, isLoading: authLoading } = useAuth()
 
   const [name, setName] = React.useState("")
@@ -19,6 +28,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [errors, setErrors] = React.useState<Errors>(NO_ERRORS)
+  const formRef = React.useRef<HTMLFormElement>(null)
 
   // 이미 로그인된 경우 대시보드로 리다이렉트
   React.useEffect(() => {
@@ -27,21 +38,27 @@ export default function RegisterPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  const showErrors = (next: Errors) => {
+    setErrors(next)
+    requestAnimationFrame(() => focusFirstInvalid(formRef.current))
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    // 비밀번호 확인
-    if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.")
+    // 입력 확인 (기존 규칙 그대로: 비밀번호 일치, 8자 이상) — 오류는 각 입력 아래에
+    const next: Errors = {
+      name: name.trim() ? "" : t("auth.nameRequired"),
+      email: EMAIL_RE.test(email.trim()) ? "" : t("auth.invalidEmail"),
+      password: password.length >= 8 ? "" : t("auth.passwordTooShort"),
+      confirmPassword: password === confirmPassword ? "" : t("auth.passwordMismatch"),
+    }
+    if (Object.values(next).some(Boolean)) {
+      showErrors(next)
       return
     }
-
-    // 비밀번호 길이 확인
-    if (password.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다.")
-      return
-    }
+    setErrors(NO_ERRORS)
 
     setIsLoading(true)
 
@@ -49,7 +66,13 @@ export default function RegisterPage() {
       await register(email, password, name)
       router.push("/dashboard")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "회원가입에 실패했습니다.")
+      // 서버 문구 대신 상황별 해요체 문구
+      const code = (err as AuthError)?.code
+      if (code === "AUTH_EMAIL_EXISTS") {
+        showErrors({ ...NO_ERRORS, email: t("auth.emailExists") })
+      } else {
+        setError(t("auth.registerFailed"))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -57,118 +80,94 @@ export default function RegisterPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <main id="main" className="grid min-h-dvh place-items-center bg-background px-4 py-16" aria-busy="true">
+        <span className="sr-only" role="status">{t("common.loading")}</span>
+        <Skeleton className="h-[560px] w-full max-w-md rounded-card" />
+      </main>
     )
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <QrCode className="h-8 w-8 text-primary" />
-            </div>
+    <main id="main" className="grid min-h-dvh place-items-center bg-background px-4 py-16">
+      <Card className="enter w-full max-w-md">
+        <CardHeader className="items-center text-center">
+          <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-secondary text-foreground">
+            <QrCode className="size-7" aria-hidden="true" />
           </div>
-          <CardTitle className="text-2xl">회원가입</CardTitle>
-          <CardDescription>
-            QR Scanner Web 계정을 만드세요
-          </CardDescription>
+          <h1 className="type-h2">{t("auth.register")}</h1>
+          <CardDescription>{t("auth.registerDescription")}</CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 rounded-lg">
-              {error}
-            </div>
-          )}
+        <CardContent>
+          <form ref={formRef} onSubmit={handleRegister} className="grid gap-4" noValidate>
+            <Field label={t("auth.name")} error={errors.name}>
+              <Input
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </Field>
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="이름"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
+            <Field label={t("auth.email")} error={errors.email}>
+              <Input
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </Field>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="이메일"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
+            <Field label={t("auth.password")} error={errors.password} help={t("auth.passwordHint")}>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                disabled={isLoading}
+              />
+            </Field>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="password"
-                  placeholder="비밀번호 (8자 이상)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={8}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
+            <Field label={t("auth.confirmPassword")} error={errors.confirmPassword}>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </Field>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="password"
-                  placeholder="비밀번호 확인"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
+            {error && (
+              <p role="alert" className="flex items-start gap-2 rounded-field bg-destructive-soft px-3.5 py-3 text-13 font-semibold text-destructive">
+                <CircleAlert className="mt-[2px] size-4 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </p>
+            )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  가입 중...
-                </>
-              ) : (
-                "회원가입"
-              )}
+            <Button type="submit" size="xl" className="w-full" disabled={isLoading}>
+              {isLoading ? t("auth.registering") : t("auth.register")}
             </Button>
           </form>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground text-center">
-            이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              로그인
+        <CardFooter className="flex-col gap-2 text-center">
+          <p className="text-15 text-muted-foreground">
+            {t("auth.hasAccount")}{" "}
+            <Link href="/login" className="font-semibold text-foreground underline underline-offset-4">
+              {t("auth.signIn")}
             </Link>
           </p>
-          <Link href="/" className="text-sm text-muted-foreground hover:underline text-center">
-            홈으로 돌아가기
+          <Link href="/" className="text-13 text-muted-foreground underline-offset-4 hover:underline">
+            {t("auth.backToHome")}
           </Link>
         </CardFooter>
       </Card>

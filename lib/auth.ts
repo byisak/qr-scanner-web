@@ -117,6 +117,64 @@ export function verifyAccessToken(token: string): JWTPayload | null {
 }
 
 // ============================================
+// 세션 접근 토큰 (비밀번호 보호 세션용)
+// ============================================
+
+// 비밀번호 보호 세션은 REST(POST /api/sessions/:id/settings)로 비밀번호를 검증한 뒤
+// 이 토큰을 발급받아 소켓 join-session 등에 제시해야 기존 스캔 데이터를 받을 수 있다.
+// 사용자 Access Token과 혼용되지 않도록 별도 키(JWT_SECRET 파생)로 서명한다.
+const SESSION_ACCESS_EXPIRY = 12 * 60 * 60; // 12시간 (초)
+
+function createSessionAccessSignature(data: string): string {
+  const hmac = createHmac('sha256', `${JWT_SECRET}:session-access`);
+  hmac.update(data);
+  return base64UrlEncode(hmac.digest('base64'));
+}
+
+/**
+ * 세션 접근 토큰 생성 (비밀번호 검증 성공 시 발급)
+ */
+export function generateSessionAccessToken(sessionId: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64UrlEncode(JSON.stringify({
+    typ: 'session-access',
+    sid: sessionId,
+    iat: now,
+    exp: now + SESSION_ACCESS_EXPIRY,
+  }));
+  return `${payload}.${createSessionAccessSignature(payload)}`;
+}
+
+/**
+ * 세션 접근 토큰 검증 (해당 세션 ID에 대해 발급된 토큰인지 확인)
+ */
+export function verifySessionAccessToken(token: unknown, sessionId: string): boolean {
+  try {
+    if (typeof token !== 'string' || !token) return false;
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const [payload, signature] = parts;
+
+    const expected = Buffer.from(createSessionAccessSignature(payload));
+    const actual = Buffer.from(signature);
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+      return false;
+    }
+
+    const decoded = JSON.parse(base64UrlDecode(payload)) as {
+      typ?: string;
+      sid?: string;
+      exp?: number;
+    };
+    if (decoded.typ !== 'session-access' || decoded.sid !== sessionId) return false;
+    if (!decoded.exp || decoded.exp < Math.floor(Date.now() / 1000)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ============================================
 // 비밀번호 해싱 관련 함수
 // ============================================
 

@@ -14,7 +14,8 @@ export const config = {
   // - _vercel (Vercel internals)
   // - Static files (files with extensions)
   // - reset-password (password reset page - no locale needed)
+  // - legal (public legal documents - no locale prefix for webview)
   matcher: [
-    '/((?!api|_next|_vercel|reset-password|.*\\..*).*)'
+    '/((?!api|_next|_vercel|reset-password|legal|.*\\..*).*)'
   ]
 };

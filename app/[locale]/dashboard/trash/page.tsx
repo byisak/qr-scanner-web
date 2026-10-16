@@ -17,10 +17,14 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ListRow, ListRowSkeleton } from '@/components/ui/list-row';
+import { Empty } from '@/components/ui/empty';
+import { notify } from '@/lib/notify';
 import { Session } from '@/types';
-import { RotateCcw, Trash2, Clock, LogIn } from 'lucide-react';
+import { RotateCcw, Trash2, Clock, LogIn, ArchiveX, QrCode } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
@@ -46,10 +50,11 @@ function getRemainingTime(deletedAt: string | null): { days: number; hours: numb
   return { days, hours };
 }
 
-function getRemainingBadgeVariant(days: number): 'default' | 'secondary' | 'destructive' {
+// 남은 시간 뱃지: 3일 이하만 경고(빨강), 나머지는 회색. 글자로도 남은 시간을 함께 보여준다
+function getRemainingBadgeVariant(days: number): 'outline' | 'secondary' | 'destructive' {
   if (days <= 3) return 'destructive';
   if (days <= 7) return 'secondary';
-  return 'default';
+  return 'outline';
 }
 
 export default function TrashPage() {
@@ -81,8 +86,8 @@ export default function TrashPage() {
         const data = await res.json();
         setDeletedSessions(data);
       }
-    } catch (err) {
-      // console.error('삭제된 세션 목록 로드 실패:', err);
+    } catch {
+      // 목록을 못 받으면 빈 목록 그대로
     } finally {
       setIsLoading(false);
     }
@@ -118,22 +123,23 @@ export default function TrashPage() {
       if (res.ok) {
         fetchDeletedSessions();
         window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+        notify.success(t('trash.restored'));
       } else {
-        const data = await res.json();
-        alert(data.error || t('trash.restoreFailed'));
+        notify.error(t('trash.restoreFailed'));
       }
-    } catch (error) {
-      // console.error('Session restore failed:', error);
-      alert(t('trash.restoreError'));
+    } catch {
+      notify.error(t('trash.restoreError'));
     }
   };
 
-  const handlePermanentDelete = async (sessionId: string) => {
+  const handlePermanentDelete = async (sessionId: string, name: string) => {
+    // 되돌릴 수 없는 작업: 세션 이름(없으면 ID)을 똑같이 입력해야 실행
     const confirmed = await confirm({
       title: t('dialog.permanentDelete'),
       description: t('trash.confirmPermanentDelete'),
       confirmText: t('trash.permanentDelete'),
-      variant: "destructive"
+      variant: "destructive",
+      typeToConfirm: name,
     });
     if (!confirmed) return;
 
@@ -148,22 +154,29 @@ export default function TrashPage() {
       if (res.ok) {
         fetchDeletedSessions();
         window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+        notify.success(t('trash.permanentlyDeleted'));
       } else {
-        const data = await res.json();
-        alert(data.error || t('trash.permanentDeleteFailed'));
+        notify.error(t('trash.permanentDeleteFailed'));
       }
-    } catch (error) {
-      // console.error('Session permanent delete failed:', error);
-      alert(t('trash.permanentDeleteError'));
+    } catch {
+      notify.error(t('trash.permanentDeleteError'));
     }
   };
 
+  const expiredCount = deletedSessions.filter((s) => {
+    const r = getRemainingTime(s.deleted_at);
+    return r.days === 0 && r.hours === 0;
+  }).length;
+
   const handleDeleteExpired = async () => {
+    // 일괄 영구 삭제: 만료된 세션 개수를 숫자로 입력해야 실행
     const confirmed = await confirm({
       title: t('dialog.cleanupExpired'),
       description: t('trash.confirmDeleteExpired'),
       confirmText: t('trash.cleanupExpired'),
-      variant: "destructive"
+      variant: "destructive",
+      typeToConfirm: String(expiredCount),
+      typeToConfirmLabel: t('trash.typeExpiredCount', { count: expiredCount }),
     });
     if (!confirmed) return;
 
@@ -177,18 +190,36 @@ export default function TrashPage() {
 
       if (res.ok) {
         const data = await res.json();
-        alert(t('trash.expiredDeleted', { count: data.deletedCount }));
+        notify.success(t('trash.expiredDeleted', { count: data.deletedCount }));
         fetchDeletedSessions();
         window.dispatchEvent(new CustomEvent('sidebar-refresh'));
       } else {
-        const data = await res.json();
-        alert(data.error || t('trash.cleanupFailed'));
+        notify.error(t('trash.cleanupFailed'));
       }
-    } catch (error) {
-      // console.error('Expired sessions cleanup failed:', error);
-      alert(t('trash.cleanupError'));
+    } catch {
+      notify.error(t('trash.cleanupError'));
     }
   };
+
+  const header = (
+    <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem className="shrink-0">
+              <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="block truncate">{t('trash.title')}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    </header>
+  );
 
   // 로그인하지 않은 사용자에게 로그인 안내 표시
   if (!authLoading && !isAuthenticated) {
@@ -196,42 +227,23 @@ export default function TrashPage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-            <div className="flex items-center gap-2 px-4 flex-1">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{t('trash.title')}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-          </header>
-
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 pt-0 min-h-[60vh]">
-            <Card className="max-w-md w-full text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                  <LogIn className="h-8 w-8 text-muted-foreground" />
+          {header}
+          <div className="page flex min-h-[60vh] flex-1 flex-col items-center justify-center py-10">
+            <Card className="enter w-full max-w-md text-center">
+              <CardHeader className="items-center">
+                <div className="mb-2 flex size-14 items-center justify-center rounded-full bg-secondary text-foreground">
+                  <LogIn className="size-7" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl">{t('dashboard.loginRequired')}</CardTitle>
-                <CardDescription className="mt-2">
-                  {t('dashboard.loginRequiredDesc')}
-                </CardDescription>
+                <h1 className="type-h2">{t('dashboard.loginRequired')}</h1>
+                <CardDescription>{t('dashboard.loginRequiredDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href="/login">
-                  <Button className="w-full">
-                    <LogIn className="mr-2 h-4 w-4" />
+                <Button asChild size="xl" className="w-full">
+                  <Link href="/login">
+                    <LogIn aria-hidden="true" />
                     {t('nav.login')}
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -240,109 +252,102 @@ export default function TrashPage() {
     );
   }
 
+  const showSkeleton = isLoading || authLoading;
+
   return (
     <SidebarProvider>
       <AppSidebar onSessionChange={fetchDeletedSessions} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4 flex-1">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">{t('dashboard.title')}</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{t('trash.title')}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
+        {header}
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">{t('trash.title')}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('trash.autoDeleteInfo', { days: DELETION_DAYS })}
-                  </p>
-                </div>
-                {deletedSessions.some(s => getRemainingTime(s.deleted_at).days === 0 && getRemainingTime(s.deleted_at).hours === 0) && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDeleteExpired}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('trash.cleanupExpired')}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {t('common.loading')}
-                </p>
-              ) : deletedSessions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {t('trash.noDeletedSessions')}
-                </p>
-              ) : (
-                <div className="grid gap-4">
-                  {deletedSessions.map((session) => {
-                    const remaining = getRemainingTime(session.deleted_at);
-                    return (
-                      <Card key={session.session_id}>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className="font-mono text-sm font-semibold line-through text-muted-foreground">
-                                  {session.session_id}
-                                </p>
-                                <Badge variant={getRemainingBadgeVariant(remaining.days)}>
-                                  <Clock className="mr-1 h-3 w-3" />
-                                  {formatRemainingTime(remaining.days, remaining.hours)}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {t('dashboard.scanCount')}: {session.scan_count} |
-                                {t('trash.deletedAt')}: {session.deleted_at ? new Date(session.deleted_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US') : '-'}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRestore(session.session_id)}
-                              >
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                {t('trash.restore')}
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handlePermanentDelete(session.session_id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                {t('trash.permanentDelete')}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="page pb-16">
+          <div
+            className="enter flex flex-col items-start justify-between gap-4 pb-6 pt-8 sm:flex-row sm:items-end sm:pt-9"
+            style={{ '--i': 0 } as CSSProperties}
+          >
+            <div className="min-w-0">
+              <h1 className="type-h1">{t('trash.title')}</h1>
+              <p className="mt-2 type-lead">{t('trash.autoDeleteInfo', { days: DELETION_DAYS })}</p>
+            </div>
+            {expiredCount > 0 && (
+              <Button variant="destructive" onClick={handleDeleteExpired} className="shrink-0">
+                <Trash2 aria-hidden="true" />
+                {t('trash.cleanupExpired')} <span className="tabular">({expiredCount})</span>
+              </Button>
+            )}
+          </div>
+
+          {showSkeleton ? (
+            <div aria-busy="true">
+              <span className="sr-only" role="status">{t('common.loading')}</span>
+              <ListRowSkeleton count={3} />
+            </div>
+          ) : deletedSessions.length === 0 ? (
+            <Empty
+              className="enter"
+              style={{ '--i': 1 } as CSSProperties}
+              icon={<ArchiveX />}
+              title={t('trash.noDeletedSessions')}
+            />
+          ) : (
+            <ul className="swap grid gap-2" aria-label={t('trash.title')}>
+              {deletedSessions.map((session, i) => {
+                const remaining = getRemainingTime(session.deleted_at);
+                const name = session.session_name || session.session_id;
+                return (
+                  <li key={session.session_id} className="min-w-0" style={{ '--i': Math.min(i, 12) } as CSSProperties}>
+                    <ListRow
+                      icon={<QrCode />}
+                      title={name}
+                      description={
+                        <>
+                          <span className="tabular">{t('dashboard.scans', { count: session.scan_count })}</span>
+                          {' · '}
+                          {t('trash.deletedAt')}{' '}
+                          <span className="tabular">
+                            {session.deleted_at ? new Date(session.deleted_at).toLocaleDateString(locale) : '-'}
+                          </span>
+                        </>
+                      }
+                      action={
+                        <>
+                          <Badge variant={getRemainingBadgeVariant(remaining.days)} className="hidden tabular sm:inline-flex">
+                            <Clock aria-hidden="true" />
+                            {formatRemainingTime(remaining.days, remaining.hours)}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRestore(session.session_id)}
+                            aria-label={`${name} ${t('trash.restore')}`}
+                          >
+                            <RotateCcw aria-hidden="true" />
+                            <span className="hidden sm:inline">{t('trash.restore')}</span>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handlePermanentDelete(session.session_id, name)}
+                            aria-label={`${name} ${t('trash.permanentDelete')}`}
+                          >
+                            <Trash2 aria-hidden="true" />
+                            <span className="hidden sm:inline">{t('trash.permanentDelete')}</span>
+                          </Button>
+                        </>
+                      }
+                    />
+                    {/* 좁은 화면: 남은 시간을 행 아래 줄에 */}
+                    <p className="mt-1 flex items-center gap-1.5 px-4 text-13 text-muted-foreground sm:hidden">
+                      <Clock className="size-3.5" aria-hidden="true" />
+                      <span className={remaining.days <= 3 ? 'tabular font-semibold text-destructive' : 'tabular'}>
+                        {formatRemainingTime(remaining.days, remaining.hours)}
+                      </span>
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </SidebarInset>
       {ConfirmDialog}

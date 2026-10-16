@@ -49,6 +49,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 휴면 기준: 1년 (365일)
+    const DORMANT_DAYS = 365;
+
     // 사용자 통계
     const userStatsResult = await client.query(`
       SELECT
@@ -57,6 +60,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE) as new_users_today,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '7 days') as new_users_week,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND last_login_at >= CURRENT_DATE - INTERVAL '7 days') as active_users_week,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND is_active = true AND last_login_at IS NOT NULL AND last_login_at <= CURRENT_TIMESTAMP - INTERVAL '${DORMANT_DAYS} days') as dormant_users,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND provider = 'email') as provider_email,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND provider = 'google') as provider_google,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND provider = 'apple') as provider_apple,
@@ -104,6 +108,26 @@ export async function GET(request: NextRequest) {
       ORDER BY date
     `);
 
+    // 기간별 누적 사용자 수 (사용자 증가 그래프용)
+    const userGrowthResult = await client.query(`
+      SELECT
+        DATE(created_at) as date,
+        COUNT(*) as new_users,
+        SUM(COUNT(*)) OVER (ORDER BY DATE(created_at)) as cumulative_users
+      FROM users
+      WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
+      GROUP BY DATE(created_at)
+      ORDER BY date
+    `);
+
+    // 기간 시작 전 총 사용자 수 (누적 계산용)
+    const baseUserCountResult = await client.query(`
+      SELECT COUNT(*) as count
+      FROM users
+      WHERE deleted_at IS NULL AND created_at < CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
+    `);
+    const baseUserCount = parseInt(baseUserCountResult.rows[0].count);
+
     const userStats = userStatsResult.rows[0];
     const sessionStats = sessionStatsResult.rows[0];
     const scanStats = scanStatsResult.rows[0];
@@ -117,6 +141,7 @@ export async function GET(request: NextRequest) {
           newToday: parseInt(userStats.new_users_today),
           newWeek: parseInt(userStats.new_users_week),
           activeWeek: parseInt(userStats.active_users_week),
+          dormant: parseInt(userStats.dormant_users),
         },
         sessions: {
           total: parseInt(sessionStats.total_sessions),
@@ -142,6 +167,11 @@ export async function GET(request: NextRequest) {
           dailyScans: dailyScansResult.rows.map(row => ({
             date: row.date.toISOString().split('T')[0],
             count: parseInt(row.count),
+          })),
+          userGrowth: userGrowthResult.rows.map(row => ({
+            date: row.date.toISOString().split('T')[0],
+            newUsers: parseInt(row.new_users),
+            totalUsers: baseUserCount + parseInt(row.cumulative_users),
           })),
         },
       },

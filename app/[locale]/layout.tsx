@@ -9,11 +9,21 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/sonner';
+import { pretendard, themeColor } from '@/lib/fonts';
+
+// 키보드 사용자를 위한 "본문으로 바로가기" (번역 키를 늘리지 않으려고 여기서 바로 고름)
+const SKIP_LINK: Record<string, string> = {
+  ko: '본문으로 바로가기',
+  en: 'Skip to main content',
+  ja: 'メインコンテンツへ移動',
+  zh: '跳到主要内容',
+  es: 'Saltar al contenido principal',
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#1e293b',
+  themeColor,
 };
 
 export const metadata: Metadata = {
@@ -69,38 +79,15 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  // 언어별 폰트 클래스
-  const getFontClass = () => {
-    switch (locale) {
-      case 'ko': return 'font-pretendard';
-      case 'ja': return 'font-noto-jp';
-      case 'zh': return 'font-noto-sc';
-      default: return 'font-inter'; // en, es
-    }
-  };
-
-  // 언어별 CDN URL
-  const getFontCDN = () => {
-    switch (locale) {
-      case 'ko':
-        // npm 버전 사용 (CORS 이슈 해결)
-        return 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css';
-      case 'ja':
-        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap';
-      case 'zh':
-        return 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap';
-      default: // en, es
-        return 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
-    }
-  };
-
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        {/* 언어별 폰트 CDN */}
-        <link rel="stylesheet" href={getFontCDN()} />
-      </head>
-      <body className={`${getFontClass()} antialiased`}>
+    <html lang={locale} className={pretendard.variable} suppressHydrationWarning>
+      <body className="min-h-dvh antialiased">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-foreground focus:px-4 focus:py-2 focus:text-15 focus:font-bold focus:text-background"
+        >
+          {SKIP_LINK[locale] ?? SKIP_LINK.en}
+        </a>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
@@ -112,7 +99,7 @@ export default async function LocaleLayout({
               <SettingsProvider>
                 <FontSizeProvider>
                   {children}
-                  <Toaster richColors position="top-right" />
+                  <Toaster position="bottom-center" />
                 </FontSizeProvider>
               </SettingsProvider>
             </AuthProvider>
