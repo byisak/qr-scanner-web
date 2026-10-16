@@ -7,7 +7,7 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "Loading...",
+    "loading": "Loading",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "typeToConfirm": "Type {value} to confirm"
@@ -131,7 +131,12 @@
     "visitedAt": "Visited",
     "loginRequired": "Login Required",
     "loginRequiredDesc": "Login to manage sessions and save scan data",
-    "confirmDelete": "Are you sure you want to delete this session?"
+    "confirmDelete": "Are you sure you want to delete this session?",
+    "emptyTitle": "No sessions yet",
+    "emptyDesc": "Sessions you create in the app show up here.",
+    "scans": "{count, plural, one {# scan} other {# scans}}",
+    "deleteSessionLabel": "Delete {name}",
+    "deleteFailed": "Couldn't delete the session. Please try again shortly."
   },
   "session": {
     "title": "Session",
@@ -143,7 +148,7 @@
     "items": "items",
     "exportCsv": "Export CSV",
     "exportExcel": "Export Excel",
-    "exporting": "Exporting...",
+    "exporting": "Exporting",
     "exportSuccess": "Export completed successfully",
     "exportFailed": "Export failed",
     "exportError": "Failed to export data.",
@@ -151,7 +156,7 @@
     "deleteError": "Failed to delete scan data.",
     "scanDeleted": "Scan deleted",
     "scansDeleted": "{count} scans deleted",
-    "newScanReceived": "New scan received!",
+    "newScanReceived": "New scan received",
     "newScansCount": "{count} new scans received",
     "copied": "Session ID copied",
     "copyFailed": "Copy failed",
@@ -171,7 +176,13 @@
     "passwordRequired": "Please enter a password",
     "wrongPassword": "Incorrect password",
     "verifyError": "Failed to verify password",
-    "accessGranted": "Access granted"
+    "accessGranted": "Access granted",
+    "connectionError": "There's a problem with the live connection. Try refreshing the page.",
+    "copySessionId": "Copy session ID",
+    "collapseInfo": "Hide session info",
+    "expandInfo": "Show session info",
+    "qrLabel": "QR code for session {id}",
+    "unlocking": "Checking"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -180,7 +191,7 @@
     "dashboard": "Dashboard",
     "addSession": "Add Session",
     "newSession": "New Session",
-    "sessionIdPlaceholder": "Session ID...",
+    "sessionIdPlaceholder": "Session ID",
     "sessionList": "Sessions",
     "noSessions": "Add a session",
     "deletedSessions": "Deleted",
@@ -190,7 +201,7 @@
     "login": "Login",
     "restore": "Restore",
     "permanentDelete": "Delete",
-    "moreItems": "more...",
+    "moreItems": "more",
     "deleteFailed": "Delete failed",
     "deleteError": "Failed to delete session.",
     "viewSession": "View Session",
@@ -206,11 +217,12 @@
     "rename": "Rename",
     "pin": "Pin",
     "unpin": "Unpin",
-    "sessionNamePlaceholder": "Enter session name...",
+    "sessionNamePlaceholder": "Enter session name",
     "admin": "Admin",
     "adminDashboard": "Admin Dashboard",
     "userManagement": "User Management",
-    "legalManagement": "Legal Documents"
+    "legalManagement": "Legal Documents",
+    "renameLabel": "Session name"
   },
   "settings": {
     "title": "Settings",
@@ -240,12 +252,21 @@
     "noData": "No scan data yet",
     "noDataDesc": "Scan data from your mobile app will appear here in real-time",
     "selected": "selected",
-    "searchPlaceholder": "Search QR codes...",
+    "searchPlaceholder": "Search QR codes",
     "totalScans": "Total scans",
     "showingOf": "Showing {showing} of {total}",
     "page": "Page",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "deleteScanTitle": "Delete scan",
+    "deleteScanDesc": "Delete this scan?",
+    "deleteScanLabel": "Delete scan",
+    "selectAll": "Select all on this page",
+    "selectRow": "Select row",
+    "searchLabel": "Search QR codes",
+    "noResults": "No matching scans",
+    "noResultsDesc": "Try a different search or clear it.",
+    "clearSearch": "Clear search"
   },
   "auth": {
     "login": "Login",
@@ -261,14 +282,24 @@
     "signIn": "Sign in",
     "loginDescription": "Sign in to QR Scanner Web",
     "loginFailed": "Login failed",
-    "loggingIn": "Logging in...",
+    "loggingIn": "Logging in",
     "or": "or",
     "loginWithGoogleComingSoon": "Login with Google (Coming soon)",
     "loginWithAppleComingSoon": "Login with Apple (Coming soon)",
     "googleLoginFailed": "Google login failed",
     "appleLoginFailed": "Apple login failed",
     "appleNotAvailable": "Apple login is not available",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "invalidCredentials": "The email or password is incorrect.",
+    "registerDescription": "Create your QR Scanner Web account",
+    "registering": "Signing up",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "At least 8 characters",
+    "passwordMismatch": "The passwords don't match.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "registerFailed": "Couldn't sign up. Please try again shortly.",
+    "emailExists": "This email is already registered.",
+    "invalidEmail": "Please check the email format."
   },
   "profile": {
     "title": "Profile Settings",
@@ -283,7 +314,7 @@
     "providerApple": "Apple",
     "providerKakao": "Kakao",
     "save": "Save Changes",
-    "saving": "Saving...",
+    "saving": "Saving",
     "saveSuccess": "Profile updated successfully",
     "saveError": "Failed to update profile",
     "changePassword": "Change Password",
@@ -299,7 +330,12 @@
     "passwordChangeSuccess": "Password changed successfully. Please login again.",
     "passwordChangeError": "Failed to change password",
     "socialAccountNote": "Social login accounts cannot change password",
-    "back": "Back"
+    "back": "Back",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "wrongCurrentPassword": "The current password is incorrect.",
+    "samePassword": "Choose a password different from your current one.",
+    "passwordRequired": "Please enter a password."
   },
   "trash": {
     "title": "Deleted Sessions",
@@ -320,7 +356,10 @@
     "confirmDeleteExpired": "Are you sure you want to permanently delete all expired sessions?",
     "expiredDeleted": "{count} expired session(s) deleted.",
     "cleanupFailed": "Cleanup failed",
-    "cleanupError": "Failed to clean up expired sessions."
+    "cleanupError": "Failed to clean up expired sessions.",
+    "restored": "Session restored",
+    "permanentlyDeleted": "Session permanently deleted",
+    "typeExpiredCount": "Type the number of expired sessions ({count}) to confirm"
   },
   "systemSettings": {
     "title": "System Settings",

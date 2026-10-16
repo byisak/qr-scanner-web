@@ -7,7 +7,7 @@
     "zh": "中文",
     "ja": "日本語",
     "es": "Español",
-    "loading": "加载中...",
+    "loading": "加载中",
     "cancel": "取消",
     "confirm": "确认",
     "typeToConfirm": "请输入“{value}”以确认"
@@ -131,7 +131,12 @@
     "visitedAt": "访问时间",
     "loginRequired": "需要登录",
     "loginRequiredDesc": "登录以管理会话和保存扫描数据",
-    "confirmDelete": "确定要删除此会话吗？"
+    "confirmDelete": "确定要删除此会话吗？",
+    "emptyTitle": "还没有会话",
+    "emptyDesc": "在应用中创建的会话会显示在这里。",
+    "scans": "扫描 {count} 次",
+    "deleteSessionLabel": "删除 {name}",
+    "deleteFailed": "无法删除会话，请稍后重试。"
   },
   "session": {
     "title": "会话",
@@ -143,7 +148,7 @@
     "items": "条",
     "exportCsv": "导出 CSV",
     "exportExcel": "导出 Excel",
-    "exporting": "正在导出...",
+    "exporting": "正在导出",
     "exportSuccess": "导出成功",
     "exportFailed": "导出失败",
     "exportError": "数据导出失败。",
@@ -151,7 +156,7 @@
     "deleteError": "删除扫描数据时出错。",
     "scanDeleted": "扫描已删除",
     "scansDeleted": "已删除 {count} 条扫描",
-    "newScanReceived": "收到新扫描！",
+    "newScanReceived": "收到新扫描。",
     "newScansCount": "收到 {count} 条新扫描",
     "copied": "会话ID已复制",
     "copyFailed": "复制失败",
@@ -171,7 +176,13 @@
     "passwordRequired": "请输入密码",
     "wrongPassword": "密码错误",
     "verifyError": "验证密码失败",
-    "accessGranted": "访问已授权"
+    "accessGranted": "访问已授权",
+    "connectionError": "实时连接出现问题，请刷新页面。",
+    "copySessionId": "复制会话 ID",
+    "collapseInfo": "收起会话信息",
+    "expandInfo": "展开会话信息",
+    "qrLabel": "会话 {id} 的二维码",
+    "unlocking": "正在验证"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -180,7 +191,7 @@
     "dashboard": "仪表板",
     "addSession": "添加会话",
     "newSession": "新会话",
-    "sessionIdPlaceholder": "会话ID...",
+    "sessionIdPlaceholder": "会话ID",
     "sessionList": "会话",
     "noSessions": "添加一个会话",
     "deletedSessions": "已删除",
@@ -190,7 +201,7 @@
     "login": "登录",
     "restore": "恢复",
     "permanentDelete": "删除",
-    "moreItems": "更多...",
+    "moreItems": "更多",
     "deleteFailed": "删除失败",
     "deleteError": "删除会话失败。",
     "viewSession": "查看会话",
@@ -206,7 +217,8 @@
     "rename": "重命名",
     "pin": "置顶",
     "unpin": "取消置顶",
-    "sessionNamePlaceholder": "输入会话名称..."
+    "sessionNamePlaceholder": "输入会话名称",
+    "renameLabel": "会话名称"
   },
   "settings": {
     "title": "设置",
@@ -236,12 +248,21 @@
     "noData": "暂无扫描数据",
     "noDataDesc": "手机应用扫描的数据将实时显示在这里",
     "selected": "已选择",
-    "searchPlaceholder": "搜索二维码...",
+    "searchPlaceholder": "搜索二维码",
     "totalScans": "总扫描数",
     "showingOf": "显示 {showing} / {total}",
     "page": "页码",
     "previous": "上一页",
-    "next": "下一页"
+    "next": "下一页",
+    "deleteScanTitle": "删除扫描记录",
+    "deleteScanDesc": "要删除这条扫描记录吗？",
+    "deleteScanLabel": "删除扫描",
+    "selectAll": "全选本页",
+    "selectRow": "选择行",
+    "searchLabel": "搜索二维码",
+    "noResults": "没有匹配的扫描",
+    "noResultsDesc": "请换个关键词或清除搜索。",
+    "clearSearch": "清除搜索"
   },
   "auth": {
     "login": "登录",
@@ -257,14 +278,24 @@
     "signIn": "登录",
     "loginDescription": "登录 QR Scanner Web",
     "loginFailed": "登录失败",
-    "loggingIn": "登录中...",
+    "loggingIn": "登录中",
     "or": "或",
     "loginWithGoogleComingSoon": "使用 Google 登录 (即将推出)",
     "loginWithAppleComingSoon": "使用 Apple 登录 (即将推出)",
     "googleLoginFailed": "Google 登录失败",
     "appleLoginFailed": "Apple 登录失败",
     "appleNotAvailable": "Apple 登录不可用",
-    "backToHome": "返回首页"
+    "backToHome": "返回首页",
+    "invalidCredentials": "邮箱或密码不正确。",
+    "registerDescription": "创建 QR Scanner Web 账户",
+    "registering": "正在注册",
+    "confirmPassword": "确认密码",
+    "passwordHint": "至少 8 个字符",
+    "passwordMismatch": "两次输入的密码不一致。",
+    "passwordTooShort": "密码至少需要 8 个字符。",
+    "registerFailed": "注册失败，请稍后重试。",
+    "emailExists": "该邮箱已注册。",
+    "invalidEmail": "请检查邮箱格式。"
   },
   "profile": {
     "title": "个人设置",
@@ -279,7 +310,7 @@
     "providerApple": "Apple",
     "providerKakao": "Kakao",
     "save": "保存更改",
-    "saving": "保存中...",
+    "saving": "保存中",
     "saveSuccess": "个人资料已更新",
     "saveError": "更新个人资料失败",
     "changePassword": "修改密码",
@@ -295,7 +326,12 @@
     "passwordChangeSuccess": "密码已更改，请重新登录。",
     "passwordChangeError": "修改密码失败",
     "socialAccountNote": "社交登录账户无法修改密码",
-    "back": "返回"
+    "back": "返回",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
+    "wrongCurrentPassword": "当前密码不正确。",
+    "samePassword": "新密码不能与当前密码相同。",
+    "passwordRequired": "请输入密码。"
   },
   "trash": {
     "title": "已删除会话",
@@ -316,7 +352,10 @@
     "confirmDeleteExpired": "确定要永久删除所有已过期的会话吗？",
     "expiredDeleted": "已删除 {count} 个过期会话。",
     "cleanupFailed": "清理失败",
-    "cleanupError": "清理过期会话失败。"
+    "cleanupError": "清理过期会话失败。",
+    "restored": "会话已恢复",
+    "permanentlyDeleted": "会话已永久删除",
+    "typeExpiredCount": "请输入已过期会话的数量（{count}）以确认"
   },
   "systemSettings": {
     "title": "系统设置",
