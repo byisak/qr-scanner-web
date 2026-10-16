@@ -149,7 +149,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      <div className="overflow-x-auto">
         <Table className="min-w-[600px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

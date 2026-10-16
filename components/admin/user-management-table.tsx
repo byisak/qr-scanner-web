@@ -236,7 +236,7 @@ export function UserManagementTable({
       )}
 
       {/* 테이블 */}
-      <div className="rounded-md border overflow-x-auto">
+      <div className="overflow-x-auto">
         <Table className="min-w-[900px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
