@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/contexts/auth-context';
 import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
 import { AdminCharts, UserGrowthChart } from '@/components/admin/admin-charts';
+import { AdminHealthPanel } from '@/components/admin/admin-health';
 import { notify } from '@/lib/notify';
 
 interface ChartData {
@@ -146,6 +147,9 @@ export default function AdminDashboardPage() {
           <div className="enter pb-2 pt-8 sm:pt-9" style={{ "--i": 0 } as React.CSSProperties}>
             <h1 className="type-h1">{t('admin.dashboard.title')}</h1>
           </div>
+
+          {/* 운영 상태: 장애를 사용자 제보보다 먼저 */}
+          <AdminHealthPanel accessToken={accessToken} />
 
           {/* 통계 카드 */}
           <AdminStatsCards stats={stats} isLoading={isLoading} />

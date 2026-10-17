@@ -10,7 +10,7 @@ import { notify } from '@/lib/notify';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/form/field';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp, CircleAlert } from 'lucide-react';
+import { Lock, ShieldX, Plug, Unplug, ChevronDown, ChevronUp, CircleAlert, Smartphone, Send, MonitorCheck } from 'lucide-react';
 
 // 방문한 세션을 localStorage에 저장
 const VISITED_SESSIONS_KEY = 'visitedSessions';
@@ -50,7 +50,7 @@ import type { CSSProperties } from 'react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
 function playNotificationSound(volume: number = 50, soundType: 'default' | 'beep' | 'none' = 'default') {
@@ -116,6 +116,7 @@ interface SessionSettings {
 
 export default function SessionPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const params = useParams();
   const sessionId = params.sessionId as string;
   const { user, isAuthenticated, isLoading, accessToken } = useAuth();
@@ -124,6 +125,14 @@ export default function SessionPage() {
   const [copied, setCopied] = useState(false);
   const [sessionName, setSessionName] = useState<string | null>(null);
   const [isSessionInfoCollapsed, setIsSessionInfoCollapsed] = useState(false);
+  // 사용자가 QR 카드를 직접 접거나 펼쳤으면 자동으로 접지 않는다
+  const infoToggledRef = useRef(false);
+  // 방금 들어온 스캔 id (행 강조용, 몇 초 뒤 지운다)
+  const [highlightIds, setHighlightIds] = useState<ReadonlySet<number>>(() => new Set());
+  // 창을 안 보고 있을 때 쌓인 새 스캔 수 (탭 제목에 표시)
+  const [hiddenCount, setHiddenCount] = useState(0);
+  // 상대 시간("3초 전")을 새로 그리기 위한 시계
+  const [now, setNow] = useState(() => Date.now());
 
   // 세션 접근 제어 상태
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
@@ -152,7 +161,8 @@ export default function SessionPage() {
     { accessToken, sessionAccessToken }
   );
 
-  const prevScansLengthRef = useRef(scans.length);
+  // 연결된 뒤에 처음 보는 스캔만 "새 스캔"으로 친다 (처음 불러온 기록은 제외)
+  const seenIdsRef = useRef<Set<number> | null>(null);
 
   // 세션 설정 및 세션 정보 로드
   useEffect(() => {
@@ -247,33 +257,62 @@ export default function SessionPage() {
     }
   }, [isLoading, isAuthenticated, sessionId]);
 
-  // 새 스캔 도착 시 사운드 재생 및 알림 표시
+  // 새 스캔 도착: 소리·브라우저 알림, 행 강조, 탭 제목 숫자. 화면을 덮는 토스트는 띄우지 않는다
   useEffect(() => {
-    if (scans.length > prevScansLengthRef.current) {
-      const newScansCount = scans.length - prevScansLengthRef.current;
-      // 최신 스캔은 배열의 마지막에 있음
-      const latestScan = scans[scans.length - 1];
-      const scanDescription = newScansCount > 1
-        ? t('session.newScansCount', { count: newScansCount })
-        : latestScan?.code?.substring(0, 50) || '';
-
-      // 사운드 알림
-      if (settings.scanSound) {
-        playNotificationSound(settings.soundVolume, settings.soundType);
-      }
-
-      // 브라우저 알림
-      if (settings.browserNotification) {
-        showBrowserNotification(t('session.newScanReceived'), scanDescription);
-      }
-
-      // 토스트 알림
-      notify.success(t('session.newScanReceived'), {
-        description: scanDescription,
-      });
+    if (!seenIdsRef.current) {
+      if (!isConnected) return;
+      seenIdsRef.current = new Set(scans.map((s) => s.id));
+      if (scans.length > 0 && !infoToggledRef.current) setIsSessionInfoCollapsed(true);
+      return;
     }
-    prevScansLengthRef.current = scans.length;
-  }, [scans.length, settings.scanSound, settings.soundVolume, settings.soundType, settings.browserNotification, scans, t]);
+    const seen = seenIdsRef.current;
+    const wasEmpty = seen.size === 0;
+    const fresh = scans.filter((s) => !seen.has(s.id));
+    if (fresh.length === 0) return;
+    fresh.forEach((s) => seen.add(s.id));
+
+    const latestScan = fresh[fresh.length - 1];
+    const scanDescription = fresh.length > 1
+      ? t('session.newScansCount', { count: fresh.length })
+      : latestScan?.code?.substring(0, 50) || '';
+
+    if (settings.scanSound) {
+      playNotificationSound(settings.soundVolume, settings.soundType);
+    }
+    if (settings.browserNotification) {
+      showBrowserNotification(t('session.newScanReceived'), scanDescription);
+    }
+
+    // 첫 스캔이 들어오면 QR 카드는 할 일을 다 했으니 접는다
+    if (wasEmpty && !infoToggledRef.current) setIsSessionInfoCollapsed(true);
+
+    setHighlightIds((prev) => new Set([...prev, ...fresh.map((s) => s.id)]));
+    const ids = fresh.map((s) => s.id);
+    window.setTimeout(() => {
+      setHighlightIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 3200);
+
+    if (document.hidden) setHiddenCount((n) => n + fresh.length);
+  }, [scans, isConnected, settings.scanSound, settings.soundVolume, settings.soundType, settings.browserNotification, t]);
+
+  // 탭 제목에 안 본 새 스캔 수 "(3)". 탭으로 돌아오면 지운다
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) setHiddenCount(0);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
+  // "방금 스캔 · 3초 전" 갱신
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 15000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // 세션 ID 복사
   const handleCopySessionId = useCallback(async () => {
@@ -352,6 +391,34 @@ export default function SessionPage() {
     [handleDeleteScan, isAuthenticated, formatOptions]
   );
 
+  // 표의 # 이 들어온 순서가 되도록 id(서버 저장 순서) 오름차순으로 넘긴다
+  const orderedScans = useMemo(() => [...scans].sort((a, b) => a.id - b.id), [scans]);
+
+  // 마지막 스캔 카드: 가장 최근 스캔과 오늘 건수·코드 종류·중복
+  const summary = useMemo(() => {
+    if (scans.length === 0) return null;
+    let latest = scans[0];
+    for (const s of scans) {
+      if (s.scan_timestamp > latest.scan_timestamp || (s.scan_timestamp === latest.scan_timestamp && s.id > latest.id)) latest = s;
+    }
+    const today = new Date().toDateString();
+    const todayCount = scans.filter((s) => new Date(s.scan_timestamp).toDateString() === today).length;
+    const distinct = new Set(scans.map((s) => s.code)).size;
+    const latestRepeat = scans.filter((s) => s.code === latest.code).length;
+    return { latest, todayCount, distinct, duplicates: scans.length - distinct, latestRepeat };
+  }, [scans]);
+
+  const relativeTime = useCallback((ts: number) => {
+    const sec = Math.round((ts - now) / 1000);
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    if (Math.abs(sec) < 60) return rtf.format(Math.min(0, sec), 'second');
+    const min = Math.round(sec / 60);
+    if (Math.abs(min) < 60) return rtf.format(min, 'minute');
+    const hour = Math.round(min / 60);
+    if (Math.abs(hour) < 24) return rtf.format(hour, 'hour');
+    return rtf.format(Math.round(hour / 24), 'day');
+  }, [locale, now]);
+
   const handleExport = async (format: 'csv' | 'xlsx') => {
     const loadingToast = notify.loading(t('session.exporting'));
     try {
@@ -382,6 +449,12 @@ export default function SessionPage() {
   };
 
   const displayName = sessionName || sessionId;
+
+  // 탭 제목: 안 본 새 스캔이 있으면 앞에 "(3)"
+  useEffect(() => {
+    const base = `${displayName} · ScanView`;
+    document.title = hiddenCount > 0 ? `(${hiddenCount}) ${base}` : base;
+  }, [hiddenCount, displayName]);
 
   const header = (
     <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/85 backdrop-blur-md">
@@ -525,7 +598,10 @@ export default function SessionPage() {
                   <Button
                     variant="outline"
                     size="icon-sm"
-                    onClick={() => setIsSessionInfoCollapsed(!isSessionInfoCollapsed)}
+                    onClick={() => {
+                      infoToggledRef.current = true;
+                      setIsSessionInfoCollapsed(!isSessionInfoCollapsed);
+                    }}
                     aria-expanded={!isSessionInfoCollapsed}
                     aria-controls="session-info"
                     aria-label={isSessionInfoCollapsed ? t('session.expandInfo') : t('session.collapseInfo')}
@@ -538,6 +614,26 @@ export default function SessionPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* 마지막 스캔: 멀리서 PC 화면으로 확인할 수 있게 크게 */}
+              {summary && (
+                <div className="mt-4 rounded-field bg-secondary px-4 py-3" aria-live="polite">
+                  <p className="text-13 font-semibold text-muted-foreground">
+                    {t('session.lastScan')} · <span className="tabular">{relativeTime(summary.latest.scan_timestamp)}</span>
+                  </p>
+                  <p className="type-h1 mt-1 break-all font-mono">{summary.latest.code}</p>
+                  <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-13 text-muted-foreground">
+                    <span className="tabular">{t('session.todayCount', { count: summary.todayCount })}</span>
+                    <span className="tabular">{t('session.distinctCodes', { count: summary.distinct })}</span>
+                    {summary.duplicates > 0 && (
+                      <span className="tabular">{t('session.duplicateScans', { count: summary.duplicates })}</span>
+                    )}
+                    {summary.latestRepeat > 1 && (
+                      <span className="tabular font-semibold text-foreground">{t('session.scannedTimes', { count: summary.latestRepeat })}</span>
+                    )}
+                  </p>
+                </div>
+              )}
 
               {/* QR 코드와 세션 ID (접기 가능) */}
               {!isSessionInfoCollapsed && (
@@ -627,7 +723,40 @@ export default function SessionPage() {
                       </Button>
                     </div>
                   )}
-                  <ScanDataTable columns={columns} data={scans} onDeleteSelected={isAuthenticated ? handleDeleteSelected : undefined} />
+                  <ScanDataTable
+                    columns={columns}
+                    data={orderedScans}
+                    onDeleteSelected={isAuthenticated ? handleDeleteSelected : undefined}
+                    highlightIds={highlightIds}
+                    emptyState={isAuthenticated ? (
+                      // 첫 세션 안내: 앱에서 이 세션으로 보내는 방법 3단계
+                      <div className="grid gap-4 py-2">
+                        <div>
+                          <h3 className="type-h3">{t('session.onboardTitle')}</h3>
+                          <p className="mt-1 text-13 text-muted-foreground">{t('session.onboardDesc')}</p>
+                        </div>
+                        <ol className="grid gap-3 sm:grid-cols-3">
+                          {[
+                            { icon: Smartphone, title: t('session.onboardStep1'), desc: t('session.onboardStep1Desc') },
+                            { icon: Send, title: t('session.onboardStep2'), desc: t('session.onboardStep2Desc') },
+                            { icon: MonitorCheck, title: t('session.onboardStep3'), desc: t('session.onboardStep3Desc') },
+                          ].map((step, i) => (
+                            <li key={i} className="rounded-field border p-4">
+                              <div className="flex items-center gap-2">
+                                <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-13 font-bold tabular">{i + 1}</span>
+                                <step.icon className="size-4 text-muted-foreground" aria-hidden="true" />
+                              </div>
+                              <p className="mt-3 font-semibold">{step.title}</p>
+                              <p className="mt-1 text-13 text-muted-foreground">{step.desc}</p>
+                            </li>
+                          ))}
+                        </ol>
+                        <a href={`/${locale}/beta`} className="justify-self-start text-13 font-semibold underline underline-offset-4">
+                          {t('session.onboardGetApp')}
+                        </a>
+                      </div>
+                    ) : undefined}
+                  />
                 </>
               )}
             </CardContent>

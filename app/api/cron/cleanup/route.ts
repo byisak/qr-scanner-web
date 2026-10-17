@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { getConnection } from '@/lib/db';
 import type { PoolClient } from 'pg';
+import { recordCronRun } from '@/lib/cron-runs';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: '권한이 없습니다.', code: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const startedAt = new Date();
   let client: PoolClient | null = null;
   try {
     client = await getConnection();
@@ -55,17 +57,26 @@ export async function GET(request: NextRequest) {
     const purged = await purgeWithdrawnUsers(client);
 
     await client.query('COMMIT');
-    return NextResponse.json({
-      success: true,
+    const result = {
       deletedSessionCount: ids.length,
       deletedScanCount,
       purgedUserCount: purged.users,
       purgedSessionCount: purged.sessions,
       purgedScanCount: purged.scans,
-    });
+    };
+    client.release();
+    client = null;
+    await recordCronRun('cleanup', startedAt, true, result);
+    return NextResponse.json({ success: true, ...result });
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
-    console.error('[cron/cleanup] 실패:', err instanceof Error ? err.message : err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[cron/cleanup] 실패:', message);
+    if (client) {
+      client.release();
+      client = null;
+    }
+    await recordCronRun('cleanup', startedAt, false, null, message);
     return NextResponse.json({ success: false, error: '정리 작업에 실패했습니다.', code: 'INTERNAL_ERROR' }, { status: 500 });
   } finally {
     if (client) client.release();

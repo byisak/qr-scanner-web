@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { isLegalDocumentType } from '@/lib/legal';
+import { sanitizeLegalHtml } from '@/lib/sanitize-legal';
 
 export async function GET(
   request: NextRequest,
@@ -55,7 +56,7 @@ export async function GET(
               type: doc.type,
               locale: doc.locale,
               title: doc.title,
-              content: doc.content,
+              content: sanitizeLegalHtml(doc.content),
               version: doc.version,
               publishedAt: doc.published_at?.toISOString() || null,
               updatedAt: doc.updated_at.toISOString(),
@@ -80,7 +81,7 @@ export async function GET(
         type: doc.type,
         locale: doc.locale,
         title: doc.title,
-        content: doc.content,
+        content: sanitizeLegalHtml(doc.content),
         version: doc.version,
         publishedAt: doc.published_at?.toISOString() || null,
         updatedAt: doc.updated_at.toISOString(),

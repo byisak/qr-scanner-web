@@ -1089,6 +1089,20 @@ ON CONFLICT (type, locale) DO NOTHING;
 COMMIT;
 
 -- ============================================
+-- 8-1. 크론 실행 기록 (scripts/migrate-cron-runs-2026-10-18.sql)
+-- ============================================
+CREATE TABLE IF NOT EXISTS cron_runs (
+    id BIGSERIAL PRIMARY KEY,
+    job VARCHAR(50) NOT NULL,
+    started_at TIMESTAMPTZ NOT NULL,
+    finished_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ok BOOLEAN NOT NULL,
+    details JSONB,
+    error TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_cron_runs_job_started ON cron_runs(job, started_at DESC);
+
+-- ============================================
 -- 9. Supabase Data API 잠금 (scripts/supabase-lockdown.sql) - 반드시 마지막
 -- ============================================
 

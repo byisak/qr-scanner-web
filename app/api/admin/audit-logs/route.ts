@@ -45,13 +45,15 @@ export async function GET(request: NextRequest) {
 
     // 쿼리 파라미터
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50') || 50));
     const action = searchParams.get('action') || '';
     const targetType = searchParams.get('targetType') || '';
     const adminId = searchParams.get('adminId') || '';
-    const startDate = searchParams.get('startDate') || '';
-    const endDate = searchParams.get('endDate') || '';
+    // YYYY-MM-DD 가 아니면 무시한다
+    const isDate = (v: string | null) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    const startDate = isDate(searchParams.get('startDate')) ? searchParams.get('startDate')! : '';
+    const endDate = isDate(searchParams.get('endDate')) ? searchParams.get('endDate')! : '';
     const offset = (page - 1) * limit;
 
     // 동적 쿼리 빌드
@@ -78,14 +80,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (startDate) {
-      conditions.push(`al.created_at >= $${paramIndex}`);
+      // 날짜는 한국 시간 기준 (created_at 은 시간대 없는 UTC)
+      conditions.push(`al.created_at >= ($${paramIndex}::date::timestamp - INTERVAL '9 hours')`);
       params.push(startDate);
       paramIndex++;
     }
 
     if (endDate) {
-      conditions.push(`al.created_at <= $${paramIndex}`);
-      params.push(endDate + ' 23:59:59');
+      conditions.push(`al.created_at < ($${paramIndex}::date::timestamp + INTERVAL '15 hours')`);
+      params.push(endDate);
       paramIndex++;
     }
 

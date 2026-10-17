@@ -185,7 +185,21 @@
     "collapseInfo": "收起会话信息",
     "expandInfo": "展开会话信息",
     "qrLabel": "会话 {id} 的二维码",
-    "unlocking": "正在验证"
+    "unlocking": "正在验证",
+    "lastScan": "刚刚扫描",
+    "todayCount": "今天 {count} 条",
+    "distinctCodes": "{count} 种码",
+    "duplicateScans": "重复 {count} 条",
+    "scannedTimes": "此码第 {count} 次",
+    "onboardTitle": "从应用发送到此会话",
+    "onboardDesc": "用手机扫描后会立即显示在这里。只需三步。",
+    "onboardStep1": "安装应用并登录",
+    "onboardStep1Desc": "在 QR 扫描器应用中用此账号登录。",
+    "onboardStep2": "开启实时发送到电脑",
+    "onboardStep2Desc": "在应用的设置 → 实时发送到电脑中选择此会话。",
+    "onboardStep3": "扫描后显示在这里",
+    "onboardStep3Desc": "每次扫描都会立即在此表格中新增一行。",
+    "onboardGetApp": "查看如何获取应用"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -221,7 +235,8 @@
     "pin": "置顶",
     "unpin": "取消置顶",
     "sessionNamePlaceholder": "输入会话名称",
-    "renameLabel": "会话名称"
+    "renameLabel": "会话名称",
+    "auditLog": "审计日志"
   },
   "settings": {
     "title": "设置",
@@ -251,7 +266,7 @@
     "noData": "暂无扫描数据",
     "noDataDesc": "手机应用扫描的数据将实时显示在这里",
     "selected": "已选择",
-    "searchPlaceholder": "搜索二维码",
+    "searchPlaceholder": "搜索码值",
     "totalScans": "总扫描数",
     "showingOf": "显示 {showing} / {total}",
     "page": "页码",
@@ -262,10 +277,12 @@
     "deleteScanLabel": "删除扫描",
     "selectAll": "全选本页",
     "selectRow": "选择行",
-    "searchLabel": "搜索二维码",
+    "searchLabel": "搜索码值",
     "noResults": "没有匹配的扫描",
     "noResultsDesc": "请换个关键词或清除搜索。",
-    "clearSearch": "清除搜索"
+    "clearSearch": "清除搜索",
+    "code": "码值",
+    "newScansJump": "{count} 条新扫描 · 回到顶部"
   },
   "auth": {
     "login": "登录",
@@ -410,7 +427,7 @@
       "refresh": "Reload",
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
-      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
       "typeBulkCount": "Type the number of selected users ({count}) to confirm"
     },
     "legal": {
@@ -444,6 +461,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "审计日志",
+      "desc": "管理员修改或删除会员信息的记录。",
+      "loadError": "无法加载审计日志",
+      "period": "期间",
+      "today": "今天",
+      "all": "全部",
+      "actionFilter": "操作",
+      "allActions": "全部操作",
+      "empty": "没有记录",
+      "emptyDesc": "请更换期间或操作类型",
+      "count": "{count} 条",
+      "admin": "管理员",
+      "target": "对象",
+      "actions": {
+        "update_user": "修改会员信息",
+        "delete_user": "删除会员",
+        "permanent_delete_user": "永久删除会员",
+        "restore_user": "恢复会员",
+        "send_password_reset": "发送重置邮件"
+      }
+    },
+    "health": {
+      "title": "运行状态",
+      "checkedAt": "{time} 检查",
+      "refresh": "重新检查",
+      "db": "DB",
+      "email": "邮件",
+      "realtime": "实时",
+      "cron": "清理任务",
+      "ok": "正常",
+      "failed": "失败",
+      "down": "无响应",
+      "notConfigured": "未设置",
+      "cronNoTable": "没有记录表",
+      "cronNever": "暂无记录",
+      "storage": "DB 容量（免费额度）",
+      "rows": "{count} 行",
+      "cronHistory": "清理任务记录",
+      "cronResult": "删除会话 {sessions} · 扫描 {scans} · 会员 {users}"
     }
   }
 }

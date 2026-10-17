@@ -185,7 +185,21 @@
     "collapseInfo": "Ocultar información de la sesión",
     "expandInfo": "Mostrar información de la sesión",
     "qrLabel": "Código QR de la sesión {id}",
-    "unlocking": "Comprobando"
+    "unlocking": "Comprobando",
+    "lastScan": "Último escaneo",
+    "todayCount": "{count} hoy",
+    "distinctCodes": "{count, plural, one {# código} other {# códigos}}",
+    "duplicateScans": "{count, plural, one {# duplicado} other {# duplicados}}",
+    "scannedTimes": "Escaneado {count} veces",
+    "onboardTitle": "Envía escaneos desde la app a esta sesión",
+    "onboardDesc": "Escanea con el móvil y aparecerá aquí al instante. Son tres pasos.",
+    "onboardStep1": "Instala la app e inicia sesión",
+    "onboardStep1Desc": "Inicia sesión en la app QR Scanner con esta cuenta.",
+    "onboardStep2": "Activa el Envío en vivo al PC",
+    "onboardStep2Desc": "En la app, abre Ajustes → Envío en vivo al PC y elige esta sesión.",
+    "onboardStep3": "Escanea y míralo aquí",
+    "onboardStep3Desc": "Cada escaneo se añade al instante como una fila nueva en esta tabla.",
+    "onboardGetApp": "Cómo conseguir la app"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -221,7 +235,8 @@
     "pin": "Fijar",
     "unpin": "Desfijar",
     "sessionNamePlaceholder": "Ingrese el nombre de sesión",
-    "renameLabel": "Nombre de la sesión"
+    "renameLabel": "Nombre de la sesión",
+    "auditLog": "Registro de auditoría"
   },
   "settings": {
     "title": "Configuración",
@@ -251,7 +266,7 @@
     "noData": "Aún no hay datos de escaneo",
     "noDataDesc": "Los datos escaneados desde tu app móvil aparecerán aquí en tiempo real",
     "selected": "seleccionados",
-    "searchPlaceholder": "Buscar códigos QR",
+    "searchPlaceholder": "Buscar códigos",
     "totalScans": "Total de escaneos",
     "showingOf": "Mostrando {showing} de {total}",
     "page": "Página",
@@ -262,10 +277,12 @@
     "deleteScanLabel": "Eliminar escaneo",
     "selectAll": "Seleccionar todo en esta página",
     "selectRow": "Seleccionar fila",
-    "searchLabel": "Buscar códigos QR",
+    "searchLabel": "Buscar códigos",
     "noResults": "No hay escaneos que coincidan",
     "noResultsDesc": "Prueba otra búsqueda o bórrala.",
-    "clearSearch": "Borrar búsqueda"
+    "clearSearch": "Borrar búsqueda",
+    "code": "Código",
+    "newScansJump": "{count, plural, one {# escaneo nuevo} other {# escaneos nuevos}} · Ir arriba"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -410,7 +427,7 @@
       "refresh": "Reload",
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
-      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
       "typeBulkCount": "Type the number of selected users ({count}) to confirm"
     },
     "legal": {
@@ -444,6 +461,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "Registro de auditoría",
+      "desc": "Cambios y eliminaciones que los administradores hicieron en cuentas de miembros.",
+      "loadError": "No se pudo cargar el registro de auditoría",
+      "period": "Periodo",
+      "today": "Hoy",
+      "all": "Todo",
+      "actionFilter": "Acción",
+      "allActions": "Todas las acciones",
+      "empty": "No hay registros",
+      "emptyDesc": "Prueba con otro periodo o acción",
+      "count": "{count, plural, one {# registro} other {# registros}}",
+      "admin": "Administrador",
+      "target": "Objetivo",
+      "actions": {
+        "update_user": "Miembro actualizado",
+        "delete_user": "Miembro eliminado",
+        "permanent_delete_user": "Miembro eliminado definitivamente",
+        "restore_user": "Miembro restaurado",
+        "send_password_reset": "Correo de restablecimiento enviado"
+      }
+    },
+    "health": {
+      "title": "Estado del sistema",
+      "checkedAt": "Comprobado {time}",
+      "refresh": "Comprobar de nuevo",
+      "db": "BD",
+      "email": "Correo",
+      "realtime": "Tiempo real",
+      "cron": "Limpieza",
+      "ok": "Correcto",
+      "failed": "Falló",
+      "down": "Sin respuesta",
+      "notConfigured": "Sin configurar",
+      "cronNoTable": "Sin tabla de registro",
+      "cronNever": "Sin ejecuciones",
+      "storage": "Almacenamiento BD (límite gratis)",
+      "rows": "{count} filas",
+      "cronHistory": "Ejecuciones de limpieza",
+      "cronResult": "Eliminados {sessions} sesiones · {scans} escaneos · {users} miembros"
     }
   }
 }

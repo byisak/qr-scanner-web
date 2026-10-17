@@ -185,7 +185,21 @@
     "collapseInfo": "세션 정보 접기",
     "expandInfo": "세션 정보 펼치기",
     "qrLabel": "세션 {id} QR 코드",
-    "unlocking": "확인하는 중"
+    "unlocking": "확인하는 중",
+    "lastScan": "방금 스캔",
+    "todayCount": "오늘 {count}건",
+    "distinctCodes": "코드 {count}종",
+    "duplicateScans": "중복 {count}건",
+    "scannedTimes": "이 코드 {count}번째",
+    "onboardTitle": "앱에서 이 세션으로 보내 보세요",
+    "onboardDesc": "폰으로 스캔하면 이 화면에 바로 떠요. 세 단계면 돼요.",
+    "onboardStep1": "앱 설치하고 로그인",
+    "onboardStep1Desc": "QR 스캐너 앱에서 이 계정으로 로그인해요.",
+    "onboardStep2": "실시간 PC 전송 켜기",
+    "onboardStep2Desc": "앱 설정 → 실시간 PC 전송에서 이 세션을 고르세요.",
+    "onboardStep3": "스캔하면 여기에 떠요",
+    "onboardStep3Desc": "스캔할 때마다 이 표에 한 줄씩 바로 추가돼요.",
+    "onboardGetApp": "앱 받는 방법 보기"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -225,7 +239,8 @@
     "adminDashboard": "관리 대시보드",
     "userManagement": "사용자 관리",
     "legalManagement": "약관 관리",
-    "renameLabel": "세션 이름"
+    "renameLabel": "세션 이름",
+    "auditLog": "감사 로그"
   },
   "settings": {
     "title": "설정",
@@ -255,7 +270,7 @@
     "noData": "아직 스캔 기록이 없어요",
     "noDataDesc": "앱에서 스캔하면 바로 여기에 나타나요",
     "selected": "개 선택됨",
-    "searchPlaceholder": "QR 코드 검색",
+    "searchPlaceholder": "코드 검색",
     "totalScans": "총 스캔 수",
     "showingOf": "{total}개 중 {showing}개",
     "page": "페이지",
@@ -266,10 +281,12 @@
     "deleteScanLabel": "스캔 삭제",
     "selectAll": "이 페이지 전체 선택",
     "selectRow": "행 선택",
-    "searchLabel": "QR 코드 검색",
+    "searchLabel": "코드 검색",
     "noResults": "찾는 스캔이 없어요",
     "noResultsDesc": "검색어를 바꾸거나 지워 보세요",
-    "clearSearch": "검색 지우기"
+    "clearSearch": "검색 지우기",
+    "code": "코드",
+    "newScansJump": "새 스캔 {count}건 · 맨 위로"
   },
   "auth": {
     "login": "로그인",
@@ -529,9 +546,9 @@
       "activateSuccess": "계정을 활성화했어요",
       "deactivateSuccess": "계정을 비활성화했어요",
       "resetPasswordConfirmTitle": "비밀번호 초기화",
-      "resetPasswordConfirmDesc": "{email} 계정의 비밀번호 재설정 링크를 만들까요?",
+      "resetPasswordConfirmDesc": "{email} 계정으로 비밀번호 재설정 메일을 보낼까요? 기존 재설정 링크는 더 이상 쓸 수 없어요.",
       "resetPasswordSuccess": "발송 완료",
-      "resetPasswordSuccessDesc": "비밀번호 재설정 링크를 만들었어요",
+      "resetPasswordSuccessDesc": "{email}로 재설정 메일을 보냈어요. 링크는 1시간 동안 쓸 수 있어요",
       "resetPasswordError": "발송 실패",
       "bulkDeleteConfirmTitle": "일괄 삭제",
       "bulkDeleteConfirmDesc": "사용자 {count}명을 삭제할까요?",
@@ -542,7 +559,7 @@
       "refresh": "다시 불러오기",
       "noUsersDesc": "검색어나 필터를 바꿔 보세요",
       "adRecordsLabel": "{name} 광고 기록: 시청 {watched}회, 해제 {unlocked}개",
-      "resetPasswordErrorDesc": "비밀번호 재설정 링크를 만들지 못했어요. 잠시 뒤 다시 해주세요",
+      "resetPasswordErrorDesc": "재설정 메일을 보내지 못했어요. 잠시 뒤 다시 해주세요",
       "typeBulkCount": "확인을 위해 선택한 사용자 수({count})를 입력해 주세요"
     },
     "stats": {
@@ -624,6 +641,47 @@
       "hr": "구분선",
       "link": "링크",
       "linkPrompt": "링크 주소를 입력해 주세요"
+    },
+    "audit": {
+      "title": "감사 로그",
+      "desc": "관리자가 회원 정보를 바꾸거나 지운 기록이에요.",
+      "loadError": "감사 로그를 불러오지 못했어요",
+      "period": "기간",
+      "today": "오늘",
+      "all": "전체",
+      "actionFilter": "작업 종류",
+      "allActions": "모든 작업",
+      "empty": "기록이 없어요",
+      "emptyDesc": "기간이나 작업 종류를 바꿔 보세요",
+      "count": "{count}건",
+      "admin": "관리자",
+      "target": "대상",
+      "actions": {
+        "update_user": "회원 정보 수정",
+        "delete_user": "회원 삭제",
+        "permanent_delete_user": "회원 영구 삭제",
+        "restore_user": "회원 복구",
+        "send_password_reset": "재설정 메일 발송"
+      }
+    },
+    "health": {
+      "title": "운영 상태",
+      "checkedAt": "{time} 확인",
+      "refresh": "다시 확인",
+      "db": "DB",
+      "email": "메일",
+      "realtime": "실시간",
+      "cron": "정리 작업",
+      "ok": "정상",
+      "failed": "실패",
+      "down": "응답 없음",
+      "notConfigured": "설정 안 됨",
+      "cronNoTable": "기록 테이블 없음",
+      "cronNever": "기록 없음",
+      "storage": "DB 용량 (무료 한도)",
+      "rows": "{count}행",
+      "cronHistory": "정리 작업 기록",
+      "cronResult": "세션 {sessions} · 스캔 {scans} · 회원 {users} 삭제"
     }
   }
 }

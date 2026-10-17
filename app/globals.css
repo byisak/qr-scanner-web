@@ -336,6 +336,17 @@
   }
 }
 
+/* 방금 들어온 스캔 행: 잠깐 회색 바탕으로 표시했다가 사라진다.
+   움직임 줄이기에서는 애니메이션 없이 회색 바탕만 (강조는 몇 초 뒤 상태에서 지운다) */
+.scan-new { background: var(--secondary); }
+@media (prefers-reduced-motion: no-preference) {
+  .scan-new { animation: kk-flash 3s ease-out forwards; }
+  @keyframes kk-flash {
+    0%, 35% { background: var(--secondary); }
+    100% { background: transparent; }
+  }
+}
+
 /* ─── 본문 글(약관·블로그·편집기): typography 플러그인을 그래파이트 토큰으로 ─── */
 .prose:not(.prose-invert),
 .dark .prose {

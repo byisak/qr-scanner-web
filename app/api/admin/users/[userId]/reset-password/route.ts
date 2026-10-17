@@ -1,4 +1,4 @@
-// POST /api/admin/users/[userId]/reset-password - 사용자 비밀번호 초기화 링크 발송
+// POST /api/admin/users/[userId]/reset-password - 사용자에게 비밀번호 재설정 메일 발송
 import { NextRequest, NextResponse } from 'next/server';
 import type { PoolClient } from 'pg';
 import { getConnection } from '@/lib/db';
@@ -9,6 +9,7 @@ import {
   generatePasswordResetToken,
   getPasswordResetExpiry,
 } from '@/lib/auth';
+import { sendPasswordResetEmail } from '@/lib/email';
 import { v4 as uuidv4 } from 'uuid';
 
 // 관리자 권한 체크
@@ -113,9 +114,13 @@ export async function POST(
       [uuidv4(), userId, token, expiresAt]
     );
 
-    // 비밀번호 재설정 링크 생성
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const resetLink = `${baseUrl}/reset-password?token=${token}`;
+    // 비밀번호 재설정 링크 생성. 사용자 언어를 저장하지 않으므로 한국어 메일로 보낸다
+    const locale = 'ko';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://scanview.app';
+    const resetUrl = `${baseUrl}/reset-password?token=${token}&lang=${locale}`;
+
+    // 메일 발송. 링크는 응답에 넣지 않는다 (관리자 화면에 토큰이 노출되지 않게)
+    const emailResult = await sendPasswordResetEmail(targetUser.email, targetUser.name, resetUrl, locale);
 
     // 감사 로그 기록
     await logAuditAction(
@@ -124,18 +129,23 @@ export async function POST(
       'send_password_reset',
       'user',
       userId,
-      { email: targetUser.email },
+      { email: targetUser.email, emailSent: emailResult.success },
       ipAddress || undefined,
       userAgent || undefined
     );
 
-    // 이메일 발송 시도 (선택적)
-    // TODO: 이메일 발송 로직 추가
+    if (!emailResult.success) {
+      console.error('Admin password reset email failed:', emailResult.error);
+      return NextResponse.json({
+        success: false,
+        error: { code: 'EMAIL_FAILED', message: '재설정 메일을 보내지 못했습니다.' },
+      }, { status: 502 });
+    }
 
     return NextResponse.json({
       success: true,
-      message: '비밀번호 재설정 링크가 생성되었습니다.',
-      resetLink, // 개발 환경에서만 반환, 프로덕션에서는 이메일로만 전달
+      message: '비밀번호 재설정 메일을 보냈습니다.',
+      data: { email: targetUser.email },
     });
   } catch (error) {
     console.error('Admin password reset error:', error);
