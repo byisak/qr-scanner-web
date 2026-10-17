@@ -26,7 +26,7 @@ const SUPPORTED_LOCALES = [
 ];
 
 // 이 페이지는 앱 웹뷰에서도 열리므로 next-intl 없이 작은 번역표를 쓴다
-const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 'light' | 'dark' | 'language' | 'loading', string>> = {
+const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 'light' | 'dark' | 'language' | 'loading' | 'fallback', string>> = {
   ko: {
     notFound: '문서를 찾을 수 없어요',
     notFoundDesc: '아직 발행된 문서가 없거나 이 언어로는 준비되지 않았어요',
@@ -35,6 +35,7 @@ const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 
     dark: '어두운 화면으로 보기',
     language: '언어',
     loading: '불러오는 중',
+    fallback: '아직 이 언어로 준비되지 않아 한국어로 보여 드려요',
   },
   en: {
     notFound: 'Document not found',
@@ -44,6 +45,7 @@ const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 
     dark: 'Switch to dark mode',
     language: 'Language',
     loading: 'Loading',
+    fallback: 'This document is not available in English yet, so it is shown in Korean',
   },
   ja: {
     notFound: '文書が見つかりません',
@@ -53,6 +55,7 @@ const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 
     dark: 'ダークモードに切り替え',
     language: '言語',
     loading: '読み込み中',
+    fallback: 'この言語ではまだ用意されていないため、韓国語で表示しています',
   },
   zh: {
     notFound: '找不到文档',
@@ -62,6 +65,7 @@ const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 
     dark: '切换到深色模式',
     language: '语言',
     loading: '加载中',
+    fallback: '该文档暂无此语言版本，现以韩语显示',
   },
   es: {
     notFound: 'No se encontró el documento',
@@ -71,6 +75,7 @@ const TEXT: Record<string, Record<'notFound' | 'notFoundDesc' | 'lastUpdated' | 
     dark: 'Cambiar a modo oscuro',
     language: 'Idioma',
     loading: 'Cargando',
+    fallback: 'Este documento aún no está disponible en este idioma; se muestra en coreano',
   },
 };
 
@@ -89,6 +94,8 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
   const [error, setError] = useState<string | null>(null);
   const [currentLang, setCurrentLang] = useState(langParam);
   const [isDark, setIsDark] = useState(themeParam === 'dark');
+  // 요청한 언어 문서가 없어 한국어로 대신 보여 주는 중인지
+  const [isFallback, setIsFallback] = useState(false);
 
   // 문서 가져오기
   useEffect(() => {
@@ -102,6 +109,7 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
 
         if (data.success && data.document) {
           setDocument(data.document);
+          setIsFallback(!!data.fallback);
         } else {
           setError(data.error || 'Document not found');
         }
@@ -159,8 +167,8 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
 
   // 읽어 주는 언어도 문서 언어에 맞춘다
   useEffect(() => {
-    window.document.documentElement.lang = currentLang;
-  }, [currentLang]);
+    window.document.documentElement.lang = document?.locale || currentLang;
+  }, [currentLang, document?.locale]);
 
   const tx = TEXT[currentLang] ?? TEXT.en;
   const docTitle = document?.title || (isLegalDocumentType(type) ? getDefaultLegalTitle(type, currentLang) : '');
@@ -227,6 +235,12 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
             <p className="mt-2 text-15 text-muted-foreground">{tx.notFoundDesc}</p>
           </div>
         ) : document && (
+          <>
+          {isFallback && (
+            <p className="mb-3 rounded-field border bg-secondary px-4 py-3 text-13 text-muted-foreground" role="note">
+              {tx.fallback}
+            </p>
+          )}
           <article className="min-w-0 rounded-card border bg-card">
             {document.publishedAt && (
               <p className="tabular px-5 pt-6 text-13 text-muted-foreground sm:px-8">
@@ -245,6 +259,7 @@ export default function LegalPage({ params }: { params: Promise<{ type: string }
               dangerouslySetInnerHTML={{ __html: renderContent() }}
             />
           </article>
+          </>
         )}
       </main>
 
