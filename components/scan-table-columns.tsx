@@ -70,7 +70,7 @@ export interface DateTimeFormatOptions {
 }
 
 // 표 머리글·체크박스 이름은 next-intl 로 (컬럼 정의 함수는 훅을 쓸 수 없어 작은 컴포넌트로 감싼다)
-type TableKey = "number" | "qrCode" | "scanTime" | "saveTime"
+type TableKey = "number" | "code" | "scanTime"
 
 function HeaderLabel({ k }: { k: TableKey }) {
   const t = useTranslations("table")
@@ -185,15 +185,16 @@ const indexColumn: ColumnDef<ScanData> = {
   id: "index",
   header: () => <HeaderLabel k="number" />,
   cell: ({ row }) => {
-    return <div className="tabular font-medium">{row.index + 1}</div>
+    // 들어온 순서 (첫 스캔이 1). 페이지가 data를 들어온 순서로 넘겨 준다
+    return <span className="tabular font-medium">{row.index + 1}</span>
   },
 }
 
 const codeColumn: ColumnDef<ScanData> = {
   accessorKey: "code",
-  header: ({ column }) => <SortHeader column={column} k="qrCode" />,
+  header: ({ column }) => <SortHeader column={column} k="code" />,
   cell: ({ row }) => {
-    return <div className="min-w-[13rem] max-w-[28rem] break-all font-mono">{row.getValue("code")}</div>
+    return <div className="max-w-[32rem] break-all font-mono sm:min-w-[13rem]">{row.getValue("code")}</div>
   },
 }
 
@@ -201,12 +202,6 @@ const scanTimeColumn = (formatOptions?: DateTimeFormatOptions): ColumnDef<ScanDa
   accessorKey: "scan_timestamp",
   header: ({ column }) => <SortHeader column={column} k="scanTime" />,
   cell: ({ row }) => <DateCell value={row.getValue("scan_timestamp") as number} formatOptions={formatOptions} />,
-})
-
-const createdAtColumn = (formatOptions?: DateTimeFormatOptions): ColumnDef<ScanData> => ({
-  accessorKey: "createdAt",
-  header: ({ column }) => <SortHeader column={column} k="saveTime" />,
-  cell: ({ row }) => <DateCell value={row.getValue("createdAt") as string} formatOptions={formatOptions} className="text-right" />,
 })
 
 export const createColumns = (
@@ -223,7 +218,6 @@ export const createColumns = (
   indexColumn,
   codeColumn,
   scanTimeColumn(formatOptions),
-  createdAtColumn(formatOptions),
   {
     id: "actions",
     header: "",
@@ -244,7 +238,6 @@ export const createReadOnlyColumns = (formatOptions?: DateTimeFormatOptions): Co
   indexColumn,
   codeColumn,
   scanTimeColumn(formatOptions),
-  createdAtColumn(formatOptions),
 ]
 
 // 기존 columns 유지 (하위 호환성)

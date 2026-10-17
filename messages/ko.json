@@ -185,7 +185,21 @@
     "collapseInfo": "세션 정보 접기",
     "expandInfo": "세션 정보 펼치기",
     "qrLabel": "세션 {id} QR 코드",
-    "unlocking": "확인하는 중"
+    "unlocking": "확인하는 중",
+    "lastScan": "방금 스캔",
+    "todayCount": "오늘 {count}건",
+    "distinctCodes": "코드 {count}종",
+    "duplicateScans": "중복 {count}건",
+    "scannedTimes": "이 코드 {count}번째",
+    "onboardTitle": "앱에서 이 세션으로 보내 보세요",
+    "onboardDesc": "폰으로 스캔하면 이 화면에 바로 떠요. 세 단계면 돼요.",
+    "onboardStep1": "앱 설치하고 로그인",
+    "onboardStep1Desc": "QR 스캐너 앱에서 이 계정으로 로그인해요.",
+    "onboardStep2": "실시간 PC 전송 켜기",
+    "onboardStep2Desc": "앱 설정 → 실시간 PC 전송에서 이 세션을 고르세요.",
+    "onboardStep3": "스캔하면 여기에 떠요",
+    "onboardStep3Desc": "스캔할 때마다 이 표에 한 줄씩 바로 추가돼요.",
+    "onboardGetApp": "앱 받는 방법 보기"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -255,7 +269,7 @@
     "noData": "아직 스캔 기록이 없어요",
     "noDataDesc": "앱에서 스캔하면 바로 여기에 나타나요",
     "selected": "개 선택됨",
-    "searchPlaceholder": "QR 코드 검색",
+    "searchPlaceholder": "코드 검색",
     "totalScans": "총 스캔 수",
     "showingOf": "{total}개 중 {showing}개",
     "page": "페이지",
@@ -266,10 +280,12 @@
     "deleteScanLabel": "스캔 삭제",
     "selectAll": "이 페이지 전체 선택",
     "selectRow": "행 선택",
-    "searchLabel": "QR 코드 검색",
+    "searchLabel": "코드 검색",
     "noResults": "찾는 스캔이 없어요",
     "noResultsDesc": "검색어를 바꾸거나 지워 보세요",
-    "clearSearch": "검색 지우기"
+    "clearSearch": "검색 지우기",
+    "code": "코드",
+    "newScansJump": "새 스캔 {count}건 · 맨 위로"
   },
   "auth": {
     "login": "로그인",

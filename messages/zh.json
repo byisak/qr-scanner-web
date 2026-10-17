@@ -185,7 +185,21 @@
     "collapseInfo": "收起会话信息",
     "expandInfo": "展开会话信息",
     "qrLabel": "会话 {id} 的二维码",
-    "unlocking": "正在验证"
+    "unlocking": "正在验证",
+    "lastScan": "刚刚扫描",
+    "todayCount": "今天 {count} 条",
+    "distinctCodes": "{count} 种码",
+    "duplicateScans": "重复 {count} 条",
+    "scannedTimes": "此码第 {count} 次",
+    "onboardTitle": "从应用发送到此会话",
+    "onboardDesc": "用手机扫描后会立即显示在这里。只需三步。",
+    "onboardStep1": "安装应用并登录",
+    "onboardStep1Desc": "在 QR 扫描器应用中用此账号登录。",
+    "onboardStep2": "开启实时发送到电脑",
+    "onboardStep2Desc": "在应用的设置 → 实时发送到电脑中选择此会话。",
+    "onboardStep3": "扫描后显示在这里",
+    "onboardStep3Desc": "每次扫描都会立即在此表格中新增一行。",
+    "onboardGetApp": "查看如何获取应用"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -251,7 +265,7 @@
     "noData": "暂无扫描数据",
     "noDataDesc": "手机应用扫描的数据将实时显示在这里",
     "selected": "已选择",
-    "searchPlaceholder": "搜索二维码",
+    "searchPlaceholder": "搜索码值",
     "totalScans": "总扫描数",
     "showingOf": "显示 {showing} / {total}",
     "page": "页码",
@@ -262,10 +276,12 @@
     "deleteScanLabel": "删除扫描",
     "selectAll": "全选本页",
     "selectRow": "选择行",
-    "searchLabel": "搜索二维码",
+    "searchLabel": "搜索码值",
     "noResults": "没有匹配的扫描",
     "noResultsDesc": "请换个关键词或清除搜索。",
-    "clearSearch": "清除搜索"
+    "clearSearch": "清除搜索",
+    "code": "码值",
+    "newScansJump": "{count} 条新扫描 · 回到顶部"
   },
   "auth": {
     "login": "登录",

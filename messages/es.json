@@ -185,7 +185,21 @@
     "collapseInfo": "Ocultar información de la sesión",
     "expandInfo": "Mostrar información de la sesión",
     "qrLabel": "Código QR de la sesión {id}",
-    "unlocking": "Comprobando"
+    "unlocking": "Comprobando",
+    "lastScan": "Último escaneo",
+    "todayCount": "{count} hoy",
+    "distinctCodes": "{count, plural, one {# código} other {# códigos}}",
+    "duplicateScans": "{count, plural, one {# duplicado} other {# duplicados}}",
+    "scannedTimes": "Escaneado {count} veces",
+    "onboardTitle": "Envía escaneos desde la app a esta sesión",
+    "onboardDesc": "Escanea con el móvil y aparecerá aquí al instante. Son tres pasos.",
+    "onboardStep1": "Instala la app e inicia sesión",
+    "onboardStep1Desc": "Inicia sesión en la app QR Scanner con esta cuenta.",
+    "onboardStep2": "Activa el Envío en vivo al PC",
+    "onboardStep2Desc": "En la app, abre Ajustes → Envío en vivo al PC y elige esta sesión.",
+    "onboardStep3": "Escanea y míralo aquí",
+    "onboardStep3Desc": "Cada escaneo se añade al instante como una fila nueva en esta tabla.",
+    "onboardGetApp": "Cómo conseguir la app"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -251,7 +265,7 @@
     "noData": "Aún no hay datos de escaneo",
     "noDataDesc": "Los datos escaneados desde tu app móvil aparecerán aquí en tiempo real",
     "selected": "seleccionados",
-    "searchPlaceholder": "Buscar códigos QR",
+    "searchPlaceholder": "Buscar códigos",
     "totalScans": "Total de escaneos",
     "showingOf": "Mostrando {showing} de {total}",
     "page": "Página",
@@ -262,10 +276,12 @@
     "deleteScanLabel": "Eliminar escaneo",
     "selectAll": "Seleccionar todo en esta página",
     "selectRow": "Seleccionar fila",
-    "searchLabel": "Buscar códigos QR",
+    "searchLabel": "Buscar códigos",
     "noResults": "No hay escaneos que coincidan",
     "noResultsDesc": "Prueba otra búsqueda o bórrala.",
-    "clearSearch": "Borrar búsqueda"
+    "clearSearch": "Borrar búsqueda",
+    "code": "Código",
+    "newScansJump": "{count, plural, one {# escaneo nuevo} other {# escaneos nuevos}} · Ir arriba"
   },
   "auth": {
     "login": "Iniciar Sesión",

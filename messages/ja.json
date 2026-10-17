@@ -185,7 +185,21 @@
     "collapseInfo": "セッション情報を閉じる",
     "expandInfo": "セッション情報を開く",
     "qrLabel": "セッション {id} のQRコード",
-    "unlocking": "確認中"
+    "unlocking": "確認中",
+    "lastScan": "直前のスキャン",
+    "todayCount": "今日 {count}件",
+    "distinctCodes": "コード {count}種類",
+    "duplicateScans": "重複 {count}件",
+    "scannedTimes": "このコード {count}回目",
+    "onboardTitle": "アプリからこのセッションに送ってみましょう",
+    "onboardDesc": "スマホでスキャンすると、この画面にすぐ表示されます。3ステップで完了です。",
+    "onboardStep1": "アプリを入れてログイン",
+    "onboardStep1Desc": "QRスキャナーアプリにこのアカウントでログインします。",
+    "onboardStep2": "リアルタイムPC送信をオン",
+    "onboardStep2Desc": "アプリの設定 → リアルタイムPC送信で、このセッションを選びます。",
+    "onboardStep3": "スキャンするとここに表示",
+    "onboardStep3Desc": "スキャンするたびに、この表に1行ずつすぐ追加されます。",
+    "onboardGetApp": "アプリの入手方法"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -251,7 +265,7 @@
     "noData": "スキャンデータがありません",
     "noDataDesc": "モバイルアプリからのスキャンデータがここにリアルタイムで表示されます",
     "selected": "件選択中",
-    "searchPlaceholder": "QRコード検索",
+    "searchPlaceholder": "コードを検索",
     "totalScans": "総スキャン数",
     "showingOf": "{total}件中 {showing}件表示",
     "page": "ページ",
@@ -262,10 +276,12 @@
     "deleteScanLabel": "スキャンを削除",
     "selectAll": "このページをすべて選択",
     "selectRow": "行を選択",
-    "searchLabel": "QRコード検索",
+    "searchLabel": "コードを検索",
     "noResults": "一致するスキャンがありません",
     "noResultsDesc": "検索語を変えるか、消してみてください。",
-    "clearSearch": "検索をクリア"
+    "clearSearch": "検索をクリア",
+    "code": "コード",
+    "newScansJump": "新しいスキャン {count}件 · 先頭へ"
   },
   "auth": {
     "login": "ログイン",

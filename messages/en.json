@@ -185,7 +185,21 @@
     "collapseInfo": "Hide session info",
     "expandInfo": "Show session info",
     "qrLabel": "QR code for session {id}",
-    "unlocking": "Checking"
+    "unlocking": "Checking",
+    "lastScan": "Just scanned",
+    "todayCount": "{count} today",
+    "distinctCodes": "{count, plural, one {# code} other {# codes}}",
+    "duplicateScans": "{count, plural, one {# duplicate} other {# duplicates}}",
+    "scannedTimes": "Scanned {count} times",
+    "onboardTitle": "Send scans from the app to this session",
+    "onboardDesc": "Scan with your phone and it shows up here right away. It takes three steps.",
+    "onboardStep1": "Install the app and sign in",
+    "onboardStep1Desc": "Sign in to the QR Scanner app with this account.",
+    "onboardStep2": "Turn on Live PC sync",
+    "onboardStep2Desc": "In the app, open Settings → Live PC sync and pick this session.",
+    "onboardStep3": "Scan and watch it appear",
+    "onboardStep3Desc": "Each scan is added to this table as a new row right away.",
+    "onboardGetApp": "How to get the app"
   },
   "sidebar": {
     "appTitle": "QR Scanner",
@@ -255,7 +269,7 @@
     "noData": "No scan data yet",
     "noDataDesc": "Scan data from your mobile app will appear here in real-time",
     "selected": "selected",
-    "searchPlaceholder": "Search QR codes",
+    "searchPlaceholder": "Search codes",
     "totalScans": "Total scans",
     "showingOf": "Showing {showing} of {total}",
     "page": "Page",
@@ -266,10 +280,12 @@
     "deleteScanLabel": "Delete scan",
     "selectAll": "Select all on this page",
     "selectRow": "Select row",
-    "searchLabel": "Search QR codes",
+    "searchLabel": "Search codes",
     "noResults": "No matching scans",
     "noResultsDesc": "Try a different search or clear it.",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "code": "Code",
+    "newScansJump": "{count, plural, one {# new scan} other {# new scans}} · Back to top"
   },
   "auth": {
     "login": "Login",
