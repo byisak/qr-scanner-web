@@ -48,6 +48,9 @@ interface DataTableProps<TData, TValue> {
   highlightIds?: ReadonlySet<number>
   // 스캔이 하나도 없을 때 보여 줄 안내 (없으면 기본 빈 화면)
   emptyState?: React.ReactNode
+  // 검색어를 바깥에서 관리할 때 (보기 전환·내보내기와 같은 검색어를 쓰려고)
+  search?: string
+  onSearchChange?: (value: string) => void
 }
 
 const DEFAULT_SORTING: SortingState = [{ id: "scan_timestamp", desc: true }]
@@ -58,6 +61,8 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
   onDeleteSelected,
   highlightIds,
   emptyState,
+  search,
+  onSearchChange,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const { settings } = useSettings()
@@ -92,6 +97,13 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
     },
   })
 
+  // 바깥에서 준 검색어를 코드 열 필터로
+  React.useEffect(() => {
+    if (search === undefined) return
+    table.getColumn("code")?.setFilterValue(search || undefined)
+    table.setPageIndex(0)
+  }, [search, table])
+
   // 설정이 변경되면 페이지 크기 업데이트
   React.useEffect(() => {
     table.setPageSize(settings.tableRowsPerPage)
@@ -107,7 +119,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
     setDeleteDialogOpen(false)
   }
 
-  const searchValue = (table.getColumn("code")?.getFilterValue() as string) ?? ""
+  const searchValue = search ?? ((table.getColumn("code")?.getFilterValue() as string) ?? "")
   const rows = table.getRowModel().rows
   const searchId = React.useId()
 
@@ -132,8 +144,13 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
     if (pageIndex > 0 && pageIndex >= pageCount) table.setPageIndex(Math.max(0, pageCount - 1))
   }, [pageIndex, pageCount, table])
 
+  const clearSearch = () => {
+    if (onSearchChange) onSearchChange("")
+    else table.getColumn("code")?.setFilterValue("")
+  }
+
   const goToTop = () => {
-    table.getColumn("code")?.setFilterValue("")
+    clearSearch()
     setSorting(DEFAULT_SORTING)
     table.setPageIndex(0)
     setUnseen(0)
@@ -159,6 +176,10 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
               placeholder={t('table.searchPlaceholder')}
               value={searchValue}
               onChange={(event) => {
+                if (onSearchChange) {
+                  onSearchChange(event.target.value)
+                  return
+                }
                 table.getColumn("code")?.setFilterValue(event.target.value)
                 table.setPageIndex(0)
               }}
@@ -213,7 +234,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
             title={t('table.noResults')}
             description={t('table.noResultsDesc')}
             action={
-              <Button variant="outline" onClick={() => table.getColumn("code")?.setFilterValue("")}>
+              <Button variant="outline" onClick={clearSearch}>
                 {t('table.clearSearch')}
               </Button>
             }

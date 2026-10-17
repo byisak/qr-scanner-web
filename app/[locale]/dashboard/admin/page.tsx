@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { AdminStatsCards, ProviderStatsCard } from '@/components/admin/admin-stats-cards';
 import { AdminCharts, UserGrowthChart } from '@/components/admin/admin-charts';
 import { AdminHealthPanel } from '@/components/admin/admin-health';
+import { AdminDeletionsCard } from '@/components/admin/admin-deletions';
 import { notify } from '@/lib/notify';
 
 interface ChartData {
@@ -171,9 +172,10 @@ export default function AdminDashboardPage() {
             />
           </div>
 
-          {/* 제공자 통계 */}
-          <div className="grid gap-4 md:grid-cols-2">
+          {/* 제공자 통계 · 파기 예정 */}
+          <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <ProviderStatsCard providers={stats?.providers} isLoading={isLoading} />
+            <AdminDeletionsCard accessToken={accessToken} />
           </div>
         </div>
       </SidebarInset>
