@@ -19,6 +19,7 @@ import {
   Users,
   FileText,
   BarChart3,
+  ScrollText,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -510,6 +511,15 @@ export function NavMain({ currentSessionId }: NavMainProps) {
                     >
                       <FileText className="size-3 mr-1" />
                       <span>{t('sidebar.legalManagement')}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push('/dashboard/admin/audit')}
+                      className="cursor-pointer"
+                    >
+                      <ScrollText className="size-3 mr-1" />
+                      <span>{t('sidebar.auditLog')}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>

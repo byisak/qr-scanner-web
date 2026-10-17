@@ -239,7 +239,8 @@
     "adminDashboard": "Admin Dashboard",
     "userManagement": "User Management",
     "legalManagement": "Legal Documents",
-    "renameLabel": "Session name"
+    "renameLabel": "Session name",
+    "auditLog": "Audit log"
   },
   "settings": {
     "title": "Settings",
@@ -640,6 +641,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "Audit log",
+      "desc": "Changes and deletions admins made to member accounts.",
+      "loadError": "Couldn't load the audit log",
+      "period": "Period",
+      "today": "Today",
+      "all": "All",
+      "actionFilter": "Action",
+      "allActions": "All actions",
+      "empty": "No records",
+      "emptyDesc": "Try a different period or action",
+      "count": "{count, plural, one {# record} other {# records}}",
+      "admin": "Admin",
+      "target": "Target",
+      "actions": {
+        "update_user": "Member updated",
+        "delete_user": "Member deleted",
+        "permanent_delete_user": "Member permanently deleted",
+        "restore_user": "Member restored",
+        "send_password_reset": "Reset email sent"
+      }
+    },
+    "health": {
+      "title": "System status",
+      "checkedAt": "Checked {time}",
+      "refresh": "Check again",
+      "db": "DB",
+      "email": "Email",
+      "realtime": "Realtime",
+      "cron": "Cleanup job",
+      "ok": "OK",
+      "failed": "Failed",
+      "down": "No response",
+      "notConfigured": "Not set up",
+      "cronNoTable": "No log table",
+      "cronNever": "No runs yet",
+      "storage": "DB storage (free limit)",
+      "rows": "{count} rows",
+      "cronHistory": "Cleanup runs",
+      "cronResult": "Deleted {sessions} sessions · {scans} scans · {users} members"
     }
   }
 }

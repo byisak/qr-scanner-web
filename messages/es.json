@@ -235,7 +235,8 @@
     "pin": "Fijar",
     "unpin": "Desfijar",
     "sessionNamePlaceholder": "Ingrese el nombre de sesión",
-    "renameLabel": "Nombre de la sesión"
+    "renameLabel": "Nombre de la sesión",
+    "auditLog": "Registro de auditoría"
   },
   "settings": {
     "title": "Configuración",
@@ -460,6 +461,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "Registro de auditoría",
+      "desc": "Cambios y eliminaciones que los administradores hicieron en cuentas de miembros.",
+      "loadError": "No se pudo cargar el registro de auditoría",
+      "period": "Periodo",
+      "today": "Hoy",
+      "all": "Todo",
+      "actionFilter": "Acción",
+      "allActions": "Todas las acciones",
+      "empty": "No hay registros",
+      "emptyDesc": "Prueba con otro periodo o acción",
+      "count": "{count, plural, one {# registro} other {# registros}}",
+      "admin": "Administrador",
+      "target": "Objetivo",
+      "actions": {
+        "update_user": "Miembro actualizado",
+        "delete_user": "Miembro eliminado",
+        "permanent_delete_user": "Miembro eliminado definitivamente",
+        "restore_user": "Miembro restaurado",
+        "send_password_reset": "Correo de restablecimiento enviado"
+      }
+    },
+    "health": {
+      "title": "Estado del sistema",
+      "checkedAt": "Comprobado {time}",
+      "refresh": "Comprobar de nuevo",
+      "db": "BD",
+      "email": "Correo",
+      "realtime": "Tiempo real",
+      "cron": "Limpieza",
+      "ok": "Correcto",
+      "failed": "Falló",
+      "down": "Sin respuesta",
+      "notConfigured": "Sin configurar",
+      "cronNoTable": "Sin tabla de registro",
+      "cronNever": "Sin ejecuciones",
+      "storage": "Almacenamiento BD (límite gratis)",
+      "rows": "{count} filas",
+      "cronHistory": "Ejecuciones de limpieza",
+      "cronResult": "Eliminados {sessions} sesiones · {scans} escaneos · {users} miembros"
     }
   }
 }

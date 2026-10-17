@@ -239,7 +239,8 @@
     "adminDashboard": "관리 대시보드",
     "userManagement": "사용자 관리",
     "legalManagement": "약관 관리",
-    "renameLabel": "세션 이름"
+    "renameLabel": "세션 이름",
+    "auditLog": "감사 로그"
   },
   "settings": {
     "title": "설정",
@@ -640,6 +641,47 @@
       "hr": "구분선",
       "link": "링크",
       "linkPrompt": "링크 주소를 입력해 주세요"
+    },
+    "audit": {
+      "title": "감사 로그",
+      "desc": "관리자가 회원 정보를 바꾸거나 지운 기록이에요.",
+      "loadError": "감사 로그를 불러오지 못했어요",
+      "period": "기간",
+      "today": "오늘",
+      "all": "전체",
+      "actionFilter": "작업 종류",
+      "allActions": "모든 작업",
+      "empty": "기록이 없어요",
+      "emptyDesc": "기간이나 작업 종류를 바꿔 보세요",
+      "count": "{count}건",
+      "admin": "관리자",
+      "target": "대상",
+      "actions": {
+        "update_user": "회원 정보 수정",
+        "delete_user": "회원 삭제",
+        "permanent_delete_user": "회원 영구 삭제",
+        "restore_user": "회원 복구",
+        "send_password_reset": "재설정 메일 발송"
+      }
+    },
+    "health": {
+      "title": "운영 상태",
+      "checkedAt": "{time} 확인",
+      "refresh": "다시 확인",
+      "db": "DB",
+      "email": "메일",
+      "realtime": "실시간",
+      "cron": "정리 작업",
+      "ok": "정상",
+      "failed": "실패",
+      "down": "응답 없음",
+      "notConfigured": "설정 안 됨",
+      "cronNoTable": "기록 테이블 없음",
+      "cronNever": "기록 없음",
+      "storage": "DB 용량 (무료 한도)",
+      "rows": "{count}행",
+      "cronHistory": "정리 작업 기록",
+      "cronResult": "세션 {sessions} · 스캔 {scans} · 회원 {users} 삭제"
     }
   }
 }

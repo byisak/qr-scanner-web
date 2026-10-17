@@ -235,7 +235,8 @@
     "pin": "置顶",
     "unpin": "取消置顶",
     "sessionNamePlaceholder": "输入会话名称",
-    "renameLabel": "会话名称"
+    "renameLabel": "会话名称",
+    "auditLog": "审计日志"
   },
   "settings": {
     "title": "设置",
@@ -460,6 +461,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "审计日志",
+      "desc": "管理员修改或删除会员信息的记录。",
+      "loadError": "无法加载审计日志",
+      "period": "期间",
+      "today": "今天",
+      "all": "全部",
+      "actionFilter": "操作",
+      "allActions": "全部操作",
+      "empty": "没有记录",
+      "emptyDesc": "请更换期间或操作类型",
+      "count": "{count} 条",
+      "admin": "管理员",
+      "target": "对象",
+      "actions": {
+        "update_user": "修改会员信息",
+        "delete_user": "删除会员",
+        "permanent_delete_user": "永久删除会员",
+        "restore_user": "恢复会员",
+        "send_password_reset": "发送重置邮件"
+      }
+    },
+    "health": {
+      "title": "运行状态",
+      "checkedAt": "{time} 检查",
+      "refresh": "重新检查",
+      "db": "DB",
+      "email": "邮件",
+      "realtime": "实时",
+      "cron": "清理任务",
+      "ok": "正常",
+      "failed": "失败",
+      "down": "无响应",
+      "notConfigured": "未设置",
+      "cronNoTable": "没有记录表",
+      "cronNever": "暂无记录",
+      "storage": "DB 容量（免费额度）",
+      "rows": "{count} 行",
+      "cronHistory": "清理任务记录",
+      "cronResult": "删除会话 {sessions} · 扫描 {scans} · 会员 {users}"
     }
   }
 }

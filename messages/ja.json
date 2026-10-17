@@ -235,7 +235,8 @@
     "pin": "ピン留め",
     "unpin": "ピン留め解除",
     "sessionNamePlaceholder": "セッション名を入力",
-    "renameLabel": "セッション名"
+    "renameLabel": "セッション名",
+    "auditLog": "監査ログ"
   },
   "settings": {
     "title": "設定",
@@ -460,6 +461,47 @@
       "hr": "Divider",
       "link": "Link",
       "linkPrompt": "Enter the link URL"
+    },
+    "audit": {
+      "title": "監査ログ",
+      "desc": "管理者が会員情報を変更・削除した記録です。",
+      "loadError": "監査ログを読み込めませんでした",
+      "period": "期間",
+      "today": "今日",
+      "all": "すべて",
+      "actionFilter": "操作",
+      "allActions": "すべての操作",
+      "empty": "記録がありません",
+      "emptyDesc": "期間や操作を変えてみてください",
+      "count": "{count}件",
+      "admin": "管理者",
+      "target": "対象",
+      "actions": {
+        "update_user": "会員情報の変更",
+        "delete_user": "会員の削除",
+        "permanent_delete_user": "会員の完全削除",
+        "restore_user": "会員の復元",
+        "send_password_reset": "再設定メール送信"
+      }
+    },
+    "health": {
+      "title": "稼働状況",
+      "checkedAt": "{time} 確認",
+      "refresh": "再確認",
+      "db": "DB",
+      "email": "メール",
+      "realtime": "リアルタイム",
+      "cron": "整理ジョブ",
+      "ok": "正常",
+      "failed": "失敗",
+      "down": "応答なし",
+      "notConfigured": "未設定",
+      "cronNoTable": "記録テーブルなし",
+      "cronNever": "記録なし",
+      "storage": "DB容量 (無料枠)",
+      "rows": "{count}行",
+      "cronHistory": "整理ジョブの記録",
+      "cronResult": "セッション {sessions} · スキャン {scans} · 会員 {users} を削除"
     }
   }
 }
