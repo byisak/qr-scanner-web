@@ -2,7 +2,7 @@
 -- 공개 주소: https://scanview.app/legal/privacy (?lang=ko|en)
 -- 바뀐 점: AdMob·광고 ID 삭제(1.3.0에서 광고 제거), 실시간 서버 전송·공개 세션, Google/Apple 로그인,
 --          위치·Google Maps Platform, Google 드라이브/iCloud 백업, 기기 권한, 보유 기간, 삭제 방법(account-deletion 링크),
---          만 14세 미만, 처리 위탁·국외 이전, 문의처(qrscanner.app.help@gmail.com) 추가.
+--          만 14세 미만, 처리 위탁·국외 이전, 문의처(support@scanview.app) 추가.
 -- 원문 마크다운: qr-scanner 저장소 store/privacy-policy-ko.md, store/privacy-policy-en.md
 --
 -- 적용 방법: 운영 DB에서 한 번 실행 (기존 ko/en 행을 덮어씀. 실행 전에 백업 권장)
@@ -208,7 +208,7 @@ VALUES (
 </li>
 <li><p>개인정보 보호책임자: 큐비온 대표</p>
 </li>
-<li><p>이메일: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>이메일: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <p>개인정보 침해에 대한 신고나 상담이 필요하면 아래 기관에 문의할 수 있습니다.</p>
@@ -429,7 +429,7 @@ VALUES (
 </li>
 <li><p>Privacy officer: Representative of Cubion</p>
 </li>
-<li><p>Email: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>Email: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <p>If you need to report or get advice on a privacy violation, you can also contact the Korean authorities below.</p>

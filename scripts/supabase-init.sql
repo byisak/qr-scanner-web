@@ -478,7 +478,7 @@ VALUES (
 </li>
 <li><p>개인정보 보호책임자: 큐비온 대표</p>
 </li>
-<li><p>이메일: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>이메일: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <p>개인정보 침해에 대한 신고나 상담이 필요하면 아래 기관에 문의할 수 있습니다.</p>
@@ -693,7 +693,7 @@ VALUES (
 </li>
 <li><p>Privacy officer: Representative of Cubion</p>
 </li>
-<li><p>Email: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>Email: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <p>If you need to report or get advice on a privacy violation, you can also contact the Korean authorities below.</p>
@@ -725,7 +725,7 @@ VALUES (
 </li>
 <li><p>개발자: 큐비온</p>
 </li>
-<li><p>문의: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>문의: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <h2>1. 앱에서 바로 삭제하기 (회원 탈퇴)</h2>
@@ -742,7 +742,7 @@ VALUES (
 <h2>2. 앱 없이 이메일로 요청하기</h2>
 <p>앱을 삭제했거나 로그인할 수 없는 경우 이메일로 삭제를 요청할 수 있습니다.</p>
 <ul>
-<li><p>받는 주소: <a href="mailto:qrscanner.app.help@gmail.com?subject=%5B%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD%5D%20QR%20%EC%8A%A4%EC%BA%90%EB%84%88" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>받는 주소: <a href="mailto:support@scanview.app?subject=%5B%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD%5D%20QR%20%EC%8A%A4%EC%BA%90%EB%84%88" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 <li><p>제목: <strong>[계정 삭제 요청] QR 스캐너</strong></p>
 </li>
@@ -815,7 +815,7 @@ VALUES (
 </li>
 <li><p>Developer: Cubion (큐비온)</p>
 </li>
-<li><p>Contact: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>Contact: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <h2>1. Delete your account in the app</h2>
@@ -832,7 +832,7 @@ VALUES (
 <h2>2. Request deletion by email (without the app)</h2>
 <p>If you have uninstalled the app or cannot sign in, you can request deletion by email.</p>
 <ul>
-<li><p>To: <a href="mailto:qrscanner.app.help@gmail.com?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>To: <a href="mailto:support@scanview.app?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 <li><p>Subject: <strong>[Account Deletion Request] QR Scanner</strong></p>
 </li>
@@ -905,7 +905,7 @@ VALUES (
 </li>
 <li><p>開発者：큐비온（Cubion）</p>
 </li>
-<li><p>お問い合わせ：<a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>お問い合わせ：<a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <h2>1. アプリで削除する（退会）</h2>
@@ -921,7 +921,7 @@ VALUES (
 </ol>
 <h2>2. アプリを使わずにメールで依頼する</h2>
 <ul>
-<li><p>宛先：<a href="mailto:qrscanner.app.help@gmail.com?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>宛先：<a href="mailto:support@scanview.app?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 <li><p>件名：<strong>[Account Deletion Request] QR Scanner</strong></p>
 </li>
@@ -969,7 +969,7 @@ VALUES (
 </li>
 <li><p>开发者：큐비온（Cubion）</p>
 </li>
-<li><p>联系方式：<a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>联系方式：<a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <h2>1. 在应用中删除（注销账户）</h2>
@@ -985,7 +985,7 @@ VALUES (
 </ol>
 <h2>2. 不使用应用，通过电子邮件申请</h2>
 <ul>
-<li><p>收件人：<a href="mailto:qrscanner.app.help@gmail.com?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>收件人：<a href="mailto:support@scanview.app?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 <li><p>主题：<strong>[Account Deletion Request] QR Scanner</strong></p>
 </li>
@@ -1033,7 +1033,7 @@ VALUES (
 </li>
 <li><p>Desarrollador: Cubion (큐비온)</p>
 </li>
-<li><p>Contacto: <a href="mailto:qrscanner.app.help@gmail.com" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>Contacto: <a href="mailto:support@scanview.app" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 </ul>
 <h2>1. Eliminar la cuenta desde la aplicación</h2>
@@ -1049,7 +1049,7 @@ VALUES (
 </ol>
 <h2>2. Solicitar la eliminación por correo electrónico (sin la aplicación)</h2>
 <ul>
-<li><p>Para: <a href="mailto:qrscanner.app.help@gmail.com?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">qrscanner.app.help@gmail.com</a></p>
+<li><p>Para: <a href="mailto:support@scanview.app?subject=%5BAccount%20Deletion%20Request%5D%20QR%20Scanner" target="_blank" rel="noopener noreferrer">support@scanview.app</a></p>
 </li>
 <li><p>Asunto: <strong>[Account Deletion Request] QR Scanner</strong></p>
 </li>
