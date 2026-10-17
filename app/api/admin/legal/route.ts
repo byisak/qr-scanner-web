@@ -13,6 +13,7 @@ import {
   isLegalDocumentType,
   type LegalDocumentType,
 } from '@/lib/legal';
+import { sanitizeLegalHtml } from '@/lib/sanitize-legal';
 
 interface LegalDocument {
   id: string;
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
       type: row.type,
       locale: row.locale,
       title: row.title,
-      content: row.content,
+      content: sanitizeLegalHtml(row.content),
       version: row.version,
       isPublished: row.is_published,
       publishedAt: row.published_at?.toISOString() || null,
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!title || !content) {
+    if (!title || !content || typeof content !== 'string') {
       return NextResponse.json(
         { success: false, error: '제목과 내용은 필수입니다.' },
         { status: 400 }
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
         type,
         locale,
         title,
-        content,
+        sanitizeLegalHtml(content),
         version || '1.0',
         isPublished || false,
         isPublished ? new Date() : null,

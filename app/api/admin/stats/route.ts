@@ -52,14 +52,22 @@ export async function GET(request: NextRequest) {
     // 휴면 기준: 1년 (365일)
     const DORMANT_DAYS = 365;
 
+    // 날짜 기준은 한국 시간. DB 시각 컬럼은 시간대 없는 UTC라서
+    // "오늘 0시(KST)"를 UTC 시각으로 바꿔 비교하고, 날짜로 묶을 때는 9시간을 더한다
+    const KST_TODAY = `(((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date)::timestamp - INTERVAL '9 hours')`;
+    const KST_DAY = (col: string) => `(${col} + INTERVAL '9 hours')::date`;
+    const PERIOD_START = `(${KST_TODAY} - INTERVAL '${chartPeriod - 1} days')`;
+    // 기간 안의 모든 날짜(KST). 빈 날도 0으로 나오게 한다
+    const DAYS = `generate_series(${KST_DAY(PERIOD_START)}, (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date, INTERVAL '1 day')`;
+
     // 사용자 통계
     const userStatsResult = await client.query(`
       SELECT
         COUNT(*) FILTER (WHERE deleted_at IS NULL) as total_users,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND is_active = true) as active_users,
-        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE) as new_users_today,
-        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '7 days') as new_users_week,
-        COUNT(*) FILTER (WHERE deleted_at IS NULL AND last_login_at >= CURRENT_DATE - INTERVAL '7 days') as active_users_week,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= ${KST_TODAY}) as new_users_today,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= ${KST_TODAY} - INTERVAL '6 days') as new_users_week,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND last_login_at >= ${KST_TODAY} - INTERVAL '6 days') as active_users_week,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND is_active = true AND last_login_at IS NOT NULL AND last_login_at <= CURRENT_TIMESTAMP - INTERVAL '${DORMANT_DAYS} days') as dormant_users,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND provider = 'email') as provider_email,
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND provider = 'google') as provider_google,
@@ -72,8 +80,8 @@ export async function GET(request: NextRequest) {
     const sessionStatsResult = await client.query(`
       SELECT
         COUNT(*) FILTER (WHERE deleted_at IS NULL) as total_sessions,
-        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE) as new_sessions_today,
-        COUNT(*) FILTER (WHERE deleted_at IS NULL AND last_activity >= CURRENT_DATE - INTERVAL '7 days') as active_sessions_week
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND created_at >= ${KST_TODAY}) as new_sessions_today,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND last_activity >= ${KST_TODAY} - INTERVAL '6 days') as active_sessions_week
       FROM sessions
     `);
 
@@ -81,52 +89,41 @@ export async function GET(request: NextRequest) {
     const scanStatsResult = await client.query(`
       SELECT
         COUNT(*) as total_scans,
-        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE) as scans_today,
-        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') as scans_week
+        COUNT(*) FILTER (WHERE created_at >= ${KST_TODAY}) as scans_today,
+        COUNT(*) FILTER (WHERE created_at >= ${KST_TODAY} - INTERVAL '6 days') as scans_week
       FROM scan_data
     `);
 
-    // 기간별 일별 가입자 수
+    // 기간별 일별 가입자 수 (KST 날짜, 빈 날 포함)
     const dailySignupsResult = await client.query(`
-      SELECT
-        DATE(created_at) as date,
-        COUNT(*) as count
-      FROM users
-      WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
-      GROUP BY DATE(created_at)
-      ORDER BY date
+      SELECT to_char(d, 'YYYY-MM-DD') as date, COUNT(u.id) as count
+      FROM ${DAYS} d
+      LEFT JOIN users u ON u.deleted_at IS NULL AND ${KST_DAY('u.created_at')} = d::date
+      GROUP BY d ORDER BY d
     `);
 
     // 기간별 일별 스캔 수
     const dailyScansResult = await client.query(`
-      SELECT
-        DATE(created_at) as date,
-        COUNT(*) as count
-      FROM scan_data
-      WHERE created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
-      GROUP BY DATE(created_at)
-      ORDER BY date
+      SELECT to_char(d, 'YYYY-MM-DD') as date, COUNT(s.id) as count
+      FROM ${DAYS} d
+      LEFT JOIN scan_data s ON s.created_at >= ${PERIOD_START} AND ${KST_DAY('s.created_at')} = d::date
+      GROUP BY d ORDER BY d
     `);
 
-    // 기간별 누적 사용자 수 (사용자 증가 그래프용)
+    // 사용자 증가: 그날 끝 시점에 가입돼 있던(아직 탈퇴 전인) 사용자 수.
+    // 지금 탈퇴한 사람이 과거 그래프를 바꾸지 않게 그 날짜 기준으로 센다
     const userGrowthResult = await client.query(`
       SELECT
-        DATE(created_at) as date,
-        COUNT(*) as new_users,
-        SUM(COUNT(*)) OVER (ORDER BY DATE(created_at)) as cumulative_users
-      FROM users
-      WHERE deleted_at IS NULL AND created_at >= CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
-      GROUP BY DATE(created_at)
-      ORDER BY date
+        to_char(d, 'YYYY-MM-DD') as date,
+        COUNT(u.id) FILTER (WHERE ${KST_DAY('u.created_at')} = d::date) as new_users,
+        COUNT(u.id) FILTER (
+          WHERE ${KST_DAY('u.created_at')} <= d::date
+            AND (u.deleted_at IS NULL OR ${KST_DAY('u.deleted_at')} > d::date)
+        ) as total_users
+      FROM ${DAYS} d
+      CROSS JOIN users u
+      GROUP BY d ORDER BY d
     `);
-
-    // 기간 시작 전 총 사용자 수 (누적 계산용)
-    const baseUserCountResult = await client.query(`
-      SELECT COUNT(*) as count
-      FROM users
-      WHERE deleted_at IS NULL AND created_at < CURRENT_DATE - INTERVAL '${chartPeriod - 1} days'
-    `);
-    const baseUserCount = parseInt(baseUserCountResult.rows[0].count);
 
     const userStats = userStatsResult.rows[0];
     const sessionStats = sessionStatsResult.rows[0];
@@ -161,17 +158,17 @@ export async function GET(request: NextRequest) {
         },
         charts: {
           dailySignups: dailySignupsResult.rows.map(row => ({
-            date: row.date.toISOString().split('T')[0],
+            date: row.date,
             count: parseInt(row.count),
           })),
           dailyScans: dailyScansResult.rows.map(row => ({
-            date: row.date.toISOString().split('T')[0],
+            date: row.date,
             count: parseInt(row.count),
           })),
           userGrowth: userGrowthResult.rows.map(row => ({
-            date: row.date.toISOString().split('T')[0],
+            date: row.date,
             newUsers: parseInt(row.new_users),
-            totalUsers: baseUserCount + parseInt(row.cumulative_users),
+            totalUsers: parseInt(row.total_users),
           })),
         },
       },

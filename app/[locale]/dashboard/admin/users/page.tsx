@@ -215,7 +215,7 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        notify.success(t('admin.users.resetPasswordSuccessDesc'));
+        notify.success(t('admin.users.resetPasswordSuccessDesc', { email: user.email }));
       } else {
         notify.error(t('admin.users.resetPasswordErrorDesc'));
       }

@@ -529,9 +529,9 @@
       "activateSuccess": "Activated Successfully",
       "deactivateSuccess": "Deactivated Successfully",
       "resetPasswordConfirmTitle": "Reset Password",
-      "resetPasswordConfirmDesc": "Send password reset link to {email}",
+      "resetPasswordConfirmDesc": "Send a password reset email to {email}? Any earlier reset link will stop working.",
       "resetPasswordSuccess": "Sent Successfully",
-      "resetPasswordSuccessDesc": "Password reset link has been generated",
+      "resetPasswordSuccessDesc": "Reset email sent to {email}. The link works for 1 hour",
       "resetPasswordError": "Send Failed",
       "bulkDeleteConfirmTitle": "Bulk Delete",
       "bulkDeleteConfirmDesc": "Are you sure you want to delete {count} users?",
@@ -542,7 +542,7 @@
       "refresh": "Reload",
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
-      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
       "typeBulkCount": "Type the number of selected users ({count}) to confirm"
     },
     "stats": {

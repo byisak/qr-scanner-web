@@ -38,34 +38,16 @@ interface AdminChartsProps {
 }
 
 // 날짜를 형식에 맞게 변환
+// 서버가 한국 날짜(YYYY-MM-DD)를 주므로 Date로 바꾸지 않고 그대로 쪼갠다 (브라우저 시간대에 따라 하루 밀리지 않게)
 function formatDate(dateStr: string, period: number) {
-  const date = new Date(dateStr)
+  const [, m, d] = dateStr.split('-').map(Number)
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
   if (period <= 7) {
-    return `${date.getMonth() + 1}/${date.getDate()}`
+    return `${m}/${d}`
   } else {
-    return `${months[date.getMonth()]} ${date.getDate()}`
+    return `${months[m - 1]} ${d}`
   }
-}
-
-// 기간에 맞게 데이터 채우기 (빈 날짜는 0으로)
-function fillMissingDates(data: ChartData[], period: number): ChartData[] {
-  const result: ChartData[] = []
-  const today = new Date()
-
-  for (let i = period - 1; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
-    const existing = data.find(d => d.date === dateStr)
-    result.push({
-      date: dateStr,
-      count: existing?.count || 0,
-    })
-  }
-
-  return result
 }
 
 // 기간 전환 (세그먼트)
@@ -138,40 +120,6 @@ function ChartSkeleton({ height }: { height: number }) {
   )
 }
 
-// 사용자 증가 데이터에 빈 날짜 채우기
-function fillUserGrowthDates(data: UserGrowthData[], period: number): UserGrowthData[] {
-  if (data.length === 0) return []
-
-  const result: UserGrowthData[] = []
-  const today = new Date()
-  let lastTotalUsers = data[0]?.totalUsers || 0
-
-  // 첫 날짜 이전의 총 사용자 수 계산
-  if (data.length > 0) {
-    lastTotalUsers = data[0].totalUsers - data[0].newUsers
-  }
-
-  for (let i = period - 1; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
-    const existing = data.find(d => d.date === dateStr)
-
-    if (existing) {
-      lastTotalUsers = existing.totalUsers
-      result.push(existing)
-    } else {
-      result.push({
-        date: dateStr,
-        newUsers: 0,
-        totalUsers: lastTotalUsers,
-      })
-    }
-  }
-
-  return result
-}
-
 export function AdminCharts({
   dailySignups,
   dailyScans,
@@ -184,13 +132,12 @@ export function AdminCharts({
   const reduceMotion = useReducedMotion()
 
   const chartData = React.useMemo(() => {
-    const signups = fillMissingDates(dailySignups, period)
-    const scans = fillMissingDates(dailyScans, period)
-
-    return signups.map((s, i) => ({
+    // 서버가 기간의 모든 날짜를 빈 날 0으로 채워서 준다
+    const scanByDate = new Map(dailyScans.map((d) => [d.date, d.count]))
+    return dailySignups.map((s) => ({
       displayDate: formatDate(s.date, period),
       signups: s.count,
-      scans: scans[i]?.count || 0,
+      scans: scanByDate.get(s.date) ?? 0,
     }))
   }, [dailySignups, dailyScans, period])
 
@@ -294,8 +241,7 @@ export function UserGrowthChart({
   const reduceMotion = useReducedMotion()
 
   const chartData = React.useMemo(() => {
-    const filled = fillUserGrowthDates(userGrowth, period)
-    return filled.map((d) => ({
+    return userGrowth.map((d) => ({
       displayDate: formatDate(d.date, period),
       newUsers: d.newUsers,
       totalUsers: d.totalUsers,
@@ -346,7 +292,7 @@ export function UserGrowthChart({
                 axisLine={false}
                 allowDecimals={false}
                 width={44}
-                domain={['dataMin - 5', 'dataMax + 5']}
+                domain={[0, 'auto']}
               />
               <Tooltip
                 {...TOOLTIP_PROPS}

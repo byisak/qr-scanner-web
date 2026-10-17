@@ -410,7 +410,7 @@
       "refresh": "Reload",
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
-      "resetPasswordErrorDesc": "Couldn't create a password reset link. Please try again in a moment",
+      "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
       "typeBulkCount": "Type the number of selected users ({count}) to confirm"
     },
     "legal": {

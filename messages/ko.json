@@ -529,9 +529,9 @@
       "activateSuccess": "계정을 활성화했어요",
       "deactivateSuccess": "계정을 비활성화했어요",
       "resetPasswordConfirmTitle": "비밀번호 초기화",
-      "resetPasswordConfirmDesc": "{email} 계정의 비밀번호 재설정 링크를 만들까요?",
+      "resetPasswordConfirmDesc": "{email} 계정으로 비밀번호 재설정 메일을 보낼까요? 기존 재설정 링크는 더 이상 쓸 수 없어요.",
       "resetPasswordSuccess": "발송 완료",
-      "resetPasswordSuccessDesc": "비밀번호 재설정 링크를 만들었어요",
+      "resetPasswordSuccessDesc": "{email}로 재설정 메일을 보냈어요. 링크는 1시간 동안 쓸 수 있어요",
       "resetPasswordError": "발송 실패",
       "bulkDeleteConfirmTitle": "일괄 삭제",
       "bulkDeleteConfirmDesc": "사용자 {count}명을 삭제할까요?",
@@ -542,7 +542,7 @@
       "refresh": "다시 불러오기",
       "noUsersDesc": "검색어나 필터를 바꿔 보세요",
       "adRecordsLabel": "{name} 광고 기록: 시청 {watched}회, 해제 {unlocked}개",
-      "resetPasswordErrorDesc": "비밀번호 재설정 링크를 만들지 못했어요. 잠시 뒤 다시 해주세요",
+      "resetPasswordErrorDesc": "재설정 메일을 보내지 못했어요. 잠시 뒤 다시 해주세요",
       "typeBulkCount": "확인을 위해 선택한 사용자 수({count})를 입력해 주세요"
     },
     "stats": {
