@@ -9,7 +9,7 @@ const PAGE_URL = 'https://scanview.app/beta'
 const GROUP_URL = 'https://groups.google.com/g/cubion-qrscanner-testers'
 const OPT_IN_URL = 'https://play.google.com/apps/testing/com.cubion.qrscanner'
 const STORE_URL = 'https://play.google.com/store/apps/details?id=com.cubion.qrscanner'
-const CONTACT = 'qrscanner.app.help@gmail.com'
+const CONTACT = 'support@scanview.app'
 
 export const metadata: Metadata = {
   title: '테스터 참여 안내 - QR 스캐너',
