@@ -939,7 +939,7 @@ const KEYS = [
   // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
   [XJ, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.06, 0.03, 0)), 0.17],
   [16.8, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.32],
-  [18.4, midWorld, V(0.9, 0.35, 0.6), 1.4],
+  [18.2, midWorld.clone().add(V(0, 0.22, 0)), V(0.9, 0.4, 0.6), 1.4 * 1.9], // 솟는 두 빛이 위에서 잘리지 않게 더 물린다
   [20.2, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
   [22.0, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
   // 두 번째 빛을 따라 지붕 위로 (내려다보며 높이 오른다)
@@ -1110,16 +1110,9 @@ function drawGeo(g, t, lang) {
       if (a <= 0 || pt.dot(camG.position) < 1.0) continue; // 지평선 너머
       const p = pt.clone().project(camG), x = (p.x + 1) / 2 * W, y = (1 - p.y) / 2 * H;
       g.globalAlpha = a; g.font = '700 30px "Noto Sans KR"'; g.textAlign = 'left';
-      // 이름판: 얇은 판(두께는 아래 그림자 판), 테두리, 양끝 나사 — Anatomy 의 이름판처럼
-      const pw = g.measureText(name).width + 64, lx = x + 18 + pw > W - 40 ? x - 18 - pw : x + 18, ph = 46;
-      g.fillStyle = 'rgba(160,158,150,.9)'; rr(g, lx + 3, y - ph / 2 + 4, pw, ph, 6); g.fill();
-      g.fillStyle = '#f6f5f1'; rr(g, lx, y - ph / 2, pw, ph, 6); g.fill();
-      g.lineWidth = 1.6; g.strokeStyle = '#3a3a40'; rr(g, lx, y - ph / 2, pw, ph, 6); g.stroke();
-      g.lineWidth = 1; g.strokeStyle = '#a9a7a0'; rr(g, lx + 5, y - ph / 2 + 5, pw - 10, ph - 10, 3); g.stroke();
-      for (const sx of [lx + 15, lx + pw - 15]) { g.fillStyle = '#d9d7d0'; g.beginPath(); g.arc(sx, y, 5, 0, 7); g.fill(); g.strokeStyle = '#3a3a40'; g.lineWidth = 1.2; g.stroke(); g.beginPath(); g.moveTo(sx - 3, y - 3); g.lineTo(sx + 3, y + 3); g.stroke(); }
-      // 지점과 이름판을 잇는 짧은 선
-      g.strokeStyle = '#3a3a40'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x, y); g.lineTo(lx > x ? lx : lx + pw, y); g.stroke();
-      g.fillStyle = '#18181b'; g.fillText(name, lx + 32, y + 1);
+      const tw = g.measureText(name).width, lx = x + 18 + tw + 28 > W - 40 ? x - 18 - tw - 28 : x + 18;
+      g.fillStyle = 'rgba(244,244,245,.92)'; rr(g, lx, y - 22, tw + 28, 44, 22); g.fill();
+      g.fillStyle = '#18181b'; g.fillText(name, lx + 14, y + 1);
     }
   }
   const wO = W8.O || 0;
