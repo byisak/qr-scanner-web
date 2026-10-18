@@ -45,7 +45,10 @@ import {
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX } from 'lucide-react';
+import { Download, FileSpreadsheet, Copy, Check, Volume2, VolumeX, Clock, Keyboard } from 'lucide-react';
+import { Empty } from '@/components/ui/empty';
+import { useHotkeys } from '@/hooks/use-hotkeys';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { CSSProperties } from 'react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
@@ -139,6 +142,9 @@ export default function SessionPage() {
   // 표 보기: 스캔 기록 / 코드별 합계. 검색어는 두 보기와 내보내기가 같이 쓴다
   const [view, setView] = useState<'scans' | 'summary'>('scans');
   const [search, setSearch] = useState('');
+  // 기간: 전체 / 최근 1시간 / 오늘 / 최근 7일 (두 보기와 내보내기가 같이 쓴다)
+  const [period, setPeriod] = useState<'all' | '1h' | 'today' | '7d'>('all');
+  const [hotkeyHelpOpen, setHotkeyHelpOpen] = useState(false);
   // 상대 시간("3초 전")을 새로 그리기 위한 시계
   const [now, setNow] = useState(() => Date.now());
 
@@ -403,8 +409,22 @@ export default function SessionPage() {
     [handleDeleteScan, isAuthenticated, formatOptions]
   );
 
-  // 표의 # 이 들어온 순서가 되도록 id(서버 저장 순서) 오름차순으로 넘긴다
-  const orderedScans = useMemo(() => [...scans].sort((a, b) => a.id - b.id), [scans]);
+  // 기간 시작 시각(밀리초). 전체면 null. now 는 15초마다 갱신된다
+  const since = useMemo(() => {
+    if (period === 'all') return null;
+    if (period === '1h') return now - 3600 * 1000;
+    if (period === '7d') return now - 7 * 86400 * 1000;
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }, [period, now]);
+
+  // 기간 안의 스캔. 표의 # 이 들어온 순서가 되도록 id(서버 저장 순서) 오름차순
+  const periodScans = useMemo(
+    () => (since === null ? scans : scans.filter((s) => s.scan_timestamp >= since)),
+    [scans, since]
+  );
+  const orderedScans = useMemo(() => [...periodScans].sort((a, b) => a.id - b.id), [periodScans]);
 
   // 마지막 스캔 카드: 가장 최근 스캔과 오늘 건수·코드 종류·중복
   const summary = useMemo(() => {
@@ -431,7 +451,7 @@ export default function SessionPage() {
     return rtf.format(Math.round(hour / 24), 'day');
   }, [locale, now]);
 
-  const summaryRows = useMemo(() => summarizeByCode(scans), [scans]);
+  const summaryRows = useMemo(() => summarizeByCode(periodScans), [periodScans]);
 
   // 지금 보이는 범위: 검색 결과 건수 (내보내기 안내용)
   const visibleCount = useMemo(() => {
@@ -439,8 +459,8 @@ export default function SessionPage() {
     if (view === 'summary') {
       return q ? summaryRows.filter((r) => r.code.toLowerCase().includes(q)).length : summaryRows.length;
     }
-    return q ? scans.filter((s) => s.code.toLowerCase().includes(q)).length : scans.length;
-  }, [view, search, scans, summaryRows]);
+    return q ? periodScans.filter((s) => s.code.toLowerCase().includes(q)).length : periodScans.length;
+  }, [view, search, periodScans, summaryRows]);
 
   // 보이는 대로 내보내기: 지금 보기(스캔 기록/코드별)와 검색어를 그대로 서버에 넘긴다
   const handleExport = async (format: 'csv' | 'xlsx') => {
@@ -448,6 +468,7 @@ export default function SessionPage() {
     try {
       const q = new URLSearchParams({ format, view, lang: locale });
       if (search.trim()) q.set('q', search.trim());
+      if (since !== null) q.set('since', String(since));
       if (sessionName) q.set('name', sessionName);
       const response = await fetch(`/api/sessions/${sessionId}/export?${q}`, {
         headers: authHeaders,
@@ -481,6 +502,16 @@ export default function SessionPage() {
       notify.error(t('session.exportError'));
     }
   };
+
+  // 키보드 단축키: / 검색, v 보기 전환, e CSV 내보내기, ? 도움말
+  useHotkeys({
+    '/': () => document.querySelector<HTMLInputElement>('[data-scan-search]')?.focus(),
+    v: () => scans.length > 0 && setView((cur) => (cur === 'scans' ? 'summary' : 'scans')),
+    e: () => {
+      if (isAuthenticated && visibleCount > 0) handleExport('csv');
+    },
+    '?': () => setHotkeyHelpOpen(true),
+  }, accessGranted);
 
   const displayName = sessionName || sessionId;
 
@@ -639,6 +670,17 @@ export default function SessionPage() {
                       <VolumeX className="text-muted-foreground" aria-hidden="true" />
                     )}
                   </Button>
+                  {/* 단축키 도움말: 키보드가 있는 넓은 화면에서만 */}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hidden sm:inline-flex"
+                    onClick={() => setHotkeyHelpOpen(true)}
+                    aria-label={t('hotkeys.title')}
+                    title={`${t('hotkeys.title')} (?)`}
+                  >
+                    <Keyboard aria-hidden="true" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon-sm"
@@ -754,15 +796,28 @@ export default function SessionPage() {
                 <>
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {scans.length > 0 ? (
-                      <Segmented<'scans' | 'summary'>
-                        aria-label={t('summary.viewLabel')}
-                        value={view}
-                        onValueChange={setView}
-                        options={[
-                          { value: 'scans', label: t('summary.viewScans') },
-                          { value: 'summary', label: t('summary.viewSummary') },
-                        ]}
-                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Segmented<'scans' | 'summary'>
+                          aria-label={t('summary.viewLabel')}
+                          value={view}
+                          onValueChange={setView}
+                          options={[
+                            { value: 'scans', label: t('summary.viewScans') },
+                            { value: 'summary', label: t('summary.viewSummary') },
+                          ]}
+                        />
+                        <Segmented<'all' | '1h' | 'today' | '7d'>
+                          aria-label={t('summary.periodLabel')}
+                          value={period}
+                          onValueChange={setPeriod}
+                          options={[
+                            { value: 'all', label: t('summary.periodAll') },
+                            { value: '1h', label: t('summary.period1h') },
+                            { value: 'today', label: t('summary.periodToday') },
+                            { value: '7d', label: t('summary.period7d') },
+                          ]}
+                        />
+                      </div>
                     ) : <span />}
                     {isAuthenticated && (
                       <div className="flex flex-wrap items-center gap-2">
@@ -788,13 +843,16 @@ export default function SessionPage() {
                     )}
                   </div>
                   {/* 무엇을 내보내는지: 보기와 검색어를 그대로 */}
-                  {isAuthenticated && scans.length > 0 && (view === 'summary' || search.trim()) && (
+                  {isAuthenticated && scans.length > 0 && (view === 'summary' || search.trim() || period !== 'all') && (
                     <p className="-mt-2 mb-4 text-13 text-muted-foreground">
                       {view === 'summary'
                         ? search.trim()
                           ? t('summary.exportScopeSummarySearch', { q: search.trim(), count: visibleCount })
                           : t('summary.exportScopeSummary', { count: visibleCount })
-                        : t('summary.exportScopeSearch', { q: search.trim(), count: visibleCount })}
+                        : search.trim()
+                          ? t('summary.exportScopeSearch', { q: search.trim(), count: visibleCount })
+                          : t('summary.exportScopePeriod', { count: visibleCount })}
+                      {period !== 'all' && ` · ${t(`summary.period${period === '1h' ? '1h' : period === 'today' ? 'Today' : '7d'}`)}`}
                     </p>
                   )}
                   {view === 'summary' ? (
@@ -812,7 +870,14 @@ export default function SessionPage() {
                     highlightIds={highlightIds}
                     search={search}
                     onSearchChange={setSearch}
-                    emptyState={isAuthenticated ? (
+                    emptyState={scans.length > 0 ? (
+                      // 기간 필터로 비었을 때
+                      <Empty
+                        icon={<Clock />}
+                        title={t('summary.periodEmpty')}
+                        action={<Button variant="outline" onClick={() => setPeriod('all')}>{t('summary.periodShowAll')}</Button>}
+                      />
+                    ) : isAuthenticated ? (
                       // 첫 세션 안내: 앱에서 이 세션으로 보내는 방법 3단계
                       <div className="grid gap-4 py-2">
                         <div>
@@ -848,6 +913,29 @@ export default function SessionPage() {
           </Card>
         </div>
       </SidebarInset>
+      <Dialog open={hotkeyHelpOpen} onOpenChange={setHotkeyHelpOpen}>
+        <DialogContent className="sm:max-w-md" closeLabel={t('common.close')}>
+          <DialogHeader>
+            <DialogTitle>{t('hotkeys.title')}</DialogTitle>
+            <DialogDescription>{t('hotkeys.desc')}</DialogDescription>
+          </DialogHeader>
+          <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
+            {([
+              ['/', t('hotkeys.search')],
+              ['v', t('hotkeys.toggleView')],
+              ['e', t('hotkeys.export')],
+              ['?', t('hotkeys.help')],
+            ] as const).map(([key, label]) => (
+              <div key={key} className="contents">
+                <dt>
+                  <kbd className="inline-flex h-7 min-w-7 items-center justify-center rounded-field border bg-secondary px-2 font-mono text-13 font-semibold">{key}</kbd>
+                </dt>
+                <dd>{label}</dd>
+              </div>
+            ))}
+          </dl>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

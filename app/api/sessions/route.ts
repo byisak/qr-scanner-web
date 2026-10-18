@@ -138,13 +138,12 @@ export async function GET(request: NextRequest) {
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
 
-    // 스캔 카운트 서브쿼리: 인증된 사용자의 경우 자신의 스캔만 카운트
-    let scanCountSubquery: string;
+    // 스캔 집계 (세션당 한 번): 전체 수, 오늘(KST) 수, 마지막 스캔 시각.
+    // 인증된 사용자 목록이면 자신의 스캔만 센다
+    let scanFilter = '';
     if (!listAll) {
-      scanCountSubquery = `(SELECT COUNT(*) FROM scan_data sd WHERE sd.session_id = s.session_id AND sd.user_id = $${paramIndex})`;
+      scanFilter = `AND sd.user_id = $${paramIndex}`;
       values.push(authUser.userId);
-    } else {
-      scanCountSubquery = `(SELECT COUNT(*) FROM scan_data sd WHERE sd.session_id = s.session_id)`;
     }
 
     const result = await client.query(
@@ -156,7 +155,9 @@ export async function GET(request: NextRequest) {
         s.last_activity,
         s.status,
         s.deleted_at,
-        ${scanCountSubquery} as scan_count,
+        agg.scan_count,
+        agg.today_count,
+        agg.last_scan_at,
         ss.is_public,
         CASE WHEN ss.password_hash IS NOT NULL THEN true ELSE false END as has_password,
         ss.max_participants,
@@ -164,6 +165,15 @@ export async function GET(request: NextRequest) {
         ss.expires_at
        FROM sessions s
        LEFT JOIN session_settings ss ON s.session_id = ss.session_id
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*) AS scan_count,
+                COUNT(*) FILTER (
+                  WHERE sd.created_at >= (((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date)::timestamp - INTERVAL '9 hours')
+                ) AS today_count,
+                MAX(sd.created_at) AS last_scan_at
+         FROM scan_data sd
+         WHERE sd.session_id = s.session_id ${scanFilter}
+       ) agg ON true
        ${whereClause}
        ORDER BY s.created_at DESC`,
       values
@@ -178,6 +188,8 @@ export async function GET(request: NextRequest) {
       status: row.status,
       deleted_at: row.deleted_at ? row.deleted_at.toISOString() : null,
       scan_count: parseInt(row.scan_count) || 0,
+      today_count: parseInt(row.today_count) || 0,
+      last_scan_at: row.last_scan_at ? row.last_scan_at.toISOString() : null,
       settings: {
         isPublic: row.is_public ?? true,
         hasPassword: row.has_password ?? false,

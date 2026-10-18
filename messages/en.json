@@ -139,7 +139,13 @@
     "emptyDesc": "Sessions you create in the app show up here.",
     "scans": "{count, plural, one {# scan} other {# scans}}",
     "deleteSessionLabel": "Delete {name}",
-    "deleteFailed": "Couldn't delete the session. Please try again shortly."
+    "deleteFailed": "Couldn't delete the session. Please try again shortly.",
+    "kpiToday": "Scans today",
+    "kpiLive": "Live sessions",
+    "kpiWeek": "New this week",
+    "live": "Live",
+    "todayCount": "({count} today)",
+    "lastScan": "Last scan"
   },
   "session": {
     "title": "Session",
@@ -508,7 +514,7 @@
       "activate": "Activate",
       "deactivate": "Deactivate",
       "resetPassword": "Reset Password",
-      "export": "Export",
+      "export": "Export all",
       "bulkDelete": "Bulk Delete",
       "selectedCount": "{count} selected",
       "showingCount": "{from}-{to} of {total}",
@@ -560,7 +566,9 @@
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
       "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
-      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm",
+      "exportDone": "Exported all {count} users to CSV",
+      "exportError": "Couldn't export. Please try again in a moment"
     },
     "stats": {
       "totalUsers": "Total Users",
@@ -612,7 +620,17 @@
       "publicUrls": "Public URLs",
       "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)",
       "loadError": "Couldn't load the documents. Please try again in a moment",
-      "language": "Document language"
+      "language": "Document language",
+      "statusTitle": "Status by language",
+      "document": "Document",
+      "status_published": "Published",
+      "status_draft": "Draft",
+      "status_missing": "Missing",
+      "status_stale": "Older than Korean",
+      "unsavedTitle": "You have unsaved changes",
+      "unsavedDesc": "If you switch documents, your edits will be lost.",
+      "discard": "Discard and switch",
+      "unsavedHint": "Unsaved changes"
     },
     "editor": {
       "toolbar": "Formatting",
@@ -661,7 +679,8 @@
         "delete_user": "Member deleted",
         "permanent_delete_user": "Member permanently deleted",
         "restore_user": "Member restored",
-        "send_password_reset": "Reset email sent"
+        "send_password_reset": "Reset email sent",
+        "export_users": "Member list exported"
       }
     },
     "health": {
@@ -710,7 +729,15 @@
     "codesOf": "{codes} codes · {scans} scans",
     "exportScopeSummary": "Export: totals for {count} codes",
     "exportScopeSummarySearch": "Export: totals for {count} codes matching \"{q}\"",
-    "exportScopeSearch": "Export: {count} scans matching \"{q}\""
+    "exportScopeSearch": "Export: {count} scans matching \"{q}\"",
+    "periodLabel": "Period",
+    "periodAll": "All",
+    "period1h": "Last hour",
+    "periodToday": "Today",
+    "period7d": "Last 7 days",
+    "exportScopePeriod": "Export: {count} scans",
+    "periodEmpty": "No scans in this period",
+    "periodShowAll": "Show all"
   },
   "share": {
     "button": "Share",
@@ -736,5 +763,13 @@
     "saved": "Sharing settings saved",
     "saveFailed": "Couldn't save sharing settings. Please try again in a moment",
     "close": "Close"
+  },
+  "hotkeys": {
+    "title": "Keyboard shortcuts",
+    "desc": "Press these when you’re not typing in a field.",
+    "search": "Jump to code search",
+    "toggleView": "Switch scans ↔ by code",
+    "export": "Export what you see as CSV",
+    "help": "Open this help"
   }
 }

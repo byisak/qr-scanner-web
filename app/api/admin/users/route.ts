@@ -9,6 +9,12 @@ import {
   createAuthErrorResponse,
 } from '@/lib/auth';
 import type { AdminUser } from '@/types';
+import * as XLSX from 'xlsx';
+
+// 엑셀이 수식으로 실행하지 않도록 =, +, -, @, 탭, CR 로 시작하는 값 앞에 작은따옴표
+const safeCell = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+// 전체 내보내기 상한 (한 번에 내려받는 행 수)
+const EXPORT_MAX_ROWS = 10000;
 
 interface UserRow {
   id: string;
@@ -65,8 +71,10 @@ export async function GET(request: NextRequest) {
 
     // 쿼리 파라미터
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // format=csv: 필터·정렬에 맞는 전체 사용자를 CSV로 (페이지 무시, 감사 로그 기록)
+    const isExport = searchParams.get('format') === 'csv';
+    const page = isExport ? 1 : Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+    const limit = isExport ? EXPORT_MAX_ROWS : Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20));
     const search = searchParams.get('search') || '';
     const provider = searchParams.get('provider') || '';
     const roleFilter = searchParams.get('role') || '';
@@ -157,7 +165,7 @@ export async function GET(request: NextRequest) {
       ) sc ON u.id = sc.user_id
       LEFT JOIN user_ad_records ar ON u.id = ar.user_id
       ${whereClause}
-      ORDER BY ${sortColumn === 'session_count' || sortColumn === 'scan_count' ? sortColumn : 'u.' + sortColumn} ${order}
+      ORDER BY ${sortColumn === 'session_count' || sortColumn === 'scan_count' ? sortColumn : 'u.' + sortColumn} ${order} NULLS LAST, u.id
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
       [...params, limit, offset]
     );
@@ -186,6 +194,39 @@ export async function GET(request: NextRequest) {
         adUnlockedCount,
       };
     });
+
+    if (isExport) {
+      const rows = users.map((u) => ({
+        ID: u.id,
+        Email: safeCell(u.email),
+        Name: safeCell(u.name || ''),
+        Role: u.role,
+        Provider: u.provider,
+        Status: u.deletedAt ? 'deleted' : u.isActive ? 'active' : 'inactive',
+        Sessions: u.sessionCount,
+        Scans: u.scanCount,
+        'Created (UTC)': u.createdAt,
+        'Last login (UTC)': u.lastLoginAt || '',
+      }));
+      const csv = '\uFEFF' + XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(rows));
+      await client.query(
+        `INSERT INTO audit_logs (admin_id, action, target_type, target_id, details, ip_address, user_agent)
+         VALUES ($1, 'export_users', 'user', '*', $2, $3, $4)`,
+        [
+          tokenUser.userId,
+          JSON.stringify({ count: rows.length, total, search, provider, role: roleFilter, status, sortBy: sortColumn, sortOrder: order }),
+          request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+          request.headers.get('user-agent'),
+        ]
+      );
+      const day = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+      return new NextResponse(csv, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="users_${day}.csv"`,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

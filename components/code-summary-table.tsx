@@ -94,6 +94,7 @@ export function CodeSummaryTable({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10"
+            data-scan-search=""
           />
         </div>
         <Segmented<SortKey>
@@ -116,7 +117,7 @@ export function CodeSummaryTable({
             action={<Button variant="outline" onClick={() => onSearchChange("")}>{t("table.clearSearch")}</Button>}
           />
         ) : (
-          <Empty icon={<ScanLine />} title={t("table.noData")} description={t("table.noDataDesc")} />
+          <Empty icon={<ScanLine />} title={t("summary.periodEmpty")} />
         )
       ) : (
         <>

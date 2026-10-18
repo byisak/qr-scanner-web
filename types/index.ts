@@ -135,6 +135,9 @@ export interface Session {
   last_activity: string;
   status: string;
   scan_count: number;
+  // 오늘(KST) 스캔 수, 마지막 스캔 시각 (목록 API가 준다)
+  today_count?: number;
+  last_scan_at?: string | null;
   deleted_at: string | null;
 }
 
