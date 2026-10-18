@@ -19,6 +19,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { SiteHeader, SiteFooter } from '@/components/site-header'
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
+import { LiveDemo } from '@/components/landing/live-demo'
+import { Reveal } from '@/components/landing/reveal'
 
 // SEO 메타데이터 - 매우 중요!
 export const metadata: Metadata = {
@@ -77,6 +79,9 @@ const FEATURES = [
   { key: 'allBarcodes', icon: QrCode, href: '/features/scan-area' },
   { key: 'validation', icon: CheckCircle, href: null },
 ] as const
+
+// 스캔으로 인식하는 바코드 13종 (앱 설정 > 바코드 종류와 같음)
+const BARCODE_TYPES = ['QR Code', 'EAN-13', 'EAN-8', 'Code 128', 'Code 39', 'Code 93', 'UPC-A', 'UPC-E', 'ITF-14', 'Codabar', 'PDF417', 'Data Matrix', 'Aztec']
 
 const USE_CASES = [
   { key: 'logistics', icon: Truck },
@@ -138,9 +143,9 @@ export default async function HomePage() {
       <SiteHeader active="home" />
 
       <main id="main" className="min-h-screen">
-        {/* 첫 화면 */}
-        <section className="page pb-16 pt-14 sm:pb-24 sm:pt-20">
-          <div className="max-w-3xl">
+        {/* 첫 화면: 왼쪽 문구, 오른쪽 폰→PC 실시간 데모 */}
+        <section className="page grid items-center gap-12 pb-16 pt-14 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-16">
+          <div className="min-w-0">
             <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
               {t('home.heroTitle1')}
               <br />
@@ -164,13 +169,47 @@ export default async function HomePage() {
               </Button>
             </div>
           </div>
+          <div className="enter min-w-0" style={{ '--i': 3 } as React.CSSProperties}>
+            <LiveDemo
+              labels={{
+                sessionName: t('landing.demoSession'),
+                connected: t('session.connected'),
+                justScanned: t('session.lastScan'),
+                now: t('landing.demoNow'),
+                todayCount: t.raw('landing.demoToday') as string,
+                distinctCodes: t.raw('landing.demoCodes') as string,
+                code: t('table.code'),
+                time: t('table.scanTime'),
+                saved: t('landing.demoSaved'),
+              }}
+            />
+            <p className="sr-only">{t('landing.demoAlt')}</p>
+          </div>
+        </section>
+
+        {/* 인식하는 바코드 13종이 흘러가는 띠 */}
+        <section aria-labelledby="types-title" className="border-y bg-card py-6">
+          <h2 id="types-title" className="sr-only">{t('landing.typesTitle')}</h2>
+          <div className="marquee">
+            <ul className="marquee-track">
+              {[...BARCODE_TYPES, ...BARCODE_TYPES].map((name, i) => (
+                <li
+                  key={i}
+                  aria-hidden={i >= BARCODE_TYPES.length ? 'true' : undefined}
+                  className="shrink-0 rounded-full border bg-background px-4 py-1.5 font-mono text-13 font-semibold text-muted-foreground"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         {/* 주요 기능 */}
         <section id="features" aria-labelledby="features-title" className="page scroll-mt-20 py-16">
           <h2 id="features-title" className="type-h1">{t('home.whyChoose')}</h2>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ key, icon: Icon, href }) => {
+          <Reveal as="ul" stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map(({ key, icon: Icon, href }, idx) => {
               const body = (
                 <>
                   <span className="flex size-10 items-center justify-center rounded-code bg-secondary">
@@ -181,7 +220,7 @@ export default async function HomePage() {
                 </>
               )
               return (
-                <li key={key} className="min-w-0">
+                <li key={key} className="min-w-0" style={{ '--i': idx } as React.CSSProperties}>
                   {href ? (
                     <Link href={href} className="lift block h-full rounded-card border bg-card p-6">{body}</Link>
                   ) : (
@@ -190,7 +229,7 @@ export default async function HomePage() {
                 </li>
               )
             })}
-          </ul>
+          </Reveal>
           <Button asChild variant="outline" className="mt-6">
             <Link href="/features">{t('nav.allFeatures')}<ArrowRight aria-hidden="true" /></Link>
           </Button>
@@ -200,34 +239,34 @@ export default async function HomePage() {
         <section id="usecases" aria-labelledby="usecases-title" className="scroll-mt-20 border-y bg-card py-16">
           <div className="page">
             <h2 id="usecases-title" className="type-h1">{t('home.whoUses')}</h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {USE_CASES.map(({ key, icon: Icon }) => (
-                <li key={key} className="min-w-0 rounded-card border bg-background p-6">
+            <Reveal as="ul" stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {USE_CASES.map(({ key, icon: Icon }, idx) => (
+                <li key={key} className="lift min-w-0 rounded-card border bg-background p-6" style={{ '--i': idx } as React.CSSProperties}>
                   <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
                   <h3 className="mt-3 type-h3">{t(`useCases.${key}.title`)}</h3>
                   <p className="mt-1.5 type-body text-muted-foreground">{t(`useCases.${key}.description`)}</p>
                 </li>
               ))}
-            </ul>
+            </Reveal>
           </div>
         </section>
 
         {/* 자주 묻는 질문 */}
         <section id="faq" aria-labelledby="faq-title" className="page scroll-mt-20 py-16">
           <h2 id="faq-title" className="type-h1">{t('home.faqTitle')}</h2>
-          <dl className="mt-8 max-w-3xl divide-y rounded-card border bg-card">
+          <Reveal as="dl" className="mt-8 max-w-3xl divide-y rounded-card border bg-card">
             {FAQ_KEYS.map((q) => (
               <div key={q} className="p-6">
                 <dt className="type-h3">{t(`faq.${q}.question`)}</dt>
                 <dd className="mt-2 type-body text-muted-foreground">{t(`faq.${q}.answer`)}</dd>
               </div>
             ))}
-          </dl>
+          </Reveal>
         </section>
 
         {/* 마무리 안내 */}
         <section className="page pb-8 pt-4">
-          <div className="rounded-card border bg-card px-6 py-12 text-center sm:px-12">
+          <Reveal className="rounded-card border bg-card px-6 py-12 text-center sm:px-12">
             <h2 className="type-h1">{t('home.ctaTitle')}</h2>
             <p className="mx-auto mt-3 max-w-xl type-lead">{t('home.ctaDescription')}</p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -238,7 +277,7 @@ export default async function HomePage() {
                 <a href={PLAY_STORE_URL}>{t('home.googlePlay')}</a>
               </Button>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 

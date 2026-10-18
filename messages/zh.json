@@ -593,5 +593,14 @@
     "toggleView": "切换扫描记录 ↔ 按码汇总",
     "export": "按当前显示导出 CSV",
     "help": "打开此帮助"
+  },
+  "landing": {
+    "demoSession": "1楼 入库验收",
+    "demoNow": "刚刚",
+    "demoToday": "今天 {count} 条",
+    "demoCodes": "{count} 种码",
+    "demoSaved": "已保存",
+    "demoAlt": "用手机扫描条码后，电脑浏览器的会话表格会立即新增一行",
+    "typesTitle": "支持识别的条码类型"
   }
 }

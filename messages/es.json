@@ -593,5 +593,14 @@
     "toggleView": "Cambiar escaneos ↔ por código",
     "export": "Exportar lo que ves en CSV",
     "help": "Abrir esta ayuda"
+  },
+  "landing": {
+    "demoSession": "Recepción planta 1",
+    "demoNow": "ahora",
+    "demoToday": "{count} hoy",
+    "demoCodes": "{count} códigos",
+    "demoSaved": "Guardado",
+    "demoAlt": "Al escanear un código con el móvil, se añade al instante una fila a la tabla de la sesión en el navegador del PC",
+    "typesTitle": "Tipos de código compatibles"
   }
 }

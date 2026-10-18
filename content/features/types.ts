@@ -30,6 +30,21 @@ export interface Screenshot {
   frame: 'phone' | 'browser';
 }
 
+// 기능마다 필요한 만큼 붙이는 자세한 설명 (예: 만들 수 있는 바코드 전체 목록)
+export type DetailBlock =
+  | { kind: 'text'; body: string }
+  | { kind: 'list'; items: string[] }
+  | { kind: 'table'; caption?: string; columns: string[]; rows: string[][] };
+
+export interface DetailSection {
+  id: string; // 목차 링크용 (영문 소문자·하이픈)
+  title: string;
+  intro?: string;
+  // 표를 촘촘하게, 넓은 화면에서 두 단으로 (긴 목록용)
+  compact?: boolean;
+  blocks: DetailBlock[];
+}
+
 export interface FeatureContent {
   group: FeatureGroup;
   title: string;
@@ -39,6 +54,8 @@ export interface FeatureContent {
   lead: string;
   steps: { title: string; body: string }[];
   settings: { name: string; value: string }[];
+  // 쓰는 법 다음에 오는 자세한 설명 (선택)
+  sections?: DetailSection[];
   // 알아둘 점 (한계도 그대로)
   notes: string[];
   faq: { q: string; a: string }[];

@@ -593,5 +593,14 @@
     "toggleView": "スキャン履歴 ↔ コード別集計",
     "export": "表示中の内容をCSVで書き出し",
     "help": "このヘルプを開く"
+  },
+  "landing": {
+    "demoSession": "1階 入荷検品",
+    "demoNow": "今",
+    "demoToday": "今日 {count}件",
+    "demoCodes": "コード {count}種類",
+    "demoSaved": "保存済み",
+    "demoAlt": "スマホでバーコードをスキャンすると、PCブラウザのセッション表にすぐ1行ずつ追加される様子",
+    "typesTitle": "読み取れるバーコードの種類"
   }
 }

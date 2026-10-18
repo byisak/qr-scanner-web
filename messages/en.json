@@ -772,5 +772,14 @@
     "toggleView": "Switch scans ↔ by code",
     "export": "Export what you see as CSV",
     "help": "Open this help"
+  },
+  "landing": {
+    "demoSession": "Floor 1 inbound",
+    "demoNow": "now",
+    "demoToday": "{count} today",
+    "demoCodes": "{count} codes",
+    "demoSaved": "Saved",
+    "demoAlt": "Scanning a barcode with a phone adds a row to the session table in a PC browser right away",
+    "typesTitle": "Supported barcode types"
   }
 }

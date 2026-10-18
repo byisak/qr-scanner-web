@@ -48,6 +48,7 @@ export default async function FeaturePage({ params }: { params: Promise<{ slug: 
 
   const toc = [
     { id: 'how-to', label: data.ui.howTo, show: f.steps.length > 0 },
+    ...(f.sections ?? []).map((sec) => ({ id: sec.id, label: sec.title, show: true })),
     { id: 'settings', label: data.ui.settings, show: f.settings.length > 0 },
     { id: 'notes', label: data.ui.notes, show: f.notes.length > 0 },
     { id: 'faq', label: data.ui.faq, show: f.faq.length > 0 },
@@ -108,6 +109,50 @@ export default async function FeaturePage({ params }: { params: Promise<{ slug: 
               </ol>
             </section>
           )}
+
+          {(f.sections ?? []).map((sec) => (
+            <section key={sec.id} id={sec.id} aria-labelledby={`${sec.id}-title`} className="mt-12 scroll-mt-24">
+              <h2 id={`${sec.id}-title`} className="type-h2">{sec.title}</h2>
+              {sec.intro && <p className="mt-3 type-body text-muted-foreground">{sec.intro}</p>}
+              <div className={sec.compact ? 'mt-5 grid gap-5 md:grid-cols-2 md:items-start' : 'mt-5 grid gap-5'}>
+                {sec.blocks.map((b, bi) =>
+                  b.kind === 'text' ? (
+                    <p key={bi} className="type-body text-muted-foreground">{b.body}</p>
+                  ) : b.kind === 'list' ? (
+                    <ul key={bi} className="grid list-disc gap-1.5 pl-5 type-body text-muted-foreground">
+                      {b.items.map((it) => <li key={it}>{it}</li>)}
+                    </ul>
+                  ) : (
+                    <div key={bi} className="min-w-0">
+                      {b.caption && <h3 className="mb-2 type-h3">{b.caption}</h3>}
+                      <div className="overflow-x-auto rounded-card border bg-card">
+                        <table className={sec.compact ? 'w-full text-13' : 'w-full min-w-[480px] text-15'}>
+                          <thead className="bg-muted text-left text-13 text-muted-foreground">
+                            <tr>
+                              {b.columns.map((c) => <th key={c} scope="col" className={sec.compact ? 'px-4 py-2 font-semibold' : 'px-5 py-3 font-semibold'}>{c}</th>)}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {b.rows.map((r, ri) => (
+                              <tr key={ri} className="border-t align-top">
+                                {r.map((cell, ci) =>
+                                  ci === 0 ? (
+                                    <th key={ci} scope="row" className={sec.compact ? 'px-4 py-2 text-left font-semibold' : 'px-5 py-3 text-left font-semibold'}>{cell}</th>
+                                  ) : (
+                                    <td key={ci} className={sec.compact ? 'px-4 py-2 text-muted-foreground' : 'px-5 py-3 text-muted-foreground'}>{cell}</td>
+                                  )
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </section>
+          ))}
 
           {f.settings.length > 0 && (
             <section id="settings" aria-labelledby="settings-title" className="mt-12 scroll-mt-24">
