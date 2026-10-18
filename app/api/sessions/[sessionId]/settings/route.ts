@@ -57,9 +57,16 @@ export async function GET(
     );
 
     if (result.rows.length === 0) {
-      // 설정이 없으면 기본값 반환
-      // console.log('⚠️ 세션 설정 없음 - 기본값 반환:', sessionId);
+      // 설정이 없으면 기본값 반환 (소유자 여부는 따로 확인)
+      let canManageDefault = false;
+      const defaultUser = getRequestUser(request);
+      if (defaultUser) {
+        const owner = await client.query(`SELECT user_id FROM sessions WHERE session_id = $1`, [sessionId]);
+        canManageDefault =
+          owner.rows[0]?.user_id === defaultUser.userId || (await isAdminUser(client, defaultUser.userId));
+      }
       return NextResponse.json({
+        canManage: canManageDefault,
         sessionId,
         hasPassword: false,
         isPublic: true,
@@ -110,6 +117,8 @@ export async function GET(
       hasPassword: settings.has_password,
       isPublic: settings.is_public,
       accessCode: canSeeSecrets ? settings.access_code : null,
+      // 소유자·관리자: 비공개·비밀번호 세션이어도 화면에서 막지 않고 공유 설정을 보여 준다
+      canManage: canSeeSecrets,
       realtimeKey,
       maxParticipants: settings.max_participants,
       allowAnonymous: settings.allow_anonymous,
@@ -162,6 +171,14 @@ export async function PUT(
     const updates: string[] = [];
     const values: (string | boolean | number | null)[] = [];
     let paramIndex = 1;
+
+    // 입력 검사: 비밀번호는 4~64자 문자열, 공개 여부는 true/false
+    if ('password' in body && body.password && (typeof body.password !== 'string' || body.password.length < 4 || body.password.length > 64)) {
+      return NextResponse.json({ error: '비밀번호는 4자 이상 64자 이하로 입력해 주세요.' }, { status: 400 });
+    }
+    if ('isPublic' in body && typeof body.isPublic !== 'boolean') {
+      return NextResponse.json({ error: 'isPublic 값이 올바르지 않습니다.' }, { status: 400 });
+    }
 
     // 비밀번호 업데이트
     if ('password' in body) {

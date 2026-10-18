@@ -50,6 +50,9 @@ import type { CSSProperties } from 'react';
 import { useParams } from 'next/navigation';
 import { ScanDataTable } from '@/components/scan-data-table';
 import { createColumns, createReadOnlyColumns } from '@/components/scan-table-columns';
+import { CodeSummaryTable, summarizeByCode } from '@/components/code-summary-table';
+import { Segmented } from '@/components/ui/segmented';
+import { SessionShareDialog } from '@/components/session-share-dialog';
 import { useLocale, useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
@@ -112,6 +115,8 @@ interface SessionSettings {
   maxParticipants: number | null;
   allowAnonymous: boolean;
   expiresAt: string | null;
+  // 소유자·관리자 (비공개·비밀번호여도 들어갈 수 있고 공유 설정을 바꿀 수 있다)
+  canManage?: boolean;
 }
 
 export default function SessionPage() {
@@ -131,6 +136,9 @@ export default function SessionPage() {
   const [highlightIds, setHighlightIds] = useState<ReadonlySet<number>>(() => new Set());
   // 창을 안 보고 있을 때 쌓인 새 스캔 수 (탭 제목에 표시)
   const [hiddenCount, setHiddenCount] = useState(0);
+  // 표 보기: 스캔 기록 / 코드별 합계. 검색어는 두 보기와 내보내기가 같이 쓴다
+  const [view, setView] = useState<'scans' | 'summary'>('scans');
+  const [search, setSearch] = useState('');
   // 상대 시간("3초 전")을 새로 그리기 위한 시계
   const [now, setNow] = useState(() => Date.now());
 
@@ -168,13 +176,16 @@ export default function SessionPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch(`/api/sessions/${sessionId}/settings`);
+        const res = await fetch(`/api/sessions/${sessionId}/settings`, { headers: authHeaders });
         if (res.ok) {
           const settings: SessionSettings = await res.json();
           setSessionSettings(settings);
 
           // 접근 권한 확인
-          if (!settings.isPublic) {
+          if (settings.canManage) {
+            // 소유자·관리자는 공개 범위와 관계없이 본다
+            setAccessGranted(true);
+          } else if (!settings.isPublic) {
             // 비공개 세션 - 접근 불가
             setAccessGranted(false);
           } else if (settings.hasPassword) {
@@ -210,11 +221,12 @@ export default function SessionPage() {
       }
     };
 
-    if (sessionId) {
+    // 로그인 확인이 끝난 뒤에 불러와야 소유자 여부를 알 수 있다
+    if (sessionId && !isLoading) {
       fetchSettings();
       fetchSessionName();
     }
-  }, [sessionId]);
+  }, [sessionId, isLoading, authHeaders]);
 
   // 비밀번호 검증
   const handlePasswordSubmit = useCallback(async () => {
@@ -419,10 +431,25 @@ export default function SessionPage() {
     return rtf.format(Math.round(hour / 24), 'day');
   }, [locale, now]);
 
+  const summaryRows = useMemo(() => summarizeByCode(scans), [scans]);
+
+  // 지금 보이는 범위: 검색 결과 건수 (내보내기 안내용)
+  const visibleCount = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (view === 'summary') {
+      return q ? summaryRows.filter((r) => r.code.toLowerCase().includes(q)).length : summaryRows.length;
+    }
+    return q ? scans.filter((s) => s.code.toLowerCase().includes(q)).length : scans.length;
+  }, [view, search, scans, summaryRows]);
+
+  // 보이는 대로 내보내기: 지금 보기(스캔 기록/코드별)와 검색어를 그대로 서버에 넘긴다
   const handleExport = async (format: 'csv' | 'xlsx') => {
     const loadingToast = notify.loading(t('session.exporting'));
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/export?format=${format}`, {
+      const q = new URLSearchParams({ format, view, lang: locale });
+      if (search.trim()) q.set('q', search.trim());
+      if (sessionName) q.set('name', sessionName);
+      const response = await fetch(`/api/sessions/${sessionId}/export?${q}`, {
         headers: authHeaders,
       });
 
@@ -430,11 +457,18 @@ export default function SessionPage() {
         throw new Error(t('session.exportFailed'));
       }
 
+      // 서버가 정한 파일 이름 (세션 이름_날짜). 못 읽으면 세션 ID
+      const cd = response.headers.get('content-disposition') || '';
+      const star = cd.match(/filename\*=UTF-8''([^;]+)/i);
+      const fileName = star
+        ? decodeURIComponent(star[1])
+        : `session-${sessionId}-${new Date().toISOString().split('T')[0]}.${format}`;
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `session-${sessionId}-${new Date().toISOString().split('T')[0]}.${format}`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -477,7 +511,7 @@ export default function SessionPage() {
   );
 
   // 비공개 세션 차단 화면
-  if (!settingsLoading && sessionSettings && !sessionSettings.isPublic) {
+  if (!settingsLoading && sessionSettings && !sessionSettings.isPublic && !sessionSettings.canManage) {
     return (
       <SidebarProvider>
         <AppSidebar currentSessionId={sessionId} />
@@ -505,7 +539,7 @@ export default function SessionPage() {
   }
 
   // 비밀번호 보호 세션 - 비밀번호 입력 화면 (데이터 렌더링하지 않음)
-  if (!settingsLoading && sessionSettings?.hasPassword && !accessGranted) {
+  if (!settingsLoading && sessionSettings?.hasPassword && !accessGranted && !sessionSettings.canManage) {
     return (
       <SidebarProvider>
         <AppSidebar currentSessionId={sessionId} />
@@ -565,7 +599,17 @@ export default function SessionPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 {/* 좁은 화면: 제목은 한 줄 전체, 버튼은 아래 줄 */}
                 <h1 className="type-h2 min-w-0 flex-1 basis-full break-all sm:basis-0">{displayName}</h1>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                  {/* 공유·공개 범위: 세션 주인(또는 관리자)만 */}
+                  {sessionSettings?.canManage && (
+                    <SessionShareDialog
+                      sessionId={sessionId}
+                      isPublic={sessionSettings.isPublic}
+                      hasPassword={sessionSettings.hasPassword}
+                      authHeaders={authHeaders}
+                      onSaved={(next) => setSessionSettings((prev) => (prev ? { ...prev, ...next } : prev))}
+                    />
+                  )}
                   {/* 연결 상태: 색만이 아니라 글자로도 */}
                   <span
                     role="status"
@@ -626,7 +670,14 @@ export default function SessionPage() {
                     <span className="tabular">{t('session.todayCount', { count: summary.todayCount })}</span>
                     <span className="tabular">{t('session.distinctCodes', { count: summary.distinct })}</span>
                     {summary.duplicates > 0 && (
-                      <span className="tabular">{t('session.duplicateScans', { count: summary.duplicates })}</span>
+                      // 누르면 코드별 합계로 (어떤 코드가 중복인지 바로 보게)
+                      <button
+                        type="button"
+                        className="tabular underline underline-offset-4 hover:text-foreground"
+                        onClick={() => setView('summary')}
+                      >
+                        {t('session.duplicateScans', { count: summary.duplicates })}
+                      </button>
                     )}
                     {summary.latestRepeat > 1 && (
                       <span className="tabular font-semibold text-foreground">{t('session.scannedTimes', { count: summary.latestRepeat })}</span>
@@ -701,33 +752,66 @@ export default function SessionPage() {
                 </div>
               ) : (
                 <>
-                  {isAuthenticated && (
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport('csv')}
-                        disabled={scans.length === 0}
-                      >
-                        <Download aria-hidden="true" />
-                        {t('session.exportCsv')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport('xlsx')}
-                        disabled={scans.length === 0}
-                      >
-                        <FileSpreadsheet aria-hidden="true" />
-                        {t('session.exportExcel')}
-                      </Button>
-                    </div>
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    {scans.length > 0 ? (
+                      <Segmented<'scans' | 'summary'>
+                        aria-label={t('summary.viewLabel')}
+                        value={view}
+                        onValueChange={setView}
+                        options={[
+                          { value: 'scans', label: t('summary.viewScans') },
+                          { value: 'summary', label: t('summary.viewSummary') },
+                        ]}
+                      />
+                    ) : <span />}
+                    {isAuthenticated && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleExport('csv')}
+                          disabled={visibleCount === 0}
+                        >
+                          <Download aria-hidden="true" />
+                          {t('session.exportCsv')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleExport('xlsx')}
+                          disabled={visibleCount === 0}
+                        >
+                          <FileSpreadsheet aria-hidden="true" />
+                          {t('session.exportExcel')}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {/* 무엇을 내보내는지: 보기와 검색어를 그대로 */}
+                  {isAuthenticated && scans.length > 0 && (view === 'summary' || search.trim()) && (
+                    <p className="-mt-2 mb-4 text-13 text-muted-foreground">
+                      {view === 'summary'
+                        ? search.trim()
+                          ? t('summary.exportScopeSummarySearch', { q: search.trim(), count: visibleCount })
+                          : t('summary.exportScopeSummary', { count: visibleCount })
+                        : t('summary.exportScopeSearch', { q: search.trim(), count: visibleCount })}
+                    </p>
                   )}
+                  {view === 'summary' ? (
+                    <CodeSummaryTable
+                      rows={summaryRows}
+                      search={search}
+                      onSearchChange={setSearch}
+                      formatOptions={formatOptions}
+                    />
+                  ) : (
                   <ScanDataTable
                     columns={columns}
                     data={orderedScans}
                     onDeleteSelected={isAuthenticated ? handleDeleteSelected : undefined}
                     highlightIds={highlightIds}
+                    search={search}
+                    onSearchChange={setSearch}
                     emptyState={isAuthenticated ? (
                       // 첫 세션 안내: 앱에서 이 세션으로 보내는 방법 3단계
                       <div className="grid gap-4 py-2">
@@ -757,6 +841,7 @@ export default function SessionPage() {
                       </div>
                     ) : undefined}
                   />
+                  )}
                 </>
               )}
             </CardContent>
