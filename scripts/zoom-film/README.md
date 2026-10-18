@@ -30,3 +30,6 @@ done
 
 ## 지구 점 데이터
 `land-dots.js` 는 Natural Earth 1:50m 육지(공개 영역)를 world-atlas(ISC) + d3-geo 로 0.8° 간격 점으로 바꾼 것이다. 다시 만들 때는 d3-geo·topojson-client·world-atlas@2 를 설치한 폴더에서 위도 -58~82°, 경도 간격 0.8°/cos(위도)로 `geoContains` 를 돌려 `window.LAND_DOTS = [위도×10, 경도×10, ...]` 로 저장한다.
+## 가로판 (첫 화면 배경)
+`FMT=wide node render.cjs <폴더>` 로 16:9 판을 렌더한다. 피사체를 가로 66% 지점에 두고(왼쪽은 페이지 문구 자리), 장 머리글·워드마크는 그리지 않는다.
+웹용은 1280×720 으로 `public/landing/zoom-wide-{ko,en}.{mp4,webm}` + `zoom-wide-poster-*.webp`. 페이지에서는 `object-position: 66% 50%` 로 카드 비율이 달라도 피사체가 같은 자리에 오게 한다.

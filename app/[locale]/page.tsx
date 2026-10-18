@@ -144,34 +144,48 @@ export default async function HomePage() {
       <SiteHeader active="home" />
 
       <main id="main" className="min-h-screen">
-        {/* 첫 화면: 왼쪽 문구, 오른쪽 폰→PC 실시간 데모 */}
-        <section className="page grid items-center gap-12 pb-16 pt-14 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-16">
-          <div className="min-w-0">
-            <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
-              {t('home.heroTitle1')}
-              <br />
-              <span className="text-muted-foreground">{t('home.heroTitle2')}</span>
-            </h1>
-            <p className="enter mt-5 max-w-2xl type-lead" style={{ '--i': 1 } as React.CSSProperties}>
-              {t('home.heroDescription')}
-            </p>
-            <div className="enter mt-8 flex flex-col gap-3 sm:flex-row" style={{ '--i': 2 } as React.CSSProperties}>
-              <Button asChild size="xl">
-                <a href={APP_STORE_URL}>
-                  <Download aria-hidden="true" />
-                  {t('home.downloadAppStore')}
-                </a>
-              </Button>
-              <Button asChild size="xl" variant="outline">
-                <a href={PLAY_STORE_URL}>
-                  <Download aria-hidden="true" />
-                  {t('home.downloadGooglePlay')}
-                </a>
-              </Button>
+        {/* 첫 화면: 넓은 화면은 카드 전체에 가로 영상(피사체는 오른쪽), 왼쪽 빈 자리에 문구.
+            좁은 화면은 문구 아래에 세로 영상 카드 */}
+        <section className="page pb-12 pt-4 sm:pb-16 sm:pt-6">
+          <div className="relative overflow-hidden rounded-[28px] border bg-card lg:min-h-[min(780px,calc(100svh-120px))]">
+            <ZoomFilm
+              variant="wide"
+              lang={locale === 'ko' ? 'ko' : 'en'}
+              label={t('landing.demoAlt')}
+              className="absolute inset-0 hidden lg:block"
+            />
+            {/* 문구가 영상 위에서도 읽히도록 왼쪽만 바탕색으로 덮는다 */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-card from-22% via-card/85 via-42% to-transparent to-58% lg:block"
+            />
+            <div className="relative flex flex-col justify-center p-6 sm:p-10 lg:min-h-[min(780px,calc(100svh-120px))] lg:max-w-[620px] lg:p-14">
+              <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
+                {t('home.heroTitle1')}
+                <br />
+                <span className="text-muted-foreground">{t('home.heroTitle2')}</span>
+              </h1>
+              <p className="enter mt-5 max-w-xl type-lead" style={{ '--i': 1 } as React.CSSProperties}>
+                {t('home.heroDescription')}
+              </p>
+              <div className="enter mt-8 flex flex-col gap-3 sm:flex-row" style={{ '--i': 2 } as React.CSSProperties}>
+                <Button asChild size="xl">
+                  <a href={APP_STORE_URL}>
+                    <Download aria-hidden="true" />
+                    {t('home.downloadAppStore')}
+                  </a>
+                </Button>
+                <Button asChild size="xl" variant="outline">
+                  <a href={PLAY_STORE_URL}>
+                    <Download aria-hidden="true" />
+                    {t('home.downloadGooglePlay')}
+                  </a>
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="enter min-w-0" style={{ '--i': 3 } as React.CSSProperties}>
-            <ZoomFilm lang={locale === 'ko' ? 'ko' : 'en'} label={t('landing.demoAlt')} />
+            <div className="enter px-4 pb-4 sm:px-10 sm:pb-10 lg:hidden" style={{ '--i': 3 } as React.CSSProperties}>
+              <ZoomFilm lang={locale === 'ko' ? 'ko' : 'en'} label={t('landing.demoAlt')} />
+            </div>
           </div>
         </section>
 
