@@ -6,6 +6,7 @@ import { ArrowRight, Download, ScanLine, FolderTree, Briefcase, QrCode, Lock, Mo
 import { Button } from '@/components/ui/button'
 import { SiteHeader, SiteFooter } from '@/components/site-header'
 import { Shot, resolveScreenshot } from '@/components/features/frames'
+import { Reveal } from '@/components/landing/reveal'
 import { getFeaturesLocale, listFeatures } from '@/content/features'
 import { FEATURE_GROUPS, type FeatureGroup } from '@/content/features/types'
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
@@ -87,13 +88,13 @@ export default async function FeaturesPage() {
         {/* 기능 지도: 묶음별 카드 */}
         <section aria-labelledby="groups-title" className="page py-12">
           <h2 id="groups-title" className="type-h1">{data.ui.groupsTitle}</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURE_GROUPS.map((g) => {
+          <Reveal stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURE_GROUPS.map((g, gi) => {
               const inGroup = items.filter((i) => i.content.group === g)
               if (inGroup.length === 0) return null
               const Icon = GROUP_ICONS[g]
               return (
-                <div key={g} className="min-w-0 rounded-card border bg-card p-6">
+                <div key={g} className="lift min-w-0 rounded-card border bg-card p-6" style={{ '--i': gi } as React.CSSProperties}>
                   <span className="flex size-10 items-center justify-center rounded-code bg-secondary">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
@@ -112,7 +113,7 @@ export default async function FeaturesPage() {
                 </div>
               )
             })}
-          </div>
+          </Reveal>
         </section>
 
         {/* 대표 기능: 설명 + 실제 화면 */}
@@ -125,7 +126,7 @@ export default async function FeaturesPage() {
                   // 스크린샷이 아직 없으면 글만 한 단으로
                   const shot = content.screenshots[0] && resolveScreenshot(locale, content.screenshots[0].file) ? content.screenshots[0] : null
                   return (
-                  <div key={slug} className={shot ? 'grid items-center gap-8 lg:grid-cols-2 lg:gap-16' : 'max-w-2xl'}>
+                  <Reveal key={slug} className={shot ? 'grid items-center gap-8 lg:grid-cols-2 lg:gap-16' : 'max-w-2xl'}>
                     <div className={i % 2 === 1 ? 'lg:order-2' : undefined}>
                       <p className="text-13 font-bold text-muted-foreground">{data.groups[content.group].title}</p>
                       <h3 className="mt-2 type-h2">{content.title}</h3>
@@ -147,7 +148,7 @@ export default async function FeaturesPage() {
                         <Shot shot={shot} locale={locale} />
                       </div>
                     )}
-                  </div>
+                  </Reveal>
                   )
                 })}
               </div>
