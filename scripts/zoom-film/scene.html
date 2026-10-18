@@ -323,7 +323,7 @@ const phoneCam = new THREE.PerspectiveCamera(46, SCR_W / SCR_H, 0.01, 20);
 phoneCam.position.set(0, 0, -PH_D / 2 - 0.002); phone.add(phoneCam); // 카메라는 -z(라벨 쪽)를 본다
 // 손 (와이어프레임): 오른손이 폰을 감싸 쥔다 — 손바닥은 뒷면, 네 손가락은 왼쪽 모서리를 감아 앞으로, 엄지는 오른쪽 앞
 // 모양은 ?hand= 로 고른다: mesh(삼각망) · skeleton(뼈대 선+관절) · box(각진 마디 윤곽) · cage(고리+세로선)
-const HAND = new URLSearchParams(location.search).get('hand') || 'natural';
+const HAND = new URLSearchParams(location.search).get('hand') || 'none';
 const hand = new THREE.Group(); phone.add(hand);
 const BZ = -PH_D / 2 - 0.009;           // 뒷면 손가락 높이
 const LX = -PH_W / 2;                   // 왼쪽 모서리
@@ -456,7 +456,7 @@ if (HAND === 'skeleton') {
   limb([V3(0.032, -0.095, PZ + 0.008), V3(PH_W / 2 + 0.006, -0.08, -0.002), V3(PH_W / 2 + 0.002, -0.068, PH_D / 2 + 0.006), V3(PH_W / 2 - 0.012, -0.058, PH_D / 2 + 0.0078)], 0.0092, 0.0078, { base: 0.25 });
   // 손목·팔: 화면 밖으로 빠져나간다 (끝은 열어 둔다)
   limb([V3(0.016, -0.09, PZ - 0.002), V3(0.03, -0.15, PZ - 0.03), V3(0.07, -0.32, PZ - 0.13), V3(0.13, -0.6, PZ - 0.3)], 0.024, 0.036, { tip: false });
-} else {
+} else if (HAND === 'mesh') {
   const wireMat = new THREE.LineBasicMaterial({ color: 0x3b3b42, transparent: true, opacity: 0.75 });
   const add = (geo, place) => { const g = new THREE.Group(); g.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireMat), new THREE.Mesh(geo, ghostMat)); place(g); hand.add(g); };
   add(new THREE.BoxGeometry(...palmBox.size, 3, 3, 2), (g) => { g.position.copy(palmBox.pos); g.rotation.z = palmBox.rz; });
@@ -565,6 +565,13 @@ const digitsWorld = barcodeWorld.clone().add(V(0, -0.006, 0));
 const midWorld = phoneTopWorld.clone().lerp(screenCenter, 0.5).add(V(0, 0.2, 0));
 const wideTarget = V(0.72, 1.02, 1.15);
 // 키: [시각, 바라보는 점, 카메라 방향(점→카메라), 거리]
+// 폰 화면 시점 → 폰 앞 전환: XF0~XF1 동안 두 장면을 겹친다
+const XF0 = 11.9, XF1 = 12.45, XJ = 12.05;
+let camT = (ts) => ts, povW = 1;
+const povDir = phonePos.clone().sub(scanTarget).normalize();
+const povD = phonePos.distanceTo(scanTarget) - 0.004; // 폰 몸체 안쪽 (폰은 숨긴다)
+// 화면 평면에서 카메라까지 거리 (폰 법선 방향, 음수면 폰 뒤)
+const screenGap = (p) => p.clone().sub(phonePos).dot(phoneNormal);
 const KEYS = [
   [0.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
   [2.4, V(0.35, 1.02, 0.6), V(-0.03, 0.12, 1), 3.4],
@@ -573,10 +580,13 @@ const KEYS = [
   [7.3, moduleWorld, V(0, 0, 1), 0.0105],
   [8.2, moduleWorld.clone().add(V(0.0006, 0, 0)), V(0.01, 0, 1), 0.0098],
   // 막대에서 곧장 뒤로 빠진다 (옆으로 쓸리지 않게 방향은 그대로)
-  [9.4, barcodeWorld.clone(), V(0.04, 0.05, 1), 0.34],
-  // 어깨 너머로 폰 화면 (뒤에 라벨이 보이게)
-  [10.6, phoneScreenWorld.clone().lerp(scanTarget, 0.3), phoneNormal.clone().add(V(-0.55, 0.25, 0)), 0.46],
-  [12.4, phoneScreenWorld.clone().lerp(scanTarget, 0.3).add(V(0, 0.004, 0)), phoneNormal.clone().add(V(-0.6, 0.27, 0)), 0.43],
+  [9.2, barcodeWorld.clone(), V(0.04, 0.05, 1), 0.3],
+  // 폰 화면 속으로: 시선 = 폰 카메라 (폰·라벨을 잇는 직선 위)
+  [10.2, scanTarget.clone(), povDir, povD],
+  [11.9, scanTarget.clone(), povDir, povD * 0.97],
+  // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
+  [XJ, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.06, 0.03, 0)), 0.17],
+  [13.1, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.3],
   [14.6, midWorld, V(0.9, 0.35, 0.6), 1.4],
   [16.4, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
   [19.4, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
@@ -603,7 +613,7 @@ const CH = [
   { t: 5.9, ko: ['바코드', '막대와 빈칸, 모듈 95칸'], en: ['The barcode', 'Bars and spaces, 95 modules'] },
   { t: 7.2, ko: ['모듈 하나', '폭 0.33 mm (100% 크기)'], en: ['One module', '0.33 mm wide at 100% size'] },
   { t: 9.4, ko: ['스캔', '앱으로 비추면 바로 읽어요'], en: ['The scan', 'Point the app and it reads instantly'] },
-  { t: 12.4, ko: ['전송', '코드와 시각만 PC로'], en: ['Sent', 'Only the code and time go to the PC'] },
+  { t: 12.9, ko: ['전송', '코드와 시각만 PC로'], en: ['Sent', 'Only the code and time go to the PC'] },
   { t: 16.0, ko: ['PC 화면', '찍으면 바로 표에 한 줄'], en: ['The PC', 'A new row as soon as you scan'] },
   { t: 20.5, ko: ['다시 창고', 'scanview.app'], en: ['Back to the floor', 'scanview.app'] },
 ];
@@ -647,9 +657,9 @@ function setState(t) {
   // 라벨 숫자: 읽히는 순간 한 자리씩 강조색, 22.5 s 부터 원래대로 (반복)
   const lit = t < 11.4 ? 0 : t < 22.5 ? Math.min(13, (t - 11.4) / 0.9 * 13) : 13 * (1 - Math.min(1, (t - 22.5) / 0.8));
   drawDigits(lit);
-  // 빛: 12.3~15.1 s 폰에서 나가고, 15.2~16.6 s 꼬리가 따라간다
+  // 빛: 12.9~15.3 s 폰에서 나가고, 15.2~16.6 s 꼬리가 따라간다
   const a = Math.min(1, Math.max(0, (t - 15.2) / 1.4));
-  const b = Math.min(1, Math.max(0, (t - 12.3) / 2.8));
+  const b = Math.min(1, Math.max(0, (t - 12.9) / 2.4));
   setRibbon(ease(a), ease(b));
   // 모니터: 16.2 s 새 줄, 19 s 부터 강조가 사라지고, 22~23.4 s (멀리서) 원래 상태로
   const rowIn = t < 16.2 ? 0 : t < 22 ? Math.min(1, (t - 16.2) / 0.6) : t < 23.4 ? 1 : 0;
@@ -658,8 +668,9 @@ function setState(t) {
   // 폰 카메라 화면 (라벨을 실제로 찍는다)
   hand.visible = false; renderer.setRenderTarget(feedRT); renderer.render(scene, phoneCam); renderer.setRenderTarget(null); hand.visible = true;
   // 카메라
-  const cam = cameraAt(t);
+  const cam = cameraAt(camT(t));
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
+  phone.visible = screenGap(cam.pos) > 0.012; // 시선이 폰 안에 있을 때는 폰을 숨긴다
   camera.near = Math.max(0.00005, cam.r * 0.05); camera.far = Math.max(40, cam.r * 50); camera.updateProjectionMatrix();
   return 0;
 }
@@ -680,16 +691,85 @@ function renderAt(t, sub = SUB) {
   actx.globalAlpha = 1;
   return fieldW;
 }
+const accA = document.createElement('canvas'); accA.width = W; accA.height = H;
+// 한 프레임: 전환 구간에서는 폰 화면 시점(A)과 폰 앞 시점(B)을 따로 그려 겹친다
+function frameAt(t, sub = SUB) {
+  const x = Math.min(1, Math.max(0, (t - XF0) / (XF1 - XF0)));
+  povW = 1 - ease(x);
+  if (x > 0 && x < 1) {
+    camT = () => XF0; renderAt(t, sub); accA.getContext('2d').drawImage(acc, 0, 0);
+    camT = (ts) => Math.max(ts, XJ); renderAt(t, sub);
+    camT = (ts) => ts;
+    actx.globalAlpha = povW; actx.drawImage(accA, 0, 0); actx.globalAlpha = 1;
+  } else {
+    camT = (ts) => ts; renderAt(t, sub);
+  }
+}
 function compose(t, lang, fieldW) {
   octx.globalAlpha = 1; octx.drawImage(acc, 0, 0);
   // 필름 그레인 (시드 고정)
+  drawPOV(octx, t);
   drawHud(octx, t, lang, fieldW);
+}
+
+// 폰 화면 시점: 화면 전체에 앱 스캔 UI 를 겹친다 (시선이 화면에 가까울수록 진하게)
+function drawPOV(g, t) {
+  const A = (t < XF0 ? Math.min(1, Math.max(0, (t - 9.6) / 0.5)) : t < XF1 ? povW : 0);
+  if (A <= 0) return;
+  g.save(); g.globalAlpha = A;
+  // 카메라 화면 느낌: 가장자리를 살짝 어둡게
+  const vg = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75);
+  vg.addColorStop(0, 'rgba(10,10,12,0)'); vg.addColorStop(1, 'rgba(10,10,12,.35)');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  g.textBaseline = 'middle'; g.textAlign = 'center';
+  // 그룹 선택
+  g.font = '700 30px "Noto Sans KR"';
+  const pw = g.measureText(PUI.group).width + 72;
+  g.fillStyle = 'rgba(17,17,19,.55)'; rr(g, W / 2 - pw / 2, 250, pw, 66, 33); g.fill();
+  g.fillStyle = '#fff'; g.fillText(PUI.group, W / 2, 284);
+  // 조준 모서리
+  const cx = W / 2, cy = H / 2 + 20, fw = 620, fh = 420, L = 80;
+  g.strokeStyle = '#fff'; g.lineWidth = 10; g.lineCap = 'round';
+  for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const x = cx + sx * fw / 2, y = cy + sy * fh / 2;
+    g.beginPath(); g.moveTo(x, y - sy * L); g.lineTo(x, y); g.lineTo(x - sx * L, y); g.stroke();
+  }
+  // 금색 스캔 선
+  const sp = (t - 10.5) / 0.9;
+  if (sp > 0 && sp < 1) {
+    const y = cy - fh / 2 + 24 + (fh - 48) * sp;
+    const gr = g.createLinearGradient(cx - fw / 2, 0, cx + fw / 2, 0);
+    gr.addColorStop(0, 'rgba(242,178,48,0)'); gr.addColorStop(.5, 'rgba(242,178,48,1)'); gr.addColorStop(1, 'rgba(242,178,48,0)');
+    g.shadowColor = 'rgba(242,178,48,.8)'; g.shadowBlur = 24;
+    g.fillStyle = gr; g.fillRect(cx - fw / 2 + 12, y - 4, fw - 24, 8);
+    g.shadowBlur = 0;
+  }
+  // 결과
+  const ta = t < 11.4 ? 0 : Math.min(1, (t - 11.4) / 0.25);
+  if (ta > 0) {
+    g.globalAlpha = A * ta;
+    const bw = 620, by = cy + fh / 2 + 70;
+    g.fillStyle = '#fff'; rr(g, cx - bw / 2, by - 46, bw, 92, 46); g.fill();
+    g.fillStyle = '#f2b230'; g.beginPath(); g.arc(cx - bw / 2 + 56, by, 22, 0, 7); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 5; g.beginPath(); g.moveTo(cx - bw / 2 + 45, by); g.lineTo(cx - bw / 2 + 53, by + 9); g.lineTo(cx - bw / 2 + 68, by - 9); g.stroke();
+    g.fillStyle = '#18181b'; g.font = '700 40px "JetBrains Mono"'; g.fillText(CODE, cx + 30, by + 2);
+    g.globalAlpha = A;
+  } else {
+    g.fillStyle = 'rgba(255,255,255,.95)'; g.font = '500 30px "Noto Sans KR"'; g.fillText(PUI.hint, cx, cy + fh / 2 + 70);
+  }
+  // 모드 버튼
+  const mw = 600, my = H - 250, seg = (mw - 12) / 3;
+  g.fillStyle = 'rgba(17,17,19,.6)'; rr(g, cx - mw / 2, my - 40, mw, 80, 40); g.fill();
+  g.fillStyle = '#fff'; rr(g, cx - mw / 2 + 6, my - 34, seg, 68, 34); g.fill();
+  g.font = '700 28px "Noto Sans KR"';
+  PUI.modes.forEach((m, i) => { g.fillStyle = i === 0 ? '#18181b' : 'rgba(255,255,255,.92)'; g.fillText(m, cx - mw / 2 + 6 + seg / 2 + i * seg, my + 1); });
+  g.restore();
 }
 
 // 렌더러용: 프레임 i → JPEG (언어는 ?lang=)
 window.renderFrame = (i) => {
   const t = i / FPS;
-  renderAt(t);
+  frameAt(t);
   compose(t, LANG, 0);
   return out.toDataURL('image/jpeg', 0.94);
 };
@@ -702,7 +782,7 @@ headTex.image.getContext('2d'); // 글꼴 로드 후 라벨 글자 다시 그림
 { const g = headTex.image.getContext('2d'); g.clearRect(0, 0, 2048, 400); g.textAlign = 'left'; g.fillStyle = '#18181b'; g.font = '800 200px "Noto Sans KR"'; g.textBaseline = 'middle'; g.fillText('A-0312', 40, 200); g.font = '700 120px "JetBrains Mono"'; g.textAlign = 'right'; g.fillText('24 EA', 2008, 200); headTex.needsUpdate = true; }
 
 const q = new URLSearchParams(location.search);
-if (q.has('t')) { const t = Number(q.get('t')); renderAt(t, Number(q.get('sub') || SUB)); compose(t, LANG, 0); }
+if (q.has('t')) { const t = Number(q.get('t')); frameAt(t, Number(q.get('sub') || SUB)); compose(t, LANG, 0); }
 window.READY = true;
 </script>
 </body>
