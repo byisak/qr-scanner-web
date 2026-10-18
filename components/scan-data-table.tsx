@@ -184,6 +184,7 @@ export function ScanDataTable<TData extends { id: number }, TValue>({
                 table.setPageIndex(0)
               }}
               className="w-full pl-10"
+              data-scan-search=""
             />
           </div>
           {selectedCount > 0 && onDeleteSelected && (

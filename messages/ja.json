@@ -139,7 +139,13 @@
     "emptyDesc": "アプリで作成したセッションがここに表示されます。",
     "scans": "スキャン {count}件",
     "deleteSessionLabel": "{name} を削除",
-    "deleteFailed": "セッションを削除できませんでした。しばらくしてからもう一度お試しください。"
+    "deleteFailed": "セッションを削除できませんでした。しばらくしてからもう一度お試しください。",
+    "kpiToday": "今日のスキャン",
+    "kpiLive": "進行中のセッション",
+    "kpiWeek": "今週の新規セッション",
+    "live": "進行中",
+    "todayCount": "(今日 {count})",
+    "lastScan": "最後のスキャン"
   },
   "session": {
     "title": "セッション",
@@ -530,7 +536,15 @@
     "codesOf": "コード {codes}種類 · スキャン {scans}件",
     "exportScopeSummary": "書き出し: コード別集計 {count}種類",
     "exportScopeSummarySearch": "書き出し: 「{q}」の検索結果のコード別集計 {count}種類",
-    "exportScopeSearch": "書き出し: 「{q}」の検索結果 {count}件"
+    "exportScopeSearch": "書き出し: 「{q}」の検索結果 {count}件",
+    "periodLabel": "期間",
+    "periodAll": "すべて",
+    "period1h": "直近1時間",
+    "periodToday": "今日",
+    "period7d": "直近7日",
+    "exportScopePeriod": "書き出し: スキャン {count}件",
+    "periodEmpty": "この期間のスキャンはありません",
+    "periodShowAll": "すべて表示"
   },
   "share": {
     "button": "共有",
@@ -556,5 +570,13 @@
     "saved": "共有設定を保存しました",
     "saveFailed": "共有設定を保存できませんでした。しばらくしてからもう一度お試しください",
     "close": "閉じる"
+  },
+  "hotkeys": {
+    "title": "キーボードショートカット",
+    "desc": "文字を入力していないときに押します。",
+    "search": "コード検索へ移動",
+    "toggleView": "スキャン履歴 ↔ コード別集計",
+    "export": "表示中の内容をCSVで書き出し",
+    "help": "このヘルプを開く"
   }
 }

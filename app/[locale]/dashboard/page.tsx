@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import {
   Breadcrumb,
@@ -21,6 +21,7 @@ import { TimeAgo } from '@/components/time-ago';
 import { useRouter } from 'next/navigation';
 import { Session } from '@/types';
 import { QrCode, ScanLine, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/auth-context';
 import { useTranslations } from 'next-intl';
 import { useConfirmDialog } from '@/components/confirm-dialog';
@@ -59,12 +60,17 @@ export function addVisitedSession(sessionId: string) {
   }
 }
 
+// 마지막 스캔이 10분 안이면 "진행 중"
+const LIVE_WINDOW_MS = 10 * 60 * 1000;
+
 export default function Dashboard() {
   const router = useRouter();
   const { isAuthenticated, isLoading, accessToken } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   // 처음 목록을 받아오기 전까지는 스켈레톤
   const [loaded, setLoaded] = useState(false);
+  // "진행 중"·"이번 주" 판단 기준 시각 (목록을 받아온 때)
+  const [fetchedAt, setFetchedAt] = useState(0);
   const t = useTranslations();
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
@@ -79,6 +85,7 @@ export default function Dashboard() {
       });
       const data = await res.json();
       setSessions(Array.isArray(data) ? data : []);
+      setFetchedAt(Date.now());
     } catch {
       // 목록 로드 실패는 다음 폴링에서 다시 시도
     } finally {
@@ -144,6 +151,23 @@ export default function Dashboard() {
 
   const showSkeleton = isLoading || !isAuthenticated || !loaded;
 
+  // 개요: 오늘 스캔, 진행 중(10분 안에 스캔), 이번 주 새 세션. 목록은 최근 스캔 순
+  const overview = useMemo(() => {
+    const isLive = (s: Session) =>
+      !!s.last_scan_at && fetchedAt - new Date(s.last_scan_at).getTime() < LIVE_WINDOW_MS;
+    const sorted = [...sessions].sort(
+      (a, b) =>
+        new Date(b.last_scan_at || b.created_at).getTime() - new Date(a.last_scan_at || a.created_at).getTime()
+    );
+    return {
+      sorted,
+      isLive,
+      today: sessions.reduce((n, s) => n + (s.today_count || 0), 0),
+      live: sessions.filter(isLive).length,
+      week: sessions.filter((s) => fetchedAt - new Date(s.created_at).getTime() < 7 * 86400 * 1000).length,
+    };
+  }, [sessions, fetchedAt]);
+
   return (
     <SidebarProvider>
       <AppSidebar onSessionChange={fetchSessions} />
@@ -168,6 +192,22 @@ export default function Dashboard() {
             <p className="mt-2 type-lead">{t('dashboard.mySessionsDesc')}</p>
           </div>
 
+          {/* 개요 숫자 3개 */}
+          {!showSkeleton && sessions.length > 0 && (
+            <dl className="enter mb-6 grid grid-cols-3 gap-2 sm:gap-3" style={{ "--i": 1 } as React.CSSProperties}>
+              {[
+                { label: t('dashboard.kpiToday'), value: overview.today },
+                { label: t('dashboard.kpiLive'), value: overview.live },
+                { label: t('dashboard.kpiWeek'), value: overview.week },
+              ].map((k) => (
+                <div key={k.label} className="min-w-0 rounded-card border bg-card px-4 py-3 sm:px-5 sm:py-4">
+                  <dt className="truncate text-13 font-semibold text-muted-foreground">{k.label}</dt>
+                  <dd className="type-h1 mt-1 tabular">{k.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
           {showSkeleton ? (
             <div aria-busy="true">
               <span className="sr-only" role="status">{t('common.loading')}</span>
@@ -183,21 +223,34 @@ export default function Dashboard() {
             />
           ) : (
             <ul className="swap grid gap-2" aria-label={t('dashboard.activeSessions')}>
-              {sessions.map((session, i) => {
+              {overview.sorted.map((session, i) => {
                 const name = session.session_name || session.session_id;
+                const live = overview.isLive(session);
                 return (
                   <li key={session.session_id} className="min-w-0" style={{ "--i": Math.min(i, 12) } as React.CSSProperties}>
                     <ListRow
                       icon={<QrCode />}
-                      title={name}
+                      title={
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate">{name}</span>
+                          {live && <Badge variant="secondary" className="shrink-0">{t('dashboard.live')}</Badge>}
+                        </span>
+                      }
                       description={
                         <>
                           {session.session_name ? (
                             <><span className="font-mono">{session.session_id}</span>{' · '}</>
                           ) : null}
                           <span className="tabular">{t('dashboard.scans', { count: session.scan_count })}</span>
+                          {session.today_count ? (
+                            <span className="tabular">{' '}{t('dashboard.todayCount', { count: session.today_count })}</span>
+                          ) : null}
                           {' · '}
-                          <TimeAgo iso={session.created_at} />
+                          {session.last_scan_at ? (
+                            <>{t('dashboard.lastScan')} <TimeAgo iso={session.last_scan_at} /></>
+                          ) : (
+                            <TimeAgo iso={session.created_at} />
+                          )}
                         </>
                       }
                       onSelect={() => viewSession(session.session_id)}

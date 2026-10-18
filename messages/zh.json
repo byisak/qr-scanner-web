@@ -139,7 +139,13 @@
     "emptyDesc": "在应用中创建的会话会显示在这里。",
     "scans": "扫描 {count} 次",
     "deleteSessionLabel": "删除 {name}",
-    "deleteFailed": "无法删除会话，请稍后重试。"
+    "deleteFailed": "无法删除会话，请稍后重试。",
+    "kpiToday": "今日扫描",
+    "kpiLive": "进行中的会话",
+    "kpiWeek": "本周新会话",
+    "live": "进行中",
+    "todayCount": "(今天 {count})",
+    "lastScan": "最后扫描"
   },
   "session": {
     "title": "会话",
@@ -530,7 +536,15 @@
     "codesOf": "{codes} 种码 · {scans} 条扫描",
     "exportScopeSummary": "导出：按码汇总 {count} 种",
     "exportScopeSummarySearch": "导出：\"{q}\" 搜索结果的按码汇总 {count} 种",
-    "exportScopeSearch": "导出：\"{q}\" 搜索结果 {count} 条"
+    "exportScopeSearch": "导出：\"{q}\" 搜索结果 {count} 条",
+    "periodLabel": "期间",
+    "periodAll": "全部",
+    "period1h": "最近 1 小时",
+    "periodToday": "今天",
+    "period7d": "最近 7 天",
+    "exportScopePeriod": "导出：扫描 {count} 条",
+    "periodEmpty": "此期间没有扫描",
+    "periodShowAll": "显示全部"
   },
   "share": {
     "button": "分享",
@@ -556,5 +570,13 @@
     "saved": "已保存分享设置",
     "saveFailed": "无法保存分享设置，请稍后再试",
     "close": "关闭"
+  },
+  "hotkeys": {
+    "title": "键盘快捷键",
+    "desc": "在未输入文字时按下。",
+    "search": "跳到搜索码值",
+    "toggleView": "切换扫描记录 ↔ 按码汇总",
+    "export": "按当前显示导出 CSV",
+    "help": "打开此帮助"
   }
 }

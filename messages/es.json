@@ -139,7 +139,13 @@
     "emptyDesc": "Las sesiones que crees en la app aparecerán aquí.",
     "scans": "{count, plural, one {# escaneo} other {# escaneos}}",
     "deleteSessionLabel": "Eliminar {name}",
-    "deleteFailed": "No se pudo eliminar la sesión. Inténtalo de nuevo en un momento."
+    "deleteFailed": "No se pudo eliminar la sesión. Inténtalo de nuevo en un momento.",
+    "kpiToday": "Escaneos hoy",
+    "kpiLive": "Sesiones activas",
+    "kpiWeek": "Nuevas esta semana",
+    "live": "En curso",
+    "todayCount": "({count} hoy)",
+    "lastScan": "Último escaneo"
   },
   "session": {
     "title": "Sesión",
@@ -530,7 +536,15 @@
     "codesOf": "{codes} códigos · {scans} escaneos",
     "exportScopeSummary": "Exportar: totales de {count} códigos",
     "exportScopeSummarySearch": "Exportar: totales de {count} códigos que coinciden con \"{q}\"",
-    "exportScopeSearch": "Exportar: {count} escaneos que coinciden con \"{q}\""
+    "exportScopeSearch": "Exportar: {count} escaneos que coinciden con \"{q}\"",
+    "periodLabel": "Periodo",
+    "periodAll": "Todo",
+    "period1h": "Última hora",
+    "periodToday": "Hoy",
+    "period7d": "Últimos 7 días",
+    "exportScopePeriod": "Exportar: {count} escaneos",
+    "periodEmpty": "No hay escaneos en este periodo",
+    "periodShowAll": "Ver todo"
   },
   "share": {
     "button": "Compartir",
@@ -556,5 +570,13 @@
     "saved": "Configuración de uso compartido guardada",
     "saveFailed": "No se pudo guardar. Inténtalo de nuevo en un momento",
     "close": "Cerrar"
+  },
+  "hotkeys": {
+    "title": "Atajos de teclado",
+    "desc": "Úsalos cuando no estés escribiendo en un campo.",
+    "search": "Ir a buscar códigos",
+    "toggleView": "Cambiar escaneos ↔ por código",
+    "export": "Exportar lo que ves en CSV",
+    "help": "Abrir esta ayuda"
   }
 }

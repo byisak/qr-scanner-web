@@ -139,7 +139,13 @@
     "emptyDesc": "앱에서 세션을 만들면 여기에 나타나요",
     "scans": "스캔 {count}개",
     "deleteSessionLabel": "{name} 삭제",
-    "deleteFailed": "세션을 삭제하지 못했어요. 잠시 뒤 다시 해주세요"
+    "deleteFailed": "세션을 삭제하지 못했어요. 잠시 뒤 다시 해주세요",
+    "kpiToday": "오늘 스캔",
+    "kpiLive": "진행 중 세션",
+    "kpiWeek": "이번 주 새 세션",
+    "live": "진행 중",
+    "todayCount": "(오늘 {count})",
+    "lastScan": "마지막 스캔"
   },
   "session": {
     "title": "세션",
@@ -710,7 +716,15 @@
     "codesOf": "코드 {codes}종 · 스캔 {scans}건",
     "exportScopeSummary": "내보내기: 코드별 합계 {count}종",
     "exportScopeSummarySearch": "내보내기: \"{q}\" 검색 결과의 코드별 합계 {count}종",
-    "exportScopeSearch": "내보내기: \"{q}\" 검색 결과 {count}건"
+    "exportScopeSearch": "내보내기: \"{q}\" 검색 결과 {count}건",
+    "periodLabel": "기간",
+    "periodAll": "전체",
+    "period1h": "최근 1시간",
+    "periodToday": "오늘",
+    "period7d": "최근 7일",
+    "exportScopePeriod": "내보내기: 스캔 {count}건",
+    "periodEmpty": "이 기간에는 스캔이 없어요",
+    "periodShowAll": "전체 보기"
   },
   "share": {
     "button": "공유",
@@ -736,5 +750,13 @@
     "saved": "공유 설정을 저장했어요",
     "saveFailed": "공유 설정을 저장하지 못했어요. 잠시 뒤 다시 해주세요",
     "close": "닫기"
+  },
+  "hotkeys": {
+    "title": "키보드 단축키",
+    "desc": "글자를 입력하는 중이 아닐 때 눌러요.",
+    "search": "코드 검색으로 이동",
+    "toggleView": "스캔 기록 ↔ 코드별 합계",
+    "export": "지금 보이는 대로 CSV 내보내기",
+    "help": "이 도움말 열기"
   }
 }

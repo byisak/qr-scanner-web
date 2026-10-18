@@ -53,6 +53,12 @@ export async function GET(
       values.push(`%${q.replace(/[\\%_]/g, (c) => '\\' + c)}%`);
       conditions.push(`code ILIKE $${values.length}`);
     }
+    // since=밀리초: 그 시각 이후 스캔만 (화면의 기간 필터와 같은 기준)
+    const since = Number(searchParams.get('since'));
+    if (Number.isFinite(since) && since > 0) {
+      values.push(since);
+      conditions.push(`scan_timestamp >= $${values.length}`);
+    }
     const where = conditions.join(' AND ');
 
     let rows: Record<string, string | number>[];
