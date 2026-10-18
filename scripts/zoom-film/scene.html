@@ -1,7 +1,8 @@
 <!doctype html>
 <!--
   ScanView 줌 영상 (첫 화면용). renderAt(t) 가 시각 t 의 한 장면을 그리는 순수 함수라 ?t=초 로 멈춰 볼 수 있다.
-  창고 → 선반 → 상자 → 라벨 → 바코드 → 모듈 하나(0.33 mm) → 장갑 낀 손의 폰이 앱으로 스캔 → 폰에서 PC 로 가는 금색 빛 → 세션 표의 새 줄 → 다시 창고.
+  창고 → 라벨 → 폰 화면 시점 스캔(해독 + 연속) → 폰에서 바로 앞 PC 로 금색 빛, 두 번째 빛은 지붕 위로 →
+  지구로 줌아웃, 태평양을 건너 LA 사무실 PC → 다시 지구를 건너 서울 창고. 장면 셋(창고·지구·LA 사무실)을 겹쳐 잇는다.
   render.cjs 가 프레임마다 window.renderFrame(i) 를 불러 JPEG 로 받고 ffmpeg 로 묶는다.
 -->
 <html>
@@ -13,6 +14,7 @@
   html, body { margin: 0; background: #f4f4f5; }
   #out { display: block; width: 540px; height: 675px; }
 </style>
+<script src="land-dots.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -28,11 +30,14 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
 // ───────── 형식 ─────────
 const W = 1080, H = 1350;          // 결과 프레임 (4:5)
 const SS = 1.5;                    // 슈퍼샘플 배율
-const DURATION = 28;               // 끊김 없는 반복 길이 (초)
+const DURATION = 38;               // 끊김 없는 반복 길이 (초)
 const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ko'; // 머리글·폰 화면 언어
 const FPS = 30;
 const SUB = 4;                     // 프레임당 서브프레임 (180° 셔터)
@@ -300,8 +305,8 @@ const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(desk.quaternion)
 const PREV = ['8801234003032', 'BOX-A0312-07', '8801234002028', '8801234001014', '8801234006064'];
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
 // 세션 화면 (사이트 세션 페이지를 단순화). rowIn: 0..1 새 줄이 들어오는 정도, hl: 강조 정도, after: 새 줄 포함 여부
-function drawScreen(rowIn, hl, count) {
-  const g = screenCanvas.getContext('2d'), w = 1600, h = 1000;
+function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, hhmm = '09:41' } = {}) {
+  const g = canvas.getContext('2d'), w = 1600, h = 1000;
   g.fillStyle = '#f4f4f5'; g.fillRect(0, 0, w, h);
   // 창 틀
   g.fillStyle = '#ffffff'; rr(g, 40, 40, w - 80, h - 80, 36); g.fill();
@@ -329,10 +334,10 @@ function drawScreen(rowIn, hl, count) {
     g.fillStyle = '#e4e4e7'; g.fillRect(90, y + rh - 2, w - 180, 2);
     g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(String(count - k), 120, y + 54);
     g.fillStyle = '#18181b'; g.font = '700 36px "JetBrains Mono"'; g.fillText(code, 230, y + 56);
-    g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(`09:41:${String(14 - k * 3).padStart(2, '0')}`, w - 330, y + 54);
+    g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(`${hhmm}:${String(14 - k * 3).padStart(2, '0')}`, w - 330, y + 54);
   });
   g.restore();
-  screenTex.needsUpdate = true;
+  tex.needsUpdate = true;
 }
 
 
@@ -617,10 +622,169 @@ function setRibbon(a, b) { // a..b 구간만 보이게 (0..1)
   ribbonCurve.getPointAt(Math.min(0.999, b), head3.position);
 }
 
+// 두 번째 빛: 폰에서 곧장 위로, 지붕 너머로 (지구 장면으로 이어진다)
+const upX = phoneTopWorld.x, upZ = phoneTopWorld.z + 0.3;
+const upCurve = new THREE.CatmullRomCurve3([
+  phoneTopWorld.clone(),
+  phoneTopWorld.clone().add(V3(-0.05, 0.35, 0.12)),
+  V3(upX, 2.4, upZ), V3(upX, 8, upZ), V3(upX, 22, upZ),
+]);
+const UP_SEG = 400;
+const upGeo = new THREE.TubeGeometry(upCurve, UP_SEG, 0.004, 8, false);
+const up = new THREE.Mesh(upGeo, ribbonMat); scene.add(up);
+const upHead = new THREE.Mesh(new THREE.SphereGeometry(0.012, 24, 16), head3.material); scene.add(upHead);
+function setUp(a, b) {
+  const per = 8 * 6, st = Math.floor(a * UP_SEG) * per, en = Math.floor(b * UP_SEG) * per;
+  upGeo.setDrawRange(st, Math.max(0, en - st)); up.visible = en > st;
+  upHead.visible = b > 0.001 && a < 0.999;
+  upCurve.getPointAt(Math.min(0.999, b), upHead.position);
+  upHead.scale.setScalar(1 + Math.max(0, upHead.position.y - 1) * 0.35);
+}
+
+// ───────── 지구 (반지름 1, 점으로 찍은 대륙) ─────────
+const PAPER = 0xf3f1eb, SPACE = 0xcfccc4;
+const sceneG = new THREE.Scene(); sceneG.background = new THREE.Color(SPACE);
+const camG = new THREE.PerspectiveCamera(FOV, W / H, 1e-7, 50);
+const ll = (lat, lon, r = 1) => { const a = THREE.MathUtils.degToRad(lat), b = THREE.MathUtils.degToRad(lon); return V3(r * Math.cos(a) * Math.cos(b), r * Math.sin(a), -r * Math.cos(a) * Math.sin(b)); };
+const SEOUL = ll(37.5665, 126.978), LA = ll(34.0522, -118.2437);
+const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 128), new THREE.ShaderMaterial({
+  uniforms: { c: { value: new THREE.Color(PAPER) }, e: { value: new THREE.Color(0xbdb7aa) } },
+  vertexShader: 'varying vec3 n; varying vec3 v; void main(){ vec4 w = modelMatrix * vec4(position,1.); n = normalize(position); v = normalize(cameraPosition - w.xyz); gl_Position = projectionMatrix * viewMatrix * w; }',
+  fragmentShader: 'uniform vec3 c; uniform vec3 e; varying vec3 n; varying vec3 v; void main(){ float f = pow(1. - max(dot(n, v), 0.), 2.5); gl_FragColor = vec4(mix(c, e, f * .8), 1.); }',
+}));
+sceneG.add(earth);
+// 대륙 점: 바깥을 보는 작은 원
+const dotGeo = new THREE.CircleGeometry(0.0042, 8);
+const dots = new THREE.InstancedMesh(dotGeo, new THREE.MeshBasicMaterial({ color: 0x2a2a30, transparent: true, opacity: 0.78, toneMapped: false }), window.LAND_DOTS.length / 2);
+{
+  const m = new THREE.Object3D();
+  for (let k = 0; k < window.LAND_DOTS.length; k += 2) {
+    const p = ll(window.LAND_DOTS[k] / 10, window.LAND_DOTS[k + 1] / 10, 1.0006);
+    m.position.copy(p); m.lookAt(p.clone().multiplyScalar(2)); m.updateMatrix(); dots.setMatrixAt(k / 2, m.matrix);
+  }
+}
+// 낮은 고도에서는 점을 작게 (가까이서 커다란 원이 화면을 덮지 않게)
+const dotScale = { value: 1 };
+dots.material.onBeforeCompile = (sh) => {
+  sh.uniforms.uScale = dotScale;
+  sh.vertexShader = 'uniform float uScale;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed *= uScale;');
+};
+sceneG.add(dots);
+// 두 도시 표시
+const cityMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.honey).multiplyScalar(4), toneMapped: false });
+const cityDots = [SEOUL, LA].map((c) => { const d = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cityMat); d.position.copy(c); sceneG.add(d); return d; });
+// 서울 → LA 금색 호 (대권, 가운데가 높다). 화면 굵기가 일정한 선
+const ARC_N = 240, arcPts = [];
+for (let k = 0; k <= ARC_N; k++) {
+  const u = k / ARC_N, q = new THREE.Quaternion().setFromUnitVectors(SEOUL.clone().normalize(), LA.clone().normalize());
+  const dir = SEOUL.clone().normalize().applyQuaternion(new THREE.Quaternion().slerp(q, u));
+  const r = 1 + 0.34 * Math.sin(Math.PI * u) + 0.002;
+  arcPts.push(dir.x * r, dir.y * r, dir.z * r);
+}
+const arcGeo = new LineGeometry(); arcGeo.setPositions(arcPts);
+const arcMat = new LineMaterial({ color: new THREE.Color(C.honey).multiplyScalar(3.2), linewidth: 5, worldUnits: false });
+arcMat.toneMapped = false; arcMat.resolution.set(W * SS, H * SS);
+const arc = new Line2(arcGeo, arcMat); arc.computeLineDistances(); sceneG.add(arc);
+const arcHead = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), head3.material); sceneG.add(arcHead);
+const MID = SEOUL.clone().normalize().add(LA.clone().normalize()).normalize();
+// 지구 카메라: (방향, 고도) 열쇠 — 방향은 대권으로, 고도는 로그로 보간, 항상 지구 중심을 본다
+const GKEYS = [
+  [22.9, SEOUL, 1e-4], [23.6, SEOUL, 3e-4], [24.6, SEOUL, 0.05],
+  [26.6, MID, 4.3], [28.0, MID.clone().lerp(LA.clone().normalize(), 0.12).normalize(), 4.0], [29.7, LA, 0.0015],
+  [30.0, LA, 0.001], [33.6, LA, 0.001], [33.9, LA, 0.0015], [35.3, MID, 4.3], [36.8, SEOUL, 0.0015], [37.2, SEOUL, 0.001],
+];
+function camGAt(t) {
+  let k = 0; while (k < GKEYS.length - 2 && t >= GKEYS[k + 1][0]) k++;
+  const [t0, d0, a0] = GKEYS[k], [t1, d1, a1] = GKEYS[k + 1];
+  const u = ease(Math.min(1, Math.max(0, (t - t0) / (t1 - t0))));
+  const la = Math.log(a0) + (Math.log(a1) - Math.log(a0)) * u, alt = Math.exp(la);
+  // 방향은 높이 0.3 위에서만 옮긴다: 오를 때는 0.3 을 넘은 뒤 건너가고, 내릴 때는 0.3 에 닿기 전에 도착
+  const H0 = 0.3, cl = (x) => Math.min(1, Math.max(0, x));
+  const uD = Math.min(a0, a1) >= H0 ? u
+    : a1 > a0 ? ease(cl(Math.log(alt / H0) / Math.log(a1 / H0)))
+    : ease(cl(Math.log(a0 / alt) / Math.log(a0 / H0)));
+  const q = new THREE.Quaternion().setFromUnitVectors(d0.clone().normalize(), d1.clone().normalize());
+  const dir = d0.clone().normalize().applyQuaternion(new THREE.Quaternion().slerp(q, uD));
+  return { dir, alt };
+}
+function setStateG(t) {
+  const { dir, alt } = camGAt(t);
+  camG.position.copy(dir).multiplyScalar(1 + alt);
+  camG.up.set(0, 1, 0); camG.lookAt(0, 0, 0);
+  camG.near = Math.max(1e-8, alt * 0.2); camG.far = 1 + alt + 2; camG.updateProjectionMatrix();
+  sceneG.background.set(alt < 0.004 ? PAPER : SPACE);
+  dots.visible = alt > 0.0015;
+  dotScale.value = Math.min(1, Math.max(0.001, alt / 0.8));
+  // 호: 24.2~28.2 s 에 그려지고, 되돌아올 때는 옅게 남는다
+  const b = Math.min(1, Math.max(0, (t - 24.2) / 4.0));
+  arcGeo.instanceCount = Math.max(0, Math.floor(ease(b) * ARC_N));
+  arc.visible = arcGeo.instanceCount > 0;
+  const hp = Math.min(ARC_N, Math.floor(ease(b) * ARC_N)) * 3;
+  arcHead.position.set(arcPts[hp], arcPts[hp + 1], arcPts[hp + 2]);
+  arcHead.visible = b > 0 && b < 1;
+  arcHead.scale.setScalar(camG.position.distanceTo(arcHead.position) * 0.012);
+  for (const d of cityDots) d.scale.setScalar(Math.min(0.012, camG.position.distanceTo(d.position) * 0.006));
+}
+
+// ───────── LA 사무실 (해 질 녘 창, 같은 세션 화면) ─────────
+const sceneO = new THREE.Scene(); sceneO.background = new THREE.Color(PAPER); sceneO.fog = new THREE.Fog(PAPER, 7, 22);
+const camO = new THREE.PerspectiveCamera(FOV, W / H, 0.01, 60);
+sceneO.add(new THREE.HemisphereLight(0xfff4ea, 0xd9cfc4, 1.2));
+const sunO = new THREE.DirectionalLight(0xffd2a8, 1.6); sunO.position.set(2, 4, -3); sceneO.add(sunO);
+const floorO = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), std(0xd8d0c4, 0.9)); floorO.rotation.x = -Math.PI / 2; sceneO.add(floorO);
+const wallO = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), std(0xf2eee8, 1)); wallO.position.set(0, 3, -1.0); sceneO.add(wallO);
+const winTex = textCanvas(1600, 900, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#9fb7d3'); gr.addColorStop(0.55, '#f6c79c'); gr.addColorStop(1, '#ef9a78');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,236,200,.9)'; g.beginPath(); g.arc(w * 0.7, h * 0.66, 70, 0, 7); g.fill();
+  g.fillStyle = '#b77a6c'; g.beginPath(); g.moveTo(0, h * 0.8); for (let x = 0; x <= w; x += 40) g.lineTo(x, h * (0.74 + 0.05 * Math.sin(x / 170) + 0.03 * Math.sin(x / 61))); g.lineTo(w, h); g.lineTo(0, h); g.fill();
+  g.strokeStyle = '#3d3238'; g.fillStyle = '#3d3238';
+  for (const [x, hh] of [[240, 0.62], [380, 0.5], [1180, 0.58], [1350, 0.66]]) { // 야자수
+    const y0 = h, y1 = h * (1 - hh); g.lineWidth = 12; g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + 20, (y0 + y1) / 2, x + 8, y1); g.stroke();
+    for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.45; g.lineWidth = 7; g.beginPath(); g.moveTo(x + 8, y1); g.quadraticCurveTo(x + 8 + Math.cos(a) * 60, y1 + Math.sin(a) * 50 - 20, x + 8 + Math.cos(a) * 120, y1 + Math.sin(a) * 40 + 40); g.stroke(); }
+  }
+  g.fillStyle = '#e9e4dc'; g.fillRect(w / 2 - 6, 0, 12, h); g.fillRect(0, h / 2 - 6, w, 12);
+});
+const win = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.46), new THREE.MeshBasicMaterial({ map: winTex, toneMapped: false })); win.position.set(0, 1.75, -0.99); sceneO.add(win);
+const deskO = new THREE.Group(); sceneO.add(deskO); deskO.position.set(0, 0, -0.25);
+{ const t2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.7), std(0xcaa98a, 0.6)); t2.position.set(0, 0.74, 0); deskO.add(t2);
+  for (const [x, z] of [[-0.65, -0.3], [0.65, -0.3], [-0.65, 0.3], [0.65, 0.3]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.74, 0.04), std(0x3a3a40, 0.5)); l.position.set(x, 0.37, z); deskO.add(l); }
+  const m2 = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.03, SCREEN_H + 0.03, 0.025), std(C.ink, 0.4, 0.2)); m2.position.set(0, 1.08, -0.15); deskO.add(m2);
+  const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.04), std(C.ink, 0.4)); s2.position.set(0, 0.9, -0.18); deskO.add(s2);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.1, 20), std(0xf4f1ea, 0.5)); cup.position.set(0.45, 0.81, 0.1); deskO.add(cup); }
+const screenCanvasO = document.createElement('canvas'); screenCanvasO.width = 1600; screenCanvasO.height = 1000;
+const screenTexO = new THREE.CanvasTexture(screenCanvasO); screenTexO.colorSpace = THREE.SRGBColorSpace; screenTexO.anisotropy = 16;
+const screenO = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenTexO, toneMapped: false }));
+screenO.position.set(0, 1.08, -0.137); deskO.add(screenO);
+sceneO.updateMatrixWorld(true);
+const screenCenterO = new THREE.Vector3(); screenO.getWorldPosition(screenCenterO);
+// 하늘에서 내려와 화면으로 들어가는 빛
+const downCurve = new THREE.CatmullRomCurve3([V3(0.1, 22, 0.9), V3(0.1, 6, 0.9), V3(0.05, 2.0, 0.6), screenCenterO.clone().add(V3(0, 0.12, 0.3)), screenCenterO.clone().add(V3(0, 0, 0.01))]);
+const downGeo = new THREE.TubeGeometry(downCurve, 400, 0.004, 8, false);
+const down = new THREE.Mesh(downGeo, ribbonMat); sceneO.add(down);
+const downHead = new THREE.Mesh(new THREE.SphereGeometry(0.012, 24, 16), head3.material); sceneO.add(downHead);
+const OKEYS = [
+  [29.4, V3(0, 0, 0.3), V3(0.02, 1, 0.05), 22],
+  [31.0, screenCenterO.clone().add(V3(0, 0.1, 0)), V3(0.05, 0.04, 1), 1.6],
+  [33.0, screenCenterO.clone().add(V3(0, 0.1, 0)), V3(0.08, 0.05, 1), 1.48],
+  [34.2, V3(0, 0, 0.3), V3(0.02, 1, 0.05), 22],
+];
+function setStateO(t) {
+  const a = Math.min(1, Math.max(0, (t - 31.2) / 1.0)), b = Math.min(1, Math.max(0, (t - 29.3) / 1.6));
+  const per = 8 * 6, st = Math.floor(ease(a) * 400) * per, en = Math.floor(ease(b) * 400) * per;
+  downGeo.setDrawRange(st, Math.max(0, en - st)); down.visible = en > st;
+  downHead.visible = b > 0 && b < 1; downCurve.getPointAt(Math.min(0.999, ease(b)), downHead.position);
+  downHead.scale.setScalar(1 + Math.max(0, downHead.position.y - 1) * 0.35);
+  const rowIn = t < 30.9 ? 0 : Math.min(1, (t - 30.9) / 0.8);
+  drawScreen(rowIn, t < 32.6 ? 1 : Math.max(0, 1 - (t - 32.6) / 1.2), rowIn > 0 ? 131 : 128, { canvas: screenCanvasO, tex: screenTexO, hhmm: '17:41' });
+  const c = cameraAt(t, OKEYS); camO.position.copy(c.pos); camO.lookAt(c.target);
+  camO.near = Math.max(0.005, c.r * 0.02); camO.updateProjectionMatrix();
+}
+
 // ───────── 후처리 ─────────
 const composer = new EffectComposer(renderer);
 composer.setSize(W * SS, H * SS);
-composer.addPass(new RenderPass(scene, camera));
+const rp = new RenderPass(scene, camera); composer.addPass(rp);
 const bloom = new UnrealBloomPass(new THREE.Vector2(W * SS, H * SS), 0.55, 0.45, 1.0);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
@@ -665,12 +829,15 @@ const KEYS = [
   [16.8, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.32],
   [18.4, midWorld, V(0.9, 0.35, 0.6), 1.4],
   [20.2, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
-  [23.0, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
-  [28.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
+  [22.0, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
+  // 두 번째 빛을 따라 지붕 위로 (내려다보며 높이 오른다)
+  [23.6, V(upX, 0, upZ), V(0.02, 1, 0.04), 25],
+  [36.6, wideTarget.clone().setY(0), V(0.02, 1, 0.04), 25],
+  [38.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
 ];
-function cameraAt(t) {
-  let k = 0; while (k < KEYS.length - 2 && t >= KEYS[k + 1][0]) k++;
-  const [t0, p0, d0, r0] = KEYS[k], [t1, p1, d1, r1] = KEYS[k + 1];
+function cameraAt(t, keys = KEYS) {
+  let k = 0; while (k < keys.length - 2 && t >= keys[k + 1][0]) k++;
+  const [t0, p0, d0, r0] = keys[k], [t1, p1, d1, r1] = keys[k + 1];
   const u = ease(Math.min(1, Math.max(0, (t - t0) / (t1 - t0))));
   const logR = Math.log(r0) + (Math.log(r1) - Math.log(r0)) * u;
   const r = Math.exp(logR);
@@ -716,14 +883,16 @@ function drawHud(g, t, lang, fieldW) {
 // ───────── 한 장면 ─────────
 function setState(t) {
   // 라벨 숫자: 해독되는 순간 한 자리씩 강조색, 22.5 s 부터 원래대로 (반복)
-  drawDigits(t < DEC0 ? 0 : t < 26.5 ? Math.min(13, (t - DEC0) / DEC_STEP) : 13 * (1 - Math.min(1, (t - 26.5) / 0.8)));
+  drawDigits(t < DEC0 ? 0 : t < 36.0 ? Math.min(13, (t - DEC0) / DEC_STEP) : 13 * (1 - Math.min(1, (t - 36.0) / 0.4)));
   // 빛: 16.3~18.7 s 폰에서 나가고, 18.8~20.2 s 꼬리가 따라간다
   const a = Math.min(1, Math.max(0, (t - 18.8) / 1.4));
   const b = Math.min(1, Math.max(0, (t - 16.3) / 2.4));
   setRibbon(ease(a), ease(b));
-  // 모니터: 20.0 s 세 줄, 22.8 s 부터 강조가 사라지고, 26~27.4 s (멀리서) 원래 상태로
-  const rowIn = t < 20.0 ? 0 : t < 26 ? Math.min(1, (t - 20.0) / 0.8) : t < 27.4 ? 1 : 0;
-  const hl = t < 20.0 ? 0 : t < 22.8 ? 1 : Math.max(0, 1 - (t - 22.8) / 1.5);
+  // 두 번째 빛: 16.8 s 폰에서 출발해 23.4 s 지붕 위로 (꼬리는 21.6 s 부터 따라 오른다)
+  setUp(ease(Math.min(1, Math.max(0, (t - 21.6) / 2.0))), ease(Math.min(1, Math.max(0, (t - 16.8) / 6.6))));
+  // 모니터: 20.0 s 세 줄, 21.8 s 부터 강조가 사라지고, 36 s (창고로 돌아오기 전) 원래 상태로
+  const rowIn = t < 20.0 ? 0 : t < 36 ? Math.min(1, (t - 20.0) / 0.8) : 0;
+  const hl = t < 20.0 ? 0 : t < 21.8 ? 1 : Math.max(0, 1 - (t - 21.8) / 1.5);
   drawScreen(rowIn, hl, rowIn > 0 ? 131 : 128);
   // 카메라
   const cam = cameraAt(camT(t));
@@ -743,22 +912,34 @@ function setState(t) {
 // 서브프레임 누적: 2D 캔버스에 평균 (180° 셔터 = 프레임 간격의 절반에 걸쳐)
 const acc = document.createElement('canvas'); acc.width = W; acc.height = H;
 const actx = acc.getContext('2d');
-function renderAt(t, sub = SUB) {
-  let fieldW = 0;
+// 장면 비중: 창고(S) · 지구(G) · LA 사무실(O). 바뀌는 구간에서는 두 장면을 겹친다
+const SG = [23.0, 23.6], GO = [29.4, 30.0], OG = [33.6, 34.2], GS = [36.6, 37.2];
+const ramp = (t, [a, b]) => ease(Math.min(1, Math.max(0, (t - a) / (b - a))));
+function weights(t) {
+  if (t < SG[1]) return { S: 1 - ramp(t, SG), G: ramp(t, SG) };
+  if (t < GO[1]) return { G: 1 - ramp(t, GO), O: ramp(t, GO) };
+  if (t < OG[1]) return { O: 1 - ramp(t, OG), G: ramp(t, OG) };
+  if (t < GS[1]) return { G: 1 - ramp(t, GS), S: ramp(t, GS) };
+  return { S: 1 };
+}
+function renderAt(t, sub = SUB, id = 'S') {
   actx.globalCompositeOperation = 'source-over';
+  rp.scene = id === 'G' ? sceneG : id === 'O' ? sceneO : scene;
+  rp.camera = id === 'G' ? camG : id === 'O' ? camO : camera;
   for (let s = 0; s < sub; s++) {
     const ts = ((t + (s / sub) * (0.5 / FPS)) % DURATION + DURATION) % DURATION;
-    fieldW = setState(ts);
+    if (id === 'G') setStateG(ts); else if (id === 'O') setStateO(ts); else setState(ts);
     composer.render();
     actx.globalAlpha = 1 / (s + 1);
     actx.drawImage(renderer.domElement, 0, 0, W, H);
   }
   actx.globalAlpha = 1;
-  return fieldW;
+  return 0;
 }
 const accA = document.createElement('canvas'); accA.width = W; accA.height = H;
-// 한 프레임: 전환 구간에서는 폰 화면 시점(A)과 폰 앞 시점(B)을 따로 그려 겹친다
-function frameAt(t, sub = SUB) {
+const accB = document.createElement('canvas'); accB.width = W; accB.height = H;
+// 창고 한 장면: 전환 구간에서는 폰 화면 시점(A)과 폰 앞 시점(B)을 따로 그려 겹친다
+function renderS(t, sub) {
   const x = Math.min(1, Math.max(0, (t - XF0) / (XF1 - XF0)));
   povW = 1 - ease(x);
   if (x > 0 && x < 1) {
@@ -770,11 +951,57 @@ function frameAt(t, sub = SUB) {
     camT = (ts) => ts; renderAt(t, sub);
   }
 }
+let W8 = { S: 1 };
+function frameAt(t, sub = SUB) {
+  W8 = weights(t);
+  const ids = Object.keys(W8).filter((k) => W8[k] > 0.0005);
+  ids.forEach((id, i) => {
+    if (id === 'S') renderS(t, sub); else renderAt(t, sub, id);
+    if (ids.length > 1) {
+      const bg = accB.getContext('2d');
+      if (i === 0) bg.drawImage(acc, 0, 0);
+      else { bg.globalAlpha = W8[id]; bg.drawImage(acc, 0, 0); bg.globalAlpha = 1; actx.drawImage(accB, 0, 0); }
+    }
+  });
+}
 function compose(t, lang, fieldW) {
   octx.globalAlpha = 1; octx.drawImage(acc, 0, 0);
   // 필름 그레인 (시드 고정)
   drawPOV(octx, t);
+  drawGeo(octx, t, lang);
   drawHud(octx, t, lang, fieldW);
+}
+
+// 지구 위 도시 이름, LA 화면 앞에서는 두 도시의 현지 시각
+const PLACE = { ko: { seoul: '서울', la: '로스앤젤레스', clock: '서울 09:41 · 로스앤젤레스 17:41 (전날)' }, en: { seoul: 'Seoul', la: 'Los Angeles', clock: 'Seoul 09:41 · Los Angeles 17:41 (previous day)' } };
+function drawGeo(g, t, lang) {
+  const P = PLACE[lang];
+  g.save(); g.textBaseline = 'middle';
+  const wG = W8.G || 0;
+  if (wG > 0) {
+    setStateG(t);
+    const { alt } = camGAt(t);
+    const a = wG * Math.min(1, Math.max(0, (alt - 0.01) / 0.03));
+    for (const [pt, name] of [[SEOUL, P.seoul], [LA, P.la]]) {
+      if (a <= 0 || pt.dot(camG.position) < 1.0) continue; // 지평선 너머
+      const p = pt.clone().project(camG), x = (p.x + 1) / 2 * W, y = (1 - p.y) / 2 * H;
+      g.globalAlpha = a; g.font = '700 30px "Noto Sans KR"'; g.textAlign = 'left';
+      const tw = g.measureText(name).width, lx = x + 18 + tw + 28 > W - 40 ? x - 18 - tw - 28 : x + 18;
+      g.fillStyle = 'rgba(244,244,245,.92)'; rr(g, lx, y - 22, tw + 28, 44, 22); g.fill();
+      g.fillStyle = '#18181b'; g.fillText(name, lx + 14, y + 1);
+    }
+  }
+  const wO = W8.O || 0;
+  const ca = wO * Math.min(1, Math.max(0, (t - 30.8) / 0.4)) * Math.min(1, Math.max(0, (33.4 - t) / 0.4));
+  if (ca > 0) {
+    const F = lang === 'ko' ? '700 28px "Noto Sans KR"' : '700 28px "JetBrains Mono"';
+    g.globalAlpha = ca; g.font = F; g.textAlign = 'left';
+    const tw = g.measureText(P.clock).width;
+    g.fillStyle = 'rgba(24,24,27,.82)'; rr(g, 56, H - 150, tw + 48, 60, 30); g.fill();
+    g.fillStyle = '#f2b230'; g.beginPath(); g.arc(80, H - 120, 7, 0, 7); g.fill();
+    g.fillStyle = '#fafafa'; g.font = F; g.fillText(P.clock, 96, H - 119);
+  }
+  g.restore();
 }
 
 // 폰 화면 시점: 화면 전체에 앱 스캔 UI, 첫 라벨에서는 막대 묶음이 빛나며 숫자가 결과로 날아간다
