@@ -322,41 +322,89 @@ ui.position.z = PH_D / 2 + 0.0004; phone.add(ui);
 const phoneCam = new THREE.PerspectiveCamera(46, SCR_W / SCR_H, 0.01, 20);
 phoneCam.position.set(0, 0, -PH_D / 2 - 0.002); phone.add(phoneCam); // 카메라는 -z(라벨 쪽)를 본다
 // 손 (와이어프레임): 오른손이 폰을 감싸 쥔다 — 손바닥은 뒷면, 네 손가락은 왼쪽 모서리를 감아 앞으로, 엄지는 오른쪽 앞
+// 모양은 ?hand= 로 고른다: mesh(삼각망) · skeleton(뼈대 선+관절) · box(각진 마디 윤곽) · cage(고리+세로선)
+const HAND = new URLSearchParams(location.search).get('hand') || 'mesh';
 const hand = new THREE.Group(); phone.add(hand);
-const wireMat = new THREE.LineBasicMaterial({ color: 0x3b3b42, transparent: true, opacity: 0.75 });
-const ghostMat = new THREE.MeshBasicMaterial({ color: 0xf6f3ec, transparent: true, opacity: 0.35, depthWrite: false });
-function bone(a, b, r) { // a→b 를 잇는 캡슐 마디
-  const len = a.distanceTo(b);
-  const geo = new THREE.CapsuleGeometry(r, Math.max(0.0001, len), 2, 7);
-  const g = new THREE.Group();
-  g.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireMat));
-  g.add(new THREE.Mesh(geo, ghostMat));
-  g.position.copy(a).lerp(b, 0.5);
-  g.quaternion.setFromUnitVectors(V3(0, 1, 0), b.clone().sub(a).normalize());
-  hand.add(g);
-}
-function chain(pts, r) { for (let k = 0; k < pts.length - 1; k++) bone(pts[k], pts[k + 1], r * (1 - k * 0.08)); }
 const BZ = -PH_D / 2 - 0.009;           // 뒷면 손가락 높이
 const LX = -PH_W / 2;                   // 왼쪽 모서리
-// 손바닥 (뒷면, 오른쪽 아래)
-const palmGeo = new THREE.BoxGeometry(0.062, 0.07, 0.022, 3, 3, 2);
-const palm = new THREE.Group();
-palm.add(new THREE.LineSegments(new THREE.WireframeGeometry(palmGeo), wireMat), new THREE.Mesh(palmGeo, ghostMat));
-palm.position.set(0.016, -0.05, BZ - 0.008); palm.rotation.z = 0.12; hand.add(palm);
-// 네 손가락: 손바닥 → 뒷면을 가로질러 → 모서리를 감아 → 화면 가장자리에 끝
-[0.004, -0.014, -0.032, -0.049].forEach((y, k) => {
-  const r = 0.0078 - k * 0.0006;
-  chain([
-    V3(0.004, y - 0.018, BZ - 0.006),
-    V3(LX + 0.012, y - 0.008, BZ),
-    V3(LX - 0.006, y - 0.004, -0.001),
-    V3(LX + 0.004, y - 0.002, PH_D / 2 + 0.006),
-  ], r);
-});
-// 엄지: 손바닥 오른쪽에서 화면 오른쪽 가장자리 앞으로
-chain([V3(0.04, -0.09, BZ), V3(PH_W / 2 + 0.01, -0.075, 0.0), V3(PH_W / 2 - 0.003, -0.064, PH_D / 2 + 0.008), V3(PH_W / 2 - 0.013, -0.056, PH_D / 2 + 0.009)], 0.0088);
-// 손목
-bone(V3(0.024, -0.085, BZ - 0.01), V3(0.05, -0.2, BZ - 0.06), 0.024);
+const fingers = [0.004, -0.014, -0.032, -0.049].map((y, k) => ({ r: 0.0078 - k * 0.0006, pts: [
+  V3(0.004, y - 0.018, BZ - 0.006), V3(LX + 0.012, y - 0.008, BZ), V3(LX - 0.006, y - 0.004, -0.001), V3(LX + 0.004, y - 0.002, PH_D / 2 + 0.006)] }));
+fingers.push({ r: 0.0088, pts: [V3(0.04, -0.09, BZ), V3(PH_W / 2 + 0.01, -0.075, 0.0), V3(PH_W / 2 - 0.003, -0.064, PH_D / 2 + 0.008), V3(PH_W / 2 - 0.013, -0.056, PH_D / 2 + 0.009)] });
+const wristBone = { r: 0.024, pts: [V3(0.024, -0.085, BZ - 0.01), V3(0.05, -0.2, BZ - 0.06)] };
+const palmBox = { pos: V3(0.016, -0.05, BZ - 0.008), size: [0.062, 0.07, 0.022], rz: 0.12 };
+const ink = new THREE.MeshBasicMaterial({ color: 0x2c2c32 });
+// 폰 뒤에 가린 부분은 도면처럼 옅게 비쳐 보이게 (선 모양 손이 덩어리 없이도 읽히도록)
+const inkHidden = new THREE.MeshBasicMaterial({ color: 0x2c2c32, transparent: true, opacity: 0.13, depthTest: false, depthWrite: false });
+function addInk(geo, place) { for (const m of [new THREE.Mesh(geo, ink), new THREE.Mesh(geo, inkHidden)]) { place(m); if (m.material === inkHidden) m.renderOrder = 5; hand.add(m); } }
+const ghostMat = new THREE.MeshBasicMaterial({ color: 0xf6f3ec, transparent: true, opacity: 0.35, depthWrite: false });
+const UP = V3(0, 1, 0);
+function stroke(a, b, w = 0.00042) { // 굵기 있는 선 (WebGL 선은 1px 이라 가는 원기둥으로)
+  addInk(new THREE.CylinderGeometry(w, w, a.distanceTo(b), 5, 1, true), (m) => { m.position.copy(a).lerp(b, 0.5); m.quaternion.setFromUnitVectors(UP, b.clone().sub(a).normalize()); });
+}
+function dot(p, r = 0.0016) { addInk(new THREE.SphereGeometry(r, 8, 6), (m) => m.position.copy(p)); }
+function frameOf(a, b) { // a→b 축에 수직인 두 방향
+  const d = b.clone().sub(a).normalize();
+  const u = new THREE.Vector3().crossVectors(d, Math.abs(d.z) < 0.9 ? V3(0, 0, 1) : V3(1, 0, 0)).normalize();
+  return [d, u, new THREE.Vector3().crossVectors(d, u).normalize()];
+}
+function ring(c, u, v, r, n = 14) { for (let k = 0; k < n; k++) { const t0 = k / n * Math.PI * 2, t1 = (k + 1) / n * Math.PI * 2;
+  stroke(c.clone().addScaledVector(u, Math.cos(t0) * r).addScaledVector(v, Math.sin(t0) * r), c.clone().addScaledVector(u, Math.cos(t1) * r).addScaledVector(v, Math.sin(t1) * r)); } }
+function edgesOf(geo, place) { // 지오메트리 윤곽선을 굵은 선으로
+  const pos = new THREE.EdgesGeometry(geo, 20).attributes.position;
+  for (let k = 0; k < pos.count; k += 2) stroke(place(V3(pos.getX(k), pos.getY(k), pos.getZ(k))), place(V3(pos.getX(k + 1), pos.getY(k + 1), pos.getZ(k + 1))));
+}
+const palmPlace = (p) => p.applyAxisAngle(V3(0, 0, 1), palmBox.rz).add(palmBox.pos);
+const bones = [...fingers, wristBone];
+if (HAND === 'skeleton') {
+  // 뼈대: 마디를 잇는 선 + 관절 점, 손바닥은 손가락 뿌리를 잇는 부채꼴
+  for (const f of bones) { f.pts.forEach((p, k) => { dot(p); if (k) stroke(f.pts[k - 1], p, 0.0006); }); }
+  const wr = wristBone.pts[0];
+  for (const f of fingers) stroke(wr, f.pts[0]);
+  for (let k = 0; k < fingers.length - 2; k++) stroke(fingers[k].pts[0], fingers[k + 1].pts[0]);
+} else if (HAND === 'box') {
+  // 각진 마디: 마디마다 납작한 상자의 윤곽만
+  edgesOf(new THREE.BoxGeometry(...palmBox.size), palmPlace);
+  for (const f of bones) for (let k = 1; k < f.pts.length; k++) {
+    const a = f.pts[k - 1], b = f.pts[k], [d, u, v] = frameOf(a, b), r = f.r * 0.95, len = a.distanceTo(b);
+    const g = new THREE.BoxGeometry(r * 2, len + r * 0.6, r * 1.6);
+    const q = new THREE.Quaternion().setFromUnitVectors(UP, d), c = a.clone().lerp(b, 0.5);
+    edgesOf(g, (p) => p.applyQuaternion(q).add(c));
+  }
+} else if (HAND === 'outline') {
+  // 윤곽선: 보는 방향에서 본 손가락 양옆 선 + 둥근 끝, 손바닥은 테두리만 (만화 선화처럼)
+  const look = V3(0.3, 0.3, 1).normalize();
+  edgesOf(new THREE.BoxGeometry(...palmBox.size), palmPlace);
+  for (const f of bones) {
+    const side = (k) => { const a = f.pts[Math.max(0, k - 1)], b = f.pts[Math.max(1, k)]; return new THREE.Vector3().crossVectors(b.clone().sub(a), look).normalize().multiplyScalar(f.r); };
+    for (let k = 1; k < f.pts.length; k++) {
+      const s0 = side(k - 1).add(side(k)).multiplyScalar(0.5), s1 = side(k);
+      stroke(f.pts[k - 1].clone().add(side(k)), f.pts[k].clone().add(s1)); stroke(f.pts[k - 1].clone().sub(side(k)), f.pts[k].clone().sub(s1));
+    }
+    if (f !== wristBone) { // 끝을 반원으로 닫는다
+      const n = f.pts.length - 1, e = f.pts[n], u = side(n), d = e.clone().sub(f.pts[n - 1]).normalize().multiplyScalar(f.r);
+      for (let k = 0; k < 6; k++) { const t0 = k / 6 * Math.PI, t1 = (k + 1) / 6 * Math.PI;
+        stroke(e.clone().addScaledVector(u, Math.cos(t0)).addScaledVector(d, Math.sin(t0)), e.clone().addScaledVector(u, Math.cos(t1)).addScaledVector(d, Math.sin(t1))); }
+    }
+  }
+} else if (HAND === 'cage') {
+  // 고리 + 세로선: 마디 끝마다 고리 하나, 양옆 두 줄
+  edgesOf(new THREE.BoxGeometry(...palmBox.size), palmPlace);
+  for (const f of bones) {
+    for (let k = 0; k < f.pts.length; k++) {
+      const a = f.pts[Math.max(0, k - 1)], b = f.pts[Math.max(1, k)], [, u, v] = frameOf(a, b);
+      ring(f.pts[k], u, v, f.r);
+      if (k) { stroke(f.pts[k - 1].clone().addScaledVector(u, f.r), f.pts[k].clone().addScaledVector(u, f.r)); stroke(f.pts[k - 1].clone().addScaledVector(u, -f.r), f.pts[k].clone().addScaledVector(u, -f.r)); }
+    }
+  }
+} else {
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x3b3b42, transparent: true, opacity: 0.75 });
+  const add = (geo, place) => { const g = new THREE.Group(); g.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireMat), new THREE.Mesh(geo, ghostMat)); place(g); hand.add(g); };
+  add(new THREE.BoxGeometry(...palmBox.size, 3, 3, 2), (g) => { g.position.copy(palmBox.pos); g.rotation.z = palmBox.rz; });
+  for (const f of bones) for (let k = 1; k < f.pts.length; k++) {
+    const a = f.pts[k - 1], b = f.pts[k], r = f.r * (1 - (k - 1) * 0.08);
+    add(new THREE.CapsuleGeometry(r, Math.max(0.0001, a.distanceTo(b)), 2, 7), (g) => { g.position.copy(a).lerp(b, 0.5); g.quaternion.setFromUnitVectors(UP, b.clone().sub(a).normalize()); });
+  }
+}
 phone.updateMatrixWorld(true);
 const phoneScreenWorld = new THREE.Vector3(); feed.getWorldPosition(phoneScreenWorld);
 const phoneNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(phone.quaternion).normalize();
@@ -463,10 +511,12 @@ const KEYS = [
   [4.4, labelCenter.clone(), V(0.02, 0.06, 1), 0.62],
   [5.9, barcodeWorld, V(0, 0.02, 1), 0.085],
   [7.3, moduleWorld, V(0, 0, 1), 0.0105],
-  [8.4, moduleWorld.clone().add(V(0.0006, 0, 0)), V(0.01, 0, 1), 0.0098],
+  [8.2, moduleWorld.clone().add(V(0.0006, 0, 0)), V(0.01, 0, 1), 0.0098],
+  // 막대에서 곧장 뒤로 빠진다 (옆으로 쓸리지 않게 방향은 그대로)
+  [9.4, barcodeWorld.clone(), V(0.04, 0.05, 1), 0.34],
   // 어깨 너머로 폰 화면 (뒤에 라벨이 보이게)
-  [10.4, phoneScreenWorld.clone().lerp(scanTarget, 0.3), phoneNormal.clone().add(V(0.32, 0.3, 0)), 0.46],
-  [12.0, phoneScreenWorld.clone().lerp(scanTarget, 0.3).add(V(0, 0.004, 0)), phoneNormal.clone().add(V(0.36, 0.32, 0)), 0.43],
+  [10.6, phoneScreenWorld.clone().lerp(scanTarget, 0.3), phoneNormal.clone().add(V(0.32, 0.3, 0)), 0.46],
+  [12.4, phoneScreenWorld.clone().lerp(scanTarget, 0.3).add(V(0, 0.004, 0)), phoneNormal.clone().add(V(0.36, 0.32, 0)), 0.43],
   [14.6, midWorld, V(0.9, 0.35, 0.6), 1.4],
   [16.4, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
   [19.4, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
@@ -530,16 +580,16 @@ function drawHud(g, t, lang, fieldW) {
 
 // ───────── 한 장면 ─────────
 function setState(t) {
-  // 폰 스캔: 스캔 선 10.0~11.0 s, 결과 11.0 s 부터 (14 s 이후 사라짐)
-  const scanP = (t - 10.0) / 1.0;
-  const toastA = t < 11.0 ? 0 : t < 14.0 ? Math.min(1, (t - 11.0) / 0.25) : Math.max(0, 1 - (t - 14.0) / 0.6);
+  // 폰 스캔: 스캔 선 10.5~11.4 s, 결과 11.4 s 부터 (14 s 이후 사라짐)
+  const scanP = (t - 10.5) / 0.9;
+  const toastA = t < 11.4 ? 0 : t < 14.0 ? Math.min(1, (t - 11.4) / 0.25) : Math.max(0, 1 - (t - 14.0) / 0.6);
   drawPhoneUI(scanP, toastA);
   // 라벨 숫자: 읽히는 순간 한 자리씩 강조색, 22.5 s 부터 원래대로 (반복)
-  const lit = t < 11.0 ? 0 : t < 22.5 ? Math.min(13, (t - 11.0) / 0.9 * 13) : 13 * (1 - Math.min(1, (t - 22.5) / 0.8));
+  const lit = t < 11.4 ? 0 : t < 22.5 ? Math.min(13, (t - 11.4) / 0.9 * 13) : 13 * (1 - Math.min(1, (t - 22.5) / 0.8));
   drawDigits(lit);
-  // 빛: 12.0~15.0 s 폰에서 나가고, 15.2~16.6 s 꼬리가 따라간다
+  // 빛: 12.3~15.1 s 폰에서 나가고, 15.2~16.6 s 꼬리가 따라간다
   const a = Math.min(1, Math.max(0, (t - 15.2) / 1.4));
-  const b = Math.min(1, Math.max(0, (t - 12.0) / 3.0));
+  const b = Math.min(1, Math.max(0, (t - 12.3) / 2.8));
   setRibbon(ease(a), ease(b));
   // 모니터: 16.2 s 새 줄, 19 s 부터 강조가 사라지고, 22~23.4 s (멀리서) 원래 상태로
   const rowIn = t < 16.2 ? 0 : t < 22 ? Math.min(1, (t - 16.2) / 0.6) : t < 23.4 ? 1 : 0;
