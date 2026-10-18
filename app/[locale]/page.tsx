@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { SiteHeader, SiteFooter } from '@/components/site-header'
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
-import { ZoomFilm } from '@/components/landing/zoom-film'
+import { ZoomFilm, MarqueeScanSync } from '@/components/landing/zoom-film'
 import { Reveal } from '@/components/landing/reveal'
 
 // SEO 메타데이터 - 매우 중요!
@@ -194,12 +194,14 @@ export default async function HomePage() {
         {/* 인식하는 바코드 13종이 흘러가는 띠 */}
         <section aria-labelledby="types-title" className="border-y bg-card py-6">
           <h2 id="types-title" className="sr-only">{t('landing.typesTitle')}</h2>
+          <MarqueeScanSync />
           <div className="marquee">
             <ul className="marquee-track">
               {[...BARCODE_TYPES, ...BARCODE_TYPES].map((name, i) => (
                 <li
                   key={i}
                   aria-hidden={i >= BARCODE_TYPES.length ? 'true' : undefined}
+                  data-barcode={name}
                   className="shrink-0 rounded-full border bg-background px-4 py-1.5 font-mono text-13 font-semibold text-muted-foreground"
                 >
                   {name}

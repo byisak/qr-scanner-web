@@ -11,7 +11,7 @@ for (const l of ['ko', 'en']) fs.mkdirSync(path.join(outDir, l), { recursive: tr
   for (const lang of ['ko', 'en']) {
     const p = await b.newPage({ viewport: { width: 600, height: 720 } });
     p.on('pageerror', (e) => console.log('pageerror', e.message));
-    await p.goto('file://' + path.join(__dirname, 'scene.html') + '?lang=' + lang + (process.env.FMT ? '&fmt=' + process.env.FMT : '') + (process.env.STYLE ? '&style=' + process.env.STYLE : ''));
+    await p.goto('file://' + path.join(__dirname, 'scene.html') + '?lang=' + lang + (process.env.FMT ? '&fmt=' + process.env.FMT : '') + (process.env.STYLE ? '&style=' + process.env.STYLE : '') + (process.env.THEME ? '&theme=' + process.env.THEME : ''));
     await p.waitForFunction(() => window.READY === true, null, { timeout: 60000 });
     const n = await p.evaluate(() => window.FRAMES);
     for (let i = 0; i < n; i++) {

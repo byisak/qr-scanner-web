@@ -365,6 +365,10 @@
   width: max-content;
   gap: 12px;
 }
+/* 첫 화면 영상에서 그 종류가 읽히는 순간 (zoomfilm:scan) */
+.marquee-track > li { transition: color .35s ease, background-color .35s ease, border-color .35s ease; }
+.marquee-track > li[data-hit] { color: #8a5d00; background: #fff4d6; border-color: #f2b230; }
+.dark .marquee-track > li[data-hit] { color: #f2b230; background: #2a2110; border-color: #f2b230; }
 @media (prefers-reduced-motion: no-preference) {
   .marquee-track {
     animation: kk-marquee 40s linear infinite;
