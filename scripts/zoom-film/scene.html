@@ -927,11 +927,13 @@ const KEYS = [
   // 폰 화면 시점: 첫 라벨 (해독)
   [5.6, aim(heroCode), POV_DIR, POV_D],
   [9.9, aim(heroCode), POV_DIR, POV_D * 0.96],
-  // 연속 스캔: 옆 상자로 훑고 지나가며 차례로 읽는다
-  [10.6, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 2.7], // 상자 사이 틈만 보이지 않게 크게 물러나 두 라벨이 함께 보이게
+  // 연속 스캔: 라벨에서 다음 라벨로는 옆으로 훑지 않고 겹쳐 넘긴다 (DISSOLVE) — 상자 사이 틈이 화면을 채우지 않게
+  [10.4, aim(heroCode), POV_DIR, POV_D * 0.94],
+  [10.8, aim(SIDE[0].codeWorld), POV_DIR, POV_D * 1.04],
   [11.3, aim(SIDE[0].codeWorld), POV_DIR, POV_D],
   [12.8, aim(SIDE[0].codeWorld), POV_DIR, POV_D * 0.97],
-  [13.4, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 2.7],
+  [13.2, aim(SIDE[0].codeWorld), POV_DIR, POV_D * 0.95],
+  [13.6, aim(scanTarget), POV_DIR, povD * 1.04],
   [14.0, aim(scanTarget), POV_DIR, povD],
   [XF0, aim(scanTarget), POV_DIR, povD * 0.98],
   // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
@@ -1051,7 +1053,17 @@ function renderAt(t, sub = SUB, id = 'S') {
 const accA = document.createElement('canvas'); accA.width = W; accA.height = H;
 const accB = document.createElement('canvas'); accB.width = W; accB.height = H;
 // 창고 한 장면: 전환 구간에서는 폰 화면 시점(A)과 폰 앞 시점(B)을 따로 그려 겹친다
+const DISSOLVE = [[10.4, 10.8], [13.2, 13.6]];
 function renderS(t, sub) {
+  const dv = DISSOLVE.find(([a, b]) => t > a && t < b);
+  if (dv) { // 앞 라벨 시점(A) → 다음 라벨 시점(B)을 겹친다
+    const w = ease((t - dv[0]) / (dv[1] - dv[0]));
+    camT = () => dv[0]; renderAt(t, sub); accA.getContext('2d').drawImage(acc, 0, 0);
+    camT = () => dv[1]; renderAt(t, sub);
+    camT = (ts) => ts;
+    actx.globalAlpha = 1 - w; actx.drawImage(accA, 0, 0); actx.globalAlpha = 1;
+    povW = 1; return;
+  }
   const x = Math.min(1, Math.max(0, (t - XF0) / (XF1 - XF0)));
   povW = 1 - ease(x);
   if (x > 0 && x < 1) {
@@ -1098,9 +1110,16 @@ function drawGeo(g, t, lang) {
       if (a <= 0 || pt.dot(camG.position) < 1.0) continue; // 지평선 너머
       const p = pt.clone().project(camG), x = (p.x + 1) / 2 * W, y = (1 - p.y) / 2 * H;
       g.globalAlpha = a; g.font = '700 30px "Noto Sans KR"'; g.textAlign = 'left';
-      const tw = g.measureText(name).width, lx = x + 18 + tw + 28 > W - 40 ? x - 18 - tw - 28 : x + 18;
-      g.fillStyle = 'rgba(244,244,245,.92)'; rr(g, lx, y - 22, tw + 28, 44, 22); g.fill();
-      g.fillStyle = '#18181b'; g.fillText(name, lx + 14, y + 1);
+      // 이름판: 얇은 판(두께는 아래 그림자 판), 테두리, 양끝 나사 — Anatomy 의 이름판처럼
+      const pw = g.measureText(name).width + 64, lx = x + 18 + pw > W - 40 ? x - 18 - pw : x + 18, ph = 46;
+      g.fillStyle = 'rgba(160,158,150,.9)'; rr(g, lx + 3, y - ph / 2 + 4, pw, ph, 6); g.fill();
+      g.fillStyle = '#f6f5f1'; rr(g, lx, y - ph / 2, pw, ph, 6); g.fill();
+      g.lineWidth = 1.6; g.strokeStyle = '#3a3a40'; rr(g, lx, y - ph / 2, pw, ph, 6); g.stroke();
+      g.lineWidth = 1; g.strokeStyle = '#a9a7a0'; rr(g, lx + 5, y - ph / 2 + 5, pw - 10, ph - 10, 3); g.stroke();
+      for (const sx of [lx + 15, lx + pw - 15]) { g.fillStyle = '#d9d7d0'; g.beginPath(); g.arc(sx, y, 5, 0, 7); g.fill(); g.strokeStyle = '#3a3a40'; g.lineWidth = 1.2; g.stroke(); g.beginPath(); g.moveTo(sx - 3, y - 3); g.lineTo(sx + 3, y + 3); g.stroke(); }
+      // 지점과 이름판을 잇는 짧은 선
+      g.strokeStyle = '#3a3a40'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x, y); g.lineTo(lx > x ? lx : lx + pw, y); g.stroke();
+      g.fillStyle = '#18181b'; g.fillText(name, lx + 32, y + 1);
     }
   }
   const wO = W8.O || 0;
