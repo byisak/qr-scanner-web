@@ -1,13 +1,13 @@
 import Image from "next/image"
-import fs from "node:fs"
-import path from "node:path"
 
 import type { Screenshot } from "@/content/features/types"
+import { FEATURE_SHOTS } from "@/content/features/shots.generated"
 
 // 스크린샷 파일 찾기: 그 언어 → 영어 → 한국어 순. 없으면 null (그림 자리를 비운다)
+// 목록은 빌드 전에 만든 FEATURE_SHOTS (서버리스에서 public 폴더를 읽을 수 없어서)
 export function resolveScreenshot(locale: string, file: string): string | null {
   for (const l of [locale, "en", "ko"]) {
-    if (fs.existsSync(path.join(process.cwd(), "public", "features", l, file))) return `/features/${l}/${file}`
+    if (FEATURE_SHOTS.has(`${l}/${file}`)) return `/features/${l}/${file}`
   }
   return null
 }
