@@ -1,0 +1,16 @@
+// 자동 생성 파일 (scripts/gen-feature-shots.mjs). 직접 고치지 마세요.
+export const FEATURE_SHOTS: ReadonlySet<string> = new Set([
+  "ko/export-1.webp",
+  "ko/generator-1.webp",
+  "ko/hardware-keys-1.webp",
+  "ko/history-1.webp",
+  "ko/image-scan-1.webp",
+  "ko/live-pc-sync-1.webp",
+  "ko/live-pc-sync-2.webp",
+  "ko/pin-lock-1.webp",
+  "ko/scan-area-1.webp",
+  "ko/scan-rules-1.webp",
+  "ko/stocktake-1.webp",
+  "ko/stocktake-2.webp",
+  "ko/web-session-1.webp"
+]);

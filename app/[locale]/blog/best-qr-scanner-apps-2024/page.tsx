@@ -274,10 +274,10 @@ export default function BlogPost() {
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button asChild>
-                <a href="https://apps.apple.com/app/qr-scanner-pro">App Store 다운로드</a>
+                <a href="https://apps.apple.com/app/id6757360768">App Store 다운로드</a>
               </Button>
               <Button asChild variant="outline">
-                <a href="https://play.google.com/store/apps/details?id=com.scanview.qrscanner">Google Play 다운로드</a>
+                <a href="https://play.google.com/store/apps/details?id=com.cubion.qrscanner">Google Play 다운로드</a>
               </Button>
             </div>
           </div>
