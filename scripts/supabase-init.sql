@@ -1103,6 +1103,16 @@ CREATE TABLE IF NOT EXISTS cron_runs (
 CREATE INDEX IF NOT EXISTS idx_cron_runs_job_started ON cron_runs(job, started_at DESC);
 
 -- ============================================
+-- 8-2. 세션 비밀번호 시도 기록 (scripts/migrate-password-attempts-2026-10-18.sql)
+-- ============================================
+CREATE TABLE IF NOT EXISTS session_password_attempts (
+    key VARCHAR(320) PRIMARY KEY,
+    count INTEGER NOT NULL DEFAULT 1,
+    reset_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_password_attempts_reset ON session_password_attempts(reset_at);
+
+-- ============================================
 -- 9. Supabase Data API 잠금 (scripts/supabase-lockdown.sql) - 반드시 마지막
 -- ============================================
 

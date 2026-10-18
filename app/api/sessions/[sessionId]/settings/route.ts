@@ -1,15 +1,13 @@
 // app/api/sessions/[sessionId]/settings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { isAttemptLimited, recordAttemptFailure, clearAttemptFailures } from '@/lib/password-attempts';
 import { hashPassword, verifyPassword, generateSessionAccessToken, verifySessionAccessToken } from '@/lib/auth';
 import { ensureRealtimeKey } from '@/lib/session-service';
 import {
   getRequestUser,
   isAdminUser,
   requireSessionOwner,
-  isPasswordAttemptLimited,
-  recordPasswordFailure,
-  clearPasswordFailures,
 } from '@/lib/session-access';
 import type { PoolClient } from 'pg';
 
@@ -383,15 +381,16 @@ export async function POST(
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       'unknown';
-    const attemptKey = `${ip}:${sessionId}`;
-    if (isPasswordAttemptLimited(attemptKey)) {
+
+    client = await getConnection();
+
+    // 시도 기록은 DB에 (Vercel 인스턴스가 달라도 같이 센다)
+    if (await isAttemptLimited(client, ip, sessionId)) {
       return NextResponse.json(
         { success: false, accessGranted: false, error: '시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.' },
         { status: 429 }
       );
     }
-
-    client = await getConnection();
 
     // 세션 설정 조회
     const result = await client.query(
@@ -436,7 +435,7 @@ export async function POST(
     // console.log('🔐 비밀번호 검증 결과:', { isValid });
 
     if (!isValid) {
-      recordPasswordFailure(attemptKey);
+      await recordAttemptFailure(client, ip, sessionId);
       // console.log('❌ 비밀번호 불일치');
       return NextResponse.json(
         { success: false, accessGranted: false, error: '비밀번호가 올바르지 않습니다.' },
@@ -445,7 +444,7 @@ export async function POST(
     }
 
     // console.log('✅ 비밀번호 검증 성공');
-    clearPasswordFailures(attemptKey);
+    await clearAttemptFailures(client, ip, sessionId);
     // 비밀번호 검증 성공 시 세션 접근 토큰 발급 → 소켓 join-session 에 sessionAccessToken 으로 제시
     // 실시간 채널 키도 함께 돌려준다 (Supabase Realtime 구독용)
     const realtimeKey = await ensureRealtimeKey(client, sessionId);

@@ -64,6 +64,10 @@ export async function GET(request: NextRequest) {
       purgedSessionCount: purged.sessions,
       purgedScanCount: purged.scans,
     };
+    // 끝난 비밀번호 시도 기록 정리 (트랜잭션 밖: 테이블이 없어도 위 작업에 영향 없게)
+    await client
+      .query(`DELETE FROM session_password_attempts WHERE reset_at < NOW() - INTERVAL '1 day'`)
+      .catch(() => {});
     client.release();
     client = null;
     await recordCronRun('cleanup', startedAt, true, result);
