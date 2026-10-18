@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import {
   QrCode,
@@ -12,6 +13,7 @@ import {
   Warehouse,
   Store,
   Factory,
+  ArrowRight,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -66,13 +68,14 @@ export const metadata: Metadata = {
 }
 
 
+// href: 기능 소개 상세 페이지 (없으면 링크 없이 카드만)
 const FEATURES = [
-  { key: 'bulkScan', icon: Zap },
-  { key: 'realtime', icon: Globe },
-  { key: 'export', icon: Database },
-  { key: 'offline', icon: Smartphone },
-  { key: 'allBarcodes', icon: QrCode },
-  { key: 'validation', icon: CheckCircle },
+  { key: 'bulkScan', icon: Zap, href: '/features/continuous-scan' },
+  { key: 'realtime', icon: Globe, href: '/features/live-pc-sync' },
+  { key: 'export', icon: Database, href: '/features/export' },
+  { key: 'offline', icon: Smartphone, href: '/features/history' },
+  { key: 'allBarcodes', icon: QrCode, href: '/features/scan-area' },
+  { key: 'validation', icon: CheckCircle, href: null },
 ] as const
 
 const USE_CASES = [
@@ -167,16 +170,30 @@ export default async function HomePage() {
         <section id="features" aria-labelledby="features-title" className="page scroll-mt-20 py-16">
           <h2 id="features-title" className="type-h1">{t('home.whyChoose')}</h2>
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ key, icon: Icon }) => (
-              <li key={key} className="lift min-w-0 rounded-card border bg-card p-6">
-                <span className="flex size-10 items-center justify-center rounded-code bg-secondary">
-                  <Icon className="size-5" aria-hidden="true" />
-                </span>
-                <h3 className="mt-4 type-h3">{t(`features.${key}.title`)}</h3>
-                <p className="mt-1.5 type-body text-muted-foreground">{t(`features.${key}.description`)}</p>
-              </li>
-            ))}
+            {FEATURES.map(({ key, icon: Icon, href }) => {
+              const body = (
+                <>
+                  <span className="flex size-10 items-center justify-center rounded-code bg-secondary">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-4 type-h3">{t(`features.${key}.title`)}</h3>
+                  <p className="mt-1.5 type-body text-muted-foreground">{t(`features.${key}.description`)}</p>
+                </>
+              )
+              return (
+                <li key={key} className="min-w-0">
+                  {href ? (
+                    <Link href={href} className="lift block h-full rounded-card border bg-card p-6">{body}</Link>
+                  ) : (
+                    <div className="h-full rounded-card border bg-card p-6">{body}</div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
+          <Button asChild variant="outline" className="mt-6">
+            <Link href="/features">{t('nav.allFeatures')}<ArrowRight aria-hidden="true" /></Link>
+          </Button>
         </section>
 
         {/* 활용 사례 */}

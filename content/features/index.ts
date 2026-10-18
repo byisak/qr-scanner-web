@@ -2,8 +2,9 @@
 import type { FeatureContent, FeatureSlug, FeaturesLocale } from './types';
 import { FEATURE_SLUGS } from './types';
 import ko from './ko';
+import en from './en';
 
-const LOCALES: Record<string, FeaturesLocale | undefined> = { ko };
+const LOCALES: Record<string, FeaturesLocale | undefined> = { ko, en };
 const FALLBACK_CHAIN = ['en', 'ko'];
 
 export function getFeaturesLocale(locale: string): { data: FeaturesLocale; locale: string; isFallback: boolean } {

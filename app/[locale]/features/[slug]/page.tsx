@@ -19,15 +19,17 @@ function isSlug(s: string): s is FeatureSlug {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const { data } = getFeaturesLocale(await getLocale())
+  const { data, locale } = getFeaturesLocale(await getLocale())
   const f = isSlug(slug) ? data.features[slug] : undefined
   if (!f) return {}
   const title = `${f.title} · ${data.meta.title}`
+  const image = `https://scanview.app/api/og/features/${slug}?lang=${locale}`
   return {
     title,
     description: f.summary,
     alternates: { canonical: `https://scanview.app/features/${slug}` },
-    openGraph: { title, description: f.summary, url: `https://scanview.app/features/${slug}`, type: 'article' },
+    openGraph: { title, description: f.summary, url: `https://scanview.app/features/${slug}`, type: 'article', images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: 'summary_large_image', title, description: f.summary, images: [image] },
   }
 }
 
