@@ -321,19 +321,42 @@ const ui = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W, SCR_H), new THREE.MeshB
 ui.position.z = PH_D / 2 + 0.0004; phone.add(ui);
 const phoneCam = new THREE.PerspectiveCamera(46, SCR_W / SCR_H, 0.01, 20);
 phoneCam.position.set(0, 0, -PH_D / 2 - 0.002); phone.add(phoneCam); // 카메라는 -z(라벨 쪽)를 본다
-// 장갑 낀 손 (작업용 장갑, 먹색)
-const glove = std(0x34343a, 0.92);
+// 손 (와이어프레임): 오른손이 폰을 감싸 쥔다 — 손바닥은 뒷면, 네 손가락은 왼쪽 모서리를 감아 앞으로, 엄지는 오른쪽 앞
 const hand = new THREE.Group(); phone.add(hand);
-const palm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.075, 0.026), glove); palm.position.set(0.006, -0.04, -0.019); hand.add(palm);
-for (let k = 0; k < 4; k++) {
-  const f = new THREE.Mesh(new THREE.CapsuleGeometry(0.0085, 0.05 - k * 0.004, 4, 10), glove);
-  f.rotation.z = Math.PI / 2; f.position.set(-0.012, -0.004 - k * 0.019, -0.013); hand.add(f);
+const wireMat = new THREE.LineBasicMaterial({ color: 0x3b3b42, transparent: true, opacity: 0.75 });
+const ghostMat = new THREE.MeshBasicMaterial({ color: 0xf6f3ec, transparent: true, opacity: 0.35, depthWrite: false });
+function bone(a, b, r) { // a→b 를 잇는 캡슐 마디
+  const len = a.distanceTo(b);
+  const geo = new THREE.CapsuleGeometry(r, Math.max(0.0001, len), 2, 7);
+  const g = new THREE.Group();
+  g.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireMat));
+  g.add(new THREE.Mesh(geo, ghostMat));
+  g.position.copy(a).lerp(b, 0.5);
+  g.quaternion.setFromUnitVectors(V3(0, 1, 0), b.clone().sub(a).normalize());
+  hand.add(g);
 }
-const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.0095, 0.04, 4, 10), glove);
-thumb.position.set(0.04, -0.045, 0.004); thumb.rotation.z = 0.35; hand.add(thumb);
-const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.03, 0.14, 16), glove);
-wrist.position.set(0.03, -0.12, -0.03); wrist.rotation.set(0.45, 0, -0.45); hand.add(wrist);
-hand.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+function chain(pts, r) { for (let k = 0; k < pts.length - 1; k++) bone(pts[k], pts[k + 1], r * (1 - k * 0.08)); }
+const BZ = -PH_D / 2 - 0.009;           // 뒷면 손가락 높이
+const LX = -PH_W / 2;                   // 왼쪽 모서리
+// 손바닥 (뒷면, 오른쪽 아래)
+const palmGeo = new THREE.BoxGeometry(0.062, 0.07, 0.022, 3, 3, 2);
+const palm = new THREE.Group();
+palm.add(new THREE.LineSegments(new THREE.WireframeGeometry(palmGeo), wireMat), new THREE.Mesh(palmGeo, ghostMat));
+palm.position.set(0.016, -0.05, BZ - 0.008); palm.rotation.z = 0.12; hand.add(palm);
+// 네 손가락: 손바닥 → 뒷면을 가로질러 → 모서리를 감아 → 화면 가장자리에 끝
+[0.004, -0.014, -0.032, -0.049].forEach((y, k) => {
+  const r = 0.0078 - k * 0.0006;
+  chain([
+    V3(0.004, y - 0.018, BZ - 0.006),
+    V3(LX + 0.012, y - 0.008, BZ),
+    V3(LX - 0.006, y - 0.004, -0.001),
+    V3(LX + 0.004, y - 0.002, PH_D / 2 + 0.006),
+  ], r);
+});
+// 엄지: 손바닥 오른쪽에서 화면 오른쪽 가장자리 앞으로
+chain([V3(0.04, -0.09, BZ), V3(PH_W / 2 + 0.01, -0.075, 0.0), V3(PH_W / 2 - 0.003, -0.064, PH_D / 2 + 0.008), V3(PH_W / 2 - 0.013, -0.056, PH_D / 2 + 0.009)], 0.0088);
+// 손목
+bone(V3(0.024, -0.085, BZ - 0.01), V3(0.05, -0.2, BZ - 0.06), 0.024);
 phone.updateMatrixWorld(true);
 const phoneScreenWorld = new THREE.Vector3(); feed.getWorldPosition(phoneScreenWorld);
 const phoneNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(phone.quaternion).normalize();
@@ -349,8 +372,9 @@ function drawPhoneUI(scanP, toastA) {
   g.textBaseline = 'middle';
   g.fillStyle = 'rgba(255,255,255,.95)'; g.font = '700 26px "Noto Sans KR"'; g.fillText('9:41', 46, 40);
   // 그룹 선택
-  g.fillStyle = 'rgba(17,17,19,.55)'; rr(g, 30, 80, 190, 56, 28); g.fill();
-  g.fillStyle = '#fff'; g.font = '700 24px "Noto Sans KR"'; g.fillText(PUI.group, 58, 109);
+  g.font = '700 24px "Noto Sans KR"';
+  g.fillStyle = 'rgba(17,17,19,.55)'; rr(g, 30, 80, g.measureText(PUI.group).width + 56, 56, 28); g.fill();
+  g.fillStyle = '#fff'; g.fillText(PUI.group, 58, 109);
   // 조준 모서리
   const cx = w / 2, cy = 520, fw = 300, fh = 220, L = 46;
   g.strokeStyle = '#fff'; g.lineWidth = 7; g.lineCap = 'round';
