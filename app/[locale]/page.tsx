@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import {
   QrCode,
   Zap,
@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { SiteHeader, SiteFooter } from '@/components/site-header'
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
-import { LiveDemo } from '@/components/landing/live-demo'
+import { ZoomFilm } from '@/components/landing/zoom-film'
 import { Reveal } from '@/components/landing/reveal'
 
 // SEO 메타데이터 - 매우 중요!
@@ -94,6 +94,7 @@ const FAQ_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5'] as const
 
 export default async function HomePage() {
   const t = await getTranslations()
+  const locale = await getLocale()
 
   // JSON-LD 구조화 데이터 (확인되지 않은 평점·리뷰 수는 넣지 않는다)
   const jsonLd = {
@@ -144,7 +145,7 @@ export default async function HomePage() {
 
       <main id="main" className="min-h-screen">
         {/* 첫 화면: 왼쪽 문구, 오른쪽 폰→PC 실시간 데모 */}
-        <section className="page grid items-center gap-12 pb-16 pt-14 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-16">
+        <section className="page grid items-center gap-12 pb-16 pt-14 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-16">
           <div className="min-w-0">
             <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
               {t('home.heroTitle1')}
@@ -170,20 +171,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="enter min-w-0" style={{ '--i': 3 } as React.CSSProperties}>
-            <LiveDemo
-              labels={{
-                sessionName: t('landing.demoSession'),
-                connected: t('session.connected'),
-                justScanned: t('session.lastScan'),
-                now: t('landing.demoNow'),
-                todayCount: t.raw('landing.demoToday') as string,
-                distinctCodes: t.raw('landing.demoCodes') as string,
-                code: t('table.code'),
-                time: t('table.scanTime'),
-                saved: t('landing.demoSaved'),
-              }}
-            />
-            <p className="sr-only">{t('landing.demoAlt')}</p>
+            <ZoomFilm lang={locale === 'ko' ? 'ko' : 'en'} label={t('landing.demoAlt')} />
           </div>
         </section>
 

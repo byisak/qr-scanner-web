@@ -1,0 +1,495 @@
+<!doctype html>
+<!--
+  ScanView 줌 영상 (첫 화면용). renderAt(t) 가 시각 t 의 한 장면을 그리는 순수 함수라 ?t=초 로 멈춰 볼 수 있다.
+  창고 → 선반 → 상자 → 라벨 → 바코드 → 모듈 하나(0.33 mm) → 스캔 → 숫자 → PC 로 가는 빛 → 세션 표의 새 줄 → 다시 창고.
+  render.cjs 가 프레임마다 window.renderFrame(i) 를 불러 JPEG 로 받고 ffmpeg 로 묶는다.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  html, body { margin: 0; background: #f4f4f5; }
+  #out { display: block; width: 540px; height: 675px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="out" width="1080" height="1350"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ───────── 형식 ─────────
+const W = 1080, H = 1350;          // 결과 프레임 (4:5)
+const SS = 1.5;                    // 슈퍼샘플 배율
+const DURATION = 22;               // 끊김 없는 반복 길이 (초)
+const FPS = 30;
+const SUB = 4;                     // 프레임당 서브프레임 (180° 셔터)
+const FOV = 32;
+
+// ───────── 색 (사이트 그래파이트 + 강조색 하나) ─────────
+const C = {
+  paper: 0xf4f4f5, ink: 0x18181b, mid: 0x52525b, line: 0xe4e4e7,
+  kraft: 0xcdbfa6, floor: 0xd6d6da, wall: 0xe9e9ec, steel: 0x8b8b93, honey: 0xf2b230,
+};
+
+// ───────── EAN-13 ─────────
+const CODE = '8801234001014';
+const L = ['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+const G = ['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
+const R = ['1110010','1100110','1101100','1000010','1011100','1001110','1010000','1000100','1001000','1110100'];
+const PARITY = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+function ean13Modules(code) {
+  const d = code.split('').map(Number);
+  let s = '101';
+  const par = PARITY[d[0]];
+  for (let i = 1; i <= 6; i++) s += (par[i - 1] === 'L' ? L : G)[d[i]];
+  s += '01010';
+  for (let i = 7; i <= 12; i++) s += R[d[i]];
+  s += '101';
+  return s; // 95 modules
+}
+const MODULES = ean13Modules(CODE);
+const GUARD = new Set([0,1,2,45,46,47,48,49,92,93,94]);
+
+// ───────── 장면 ─────────
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W * SS, H * SS, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(C.wall);
+scene.fog = new THREE.Fog(C.wall, 9, 26);
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.0005, 80);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcfcfd4, 1.15));
+const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+sun.position.set(-3, 6, 5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -5; sun.shadow.camera.right = 5; sun.shadow.camera.top = 5; sun.shadow.camera.bottom = -5;
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+const std = (color, rough = 0.85, metal = 0) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+
+// 바닥·벽
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), std(C.floor, 0.95));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), std(C.wall, 1));
+wall.position.set(0, 4, -1.2); scene.add(wall);
+// 바닥 통로선
+for (const x of [-1.6, 3.4]) {
+  const ln = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 30), std(C.honey, 0.9));
+  ln.rotation.x = -Math.PI / 2; ln.position.set(x, 0.001, 2); scene.add(ln);
+}
+
+// 선반 (3단) + 상자
+const rack = new THREE.Group(); scene.add(rack);
+const steel = std(C.steel, 0.5, 0.6);
+for (const x of [-1.5, 1.5]) for (const z of [-0.45, 0.45]) {
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.6, 0.06), steel);
+  post.position.set(x, 1.3, z); post.castShadow = true; rack.add(post);
+}
+const levels = [0.18, 0.86, 1.54, 2.22];
+for (const y of levels) {
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(3.06, 0.04, 0.96), std(0x9a9aa2, 0.6, 0.4));
+  deck.position.set(0, y, 0); deck.receiveShadow = true; deck.castShadow = true; rack.add(deck);
+}
+// 상자 배치 (결정적 난수)
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const boxes = [];
+for (let li = 0; li < 3; li++) {
+  let x = -1.38;
+  while (x < 1.3) {
+    const w = 0.34 + rnd() * 0.22, h = 0.3 + rnd() * 0.24, d = 0.4 + rnd() * 0.12;
+    if (x + w > 1.42) break;
+    boxes.push({ x: x + w / 2, y: levels[li] + 0.02 + h / 2, w, h, d, li });
+    x += w + 0.04 + rnd() * 0.05;
+  }
+}
+// 주인공 상자: 가운데 단 가운데에 가장 가까운 것
+let hero = boxes.filter(b => b.li === 1).reduce((a, b) => Math.abs(b.x - 0.1) < Math.abs(a.x - 0.1) ? b : a);
+hero.w = 0.46; hero.h = 0.38; hero.d = 0.44; hero.y = levels[1] + 0.02 + hero.h / 2;
+const kraft = std(C.kraft, 0.95);
+for (const b of boxes) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), kraft);
+  m.position.set(b.x, b.y, 0.45 - b.d / 2 + 0.02); m.castShadow = true; m.receiveShadow = true; rack.add(m);
+  b.front = m.position.z + b.d / 2;
+  // 테이프 한 줄
+  const tape = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.18, b.h + 0.002, b.d + 0.002), std(0xbfb196, 0.6));
+  tape.position.copy(m.position); rack.add(tape);
+  // 다른 상자의 작은 라벨 (흰 직사각형)
+  if (b !== hero) {
+    const lb = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.06), std(0xfafafa, 0.9));
+    lb.position.set(b.x + b.w * 0.18, b.y + b.h * 0.12, b.front + 0.001); rack.add(lb);
+  }
+}
+
+// ───────── 주인공 라벨 (종이 질감은 셰이더로: 확대할수록 섬유가 보임) ─────────
+const LABEL_W = 0.1, LABEL_H = 0.064;
+// 상자 가운데 테이프(폭 약 8 cm)를 피해 오른쪽에 붙인다
+const labelCenter = new THREE.Vector3(hero.x + 0.105, hero.y + 0.04, hero.front + 0.0016);
+const paperVert = `
+  varying vec3 vW; varying vec3 vN; varying vec2 vUv;
+  void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position,1.); vW = w.xyz; vN = normalize(mat3(modelMatrix)*normal);
+  gl_Position = projectionMatrix * viewMatrix * w; }`;
+const noiseGLSL = `
+  float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
+  float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+    return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
+  float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }
+  // 섬유: 한 방향으로 늘린 노이즈
+  float fibers(vec2 p){ return fbm(vec2(p.x*0.35, p.y*3.0)) * .6 + fbm(vec2(p.y*0.4+3.1, p.x*2.6)) * .4; }`;
+function paperMaterial(base, inkMix = 0) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uBase: { value: new THREE.Color(base) }, uLight: { value: sun.position.clone().normalize() }, uInk: { value: inkMix } },
+    vertexShader: paperVert,
+    fragmentShader: `
+      uniform vec3 uBase; uniform vec3 uLight; uniform float uInk;
+      varying vec3 vW; varying vec3 vN; varying vec2 vUv;
+      ${noiseGLSL}
+      void main(){
+        vec2 p = vW.xy;
+        float f1 = fibers(p*9000.);   // 0.1 mm 섬유
+        float f2 = fbm(p*1400.);      // 얼룩
+        float f3 = fibers(p*60000.);  // 0.02 mm
+        vec3 c = uBase;
+        if (uInk < .5) { c *= 1. - .07*f1 - .04*f2 - .05*f3; }
+        else { c = mix(c, c + vec3(.07), f1*.6 + f3*.5); }   // 잉크도 종이결을 따라 얼룩
+        float diff = max(dot(normalize(vN), uLight), 0.) * .55 + .6;
+        gl_FragColor = vec4(c*diff, 1.);
+        #include <colorspace_fragment>
+      }`,
+  });
+}
+const labelGroup = new THREE.Group(); labelGroup.position.copy(labelCenter); rack.add(labelGroup);
+const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), paperMaterial(0xfbfbfb));
+labelGroup.add(labelMesh);
+
+// 라벨 위 글자 (위치 코드·수량) — 캔버스 텍스처
+function textCanvas(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16; return t; }
+const headTex = textCanvas(2048, 400, (g, w, h) => {
+  g.fillStyle = '#18181b'; g.font = '800 200px "Noto Sans KR"'; g.textBaseline = 'middle'; g.fillText('A-0312', 40, h / 2);
+  g.font = '700 120px "JetBrains Mono"'; g.textAlign = 'right'; g.fillText('24 EA', w - 40, h / 2);
+});
+const head = new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W * 0.8, LABEL_W * 0.8 * 400 / 2048), new THREE.MeshBasicMaterial({ map: headTex, transparent: true, toneMapped: false }));
+head.position.set(0, LABEL_H * 0.355, 0.00005); labelGroup.add(head);
+
+// 바코드 막대: 실제 기하 (모듈 0.33 mm, 막대 높이 22.85 mm 의 80%)
+const MOD = 0.00033;
+const BAR_H = 0.0229 * 0.8, GUARD_EXT = 0.0016;
+const barcodeCenter = new THREE.Vector3(0, -0.004, 0.00006);
+const barsGroup = new THREE.Group(); barsGroup.position.copy(barcodeCenter); labelGroup.add(barsGroup);
+const inkMat = paperMaterial(0x141416, 1);
+{
+  let i = 0;
+  while (i < 95) {
+    if (MODULES[i] === '1') {
+      let j = i; while (j < 95 && MODULES[j] === '1') j++;
+      const guard = GUARD.has(i);
+      const hh = BAR_H + (guard ? GUARD_EXT : 0);
+      const bar = new THREE.Mesh(new THREE.PlaneGeometry((j - i) * MOD, hh), inkMat);
+      bar.position.set((i + (j - i) / 2 - 47.5) * MOD, (BAR_H - hh) / 2, 0);
+      barsGroup.add(bar);
+      i = j;
+    } else i++;
+  }
+}
+// 바코드 아래 숫자 (스캔 후 한 자리씩 강조색)
+const digitsCanvas = document.createElement('canvas'); digitsCanvas.width = 2400; digitsCanvas.height = 240;
+const digitsTex = new THREE.CanvasTexture(digitsCanvas); digitsTex.colorSpace = THREE.SRGBColorSpace; digitsTex.anisotropy = 16;
+const DIG_W = 95 * MOD * 1.08;
+const digits = new THREE.Mesh(new THREE.PlaneGeometry(DIG_W, DIG_W * 240 / 2400), new THREE.MeshBasicMaterial({ map: digitsTex, transparent: true, toneMapped: false }));
+digits.position.set(barcodeCenter.x - 0.0004, barcodeCenter.y - BAR_H / 2 - 0.0021, 0.00006); labelGroup.add(digits);
+function drawDigits(lit) { // lit: 0..13 켜진 자리 수 (소수 = 켜지는 중)
+  const g = digitsCanvas.getContext('2d'); g.clearRect(0, 0, 2400, 240);
+  g.font = '500 190px "JetBrains Mono"'; g.textBaseline = 'middle'; g.textAlign = 'center';
+  for (let k = 0; k < 13; k++) {
+    const x = k === 0 ? 70 : (k <= 6 ? 220 + (k - 1) * 165 : 1290 + (k - 7) * 165);
+    const a = Math.min(1, Math.max(0, lit - k));
+    g.fillStyle = a > 0 ? `rgba(242,178,48,${0.35 + 0.65 * a})` : '#18181b';
+    g.fillText(CODE[k], x, 125);
+    if (a > 0) { g.fillStyle = `rgba(24,24,27,${1 - a})`; g.fillText(CODE[k], x, 125); }
+  }
+  digitsTex.needsUpdate = true;
+}
+
+// 스캔 빛: 막대 위를 지나가는 얇은 선 (강조색, 블룸)
+const beamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.honey).multiplyScalar(6), transparent: true, opacity: 0, toneMapped: false, depthWrite: false, blending: THREE.AdditiveBlending });
+const beam = new THREE.Mesh(new THREE.PlaneGeometry(0.00012, BAR_H * 1.25), beamMat);
+beam.position.set(0, 0, 0.0001); barsGroup.add(beam);
+const glowMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.honey).multiplyScalar(1.6), transparent: true, opacity: 0, toneMapped: false, depthWrite: false, blending: THREE.AdditiveBlending });
+const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.0012, BAR_H * 1.3), glowMat);
+glow.position.set(0, 0, 0.00009); barsGroup.add(glow);
+
+// ───────── 책상과 모니터 (끝 장면을 첫 장면에 심어 둔다) ─────────
+const desk = new THREE.Group(); scene.add(desk);
+desk.position.set(1.3, 0, 2.35); desk.rotation.y = -0.38;
+const top = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.04, 0.7), std(0xdedee2, 0.7));
+top.position.set(0, 0.74, 0); top.castShadow = true; top.receiveShadow = true; desk.add(top);
+for (const [x, z] of [[-0.6, -0.3], [0.6, -0.3], [-0.6, 0.3], [0.6, 0.3]]) {
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.74, 0.04), steel); leg.position.set(x, 0.37, z); desk.add(leg);
+}
+const SCREEN_W = 0.6, SCREEN_H = 0.375;
+const mon = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.03, SCREEN_H + 0.03, 0.025), std(C.ink, 0.4, 0.2));
+mon.position.set(0, 1.08, -0.15); mon.castShadow = true; desk.add(mon);
+const stand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.04), std(C.ink, 0.4)); stand.position.set(0, 0.9, -0.18); desk.add(stand);
+const screenCanvas = document.createElement('canvas'); screenCanvas.width = 1600; screenCanvas.height = 1000;
+const screenTex = new THREE.CanvasTexture(screenCanvas); screenTex.colorSpace = THREE.SRGBColorSpace; screenTex.anisotropy = 16;
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }));
+screen.position.set(0, 1.08, -0.137); desk.add(screen);
+const screenCenter = new THREE.Vector3(); screen.getWorldPosition(screenCenter);
+const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(desk.quaternion).normalize();
+
+const PREV = ['8801234003032', 'BOX-A0312-07', '8801234002028', '8801234001014', '8801234006064'];
+function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+// 세션 화면 (사이트 세션 페이지를 단순화). rowIn: 0..1 새 줄이 들어오는 정도, hl: 강조 정도, after: 새 줄 포함 여부
+function drawScreen(rowIn, hl, count) {
+  const g = screenCanvas.getContext('2d'), w = 1600, h = 1000;
+  g.fillStyle = '#f4f4f5'; g.fillRect(0, 0, w, h);
+  // 창 틀
+  g.fillStyle = '#ffffff'; rr(g, 40, 40, w - 80, h - 80, 36); g.fill();
+  g.fillStyle = '#e4e4e7'; g.fillRect(40, 110, w - 80, 2);
+  for (let k = 0; k < 3; k++) { g.fillStyle = '#e4e4e7'; g.beginPath(); g.arc(90 + k * 34, 76, 11, 0, 7); g.fill(); }
+  g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText('scanview.app/session/A3F9K2', 210, 87);
+  g.fillStyle = '#18181b'; g.font = '800 46px "Noto Sans KR"'; g.fillText('A-0312', 90, 190);
+  // 마지막 스캔 카드
+  g.fillStyle = '#eaeaec'; rr(g, 90, 230, w - 180, 210, 26); g.fill();
+  const latest = rowIn > 0.5 ? CODE : PREV[0];
+  g.fillStyle = '#52525b'; g.font = '700 28px "Noto Sans KR"'; g.fillText('●', 120, 285);
+  g.fillStyle = '#18181b'; g.font = '700 92px "JetBrains Mono"'; g.fillText(latest, 120, 390);
+  g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(`${count}`, w - 230, 285);
+  // 표
+  const rows = rowIn > 0 ? [CODE, ...PREV] : PREV;
+  const y0 = 480, rh = 86;
+  g.fillStyle = '#fafafa'; rr(g, 90, y0, w - 180, 60, 14); g.fill();
+  g.fillStyle = '#71717a'; g.font = '700 26px "Noto Sans KR"'; g.fillText('#', 120, y0 + 40); g.fillText('CODE', 230, y0 + 40); g.fillText('TIME', w - 330, y0 + 40);
+  g.save(); g.beginPath(); g.rect(90, y0 + 60, w - 180, h - y0 - 120); g.clip();
+  const shift = rowIn > 0 ? (1 - easeOut(rowIn)) * -rh : 0;
+  rows.forEach((code, k) => {
+    const y = y0 + 60 + k * rh + shift;
+    if (k === 0 && rowIn > 0) { g.fillStyle = `rgba(242,178,48,${0.28 * hl})`; g.fillRect(90, y, w - 180, rh); }
+    g.fillStyle = '#e4e4e7'; g.fillRect(90, y + rh - 2, w - 180, 2);
+    g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(String(count - k), 120, y + 54);
+    g.fillStyle = '#18181b'; g.font = '700 36px "JetBrains Mono"'; g.fillText(code, 230, y + 56);
+    g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(`09:41:${String(14 - k * 3).padStart(2, '0')}`, w - 330, y + 54);
+  });
+  g.restore();
+  screenTex.needsUpdate = true;
+}
+
+// ───────── 라벨 → 모니터 빛 (데이터 전송) ─────────
+const labelWorld = new THREE.Vector3(); labelGroup.localToWorld(labelWorld.copy(barcodeCenter));
+const ribbonCurve = new THREE.CatmullRomCurve3([
+  labelWorld.clone().add(new THREE.Vector3(0, 0, 0.002)),
+  labelWorld.clone().add(new THREE.Vector3(0.05, 0.25, 0.35)),
+  labelWorld.clone().lerp(screenCenter, 0.5).add(new THREE.Vector3(0, 0.45, 0)),
+  screenCenter.clone().add(screenNormal.clone().multiplyScalar(0.35)).add(new THREE.Vector3(0, 0.08, 0)),
+  screenCenter.clone().add(screenNormal.clone().multiplyScalar(0.01)),
+]);
+const RIB_SEG = 400;
+const ribbonGeo = new THREE.TubeGeometry(ribbonCurve, RIB_SEG, 0.0035, 8, false);
+const ribbonMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.honey).multiplyScalar(3.2), toneMapped: false, transparent: true, opacity: 1 });
+const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat); scene.add(ribbon);
+const head3 = new THREE.Mesh(new THREE.SphereGeometry(0.012, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(C.honey).multiplyScalar(5), toneMapped: false }));
+scene.add(head3);
+function setRibbon(a, b) { // a..b 구간만 보이게 (0..1)
+  const per = 8 * 6;
+  const start = Math.floor(a * RIB_SEG) * per, end = Math.floor(b * RIB_SEG) * per;
+  ribbonGeo.setDrawRange(start, Math.max(0, end - start));
+  ribbon.visible = end > start;
+  head3.visible = b > 0.001 && b < 0.999 && a < 0.999;
+  ribbonCurve.getPointAt(Math.min(0.999, b), head3.position);
+}
+
+// ───────── 후처리 ─────────
+const composer = new EffectComposer(renderer);
+composer.setSize(W * SS, H * SS);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(W * SS, H * SS), 0.55, 0.45, 1.0);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ───────── 시간 → 카메라 ─────────
+const ease = (u) => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+function easeOut(u) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, u)), 3); }
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const barcodeWorld = labelWorld.clone();
+const moduleWorld = barcodeWorld.clone().add(V(-0.0062, 0.002, 0));
+const digitsWorld = barcodeWorld.clone().add(V(0, -0.006, 0));
+const midWorld = labelWorld.clone().lerp(screenCenter, 0.5).add(V(0, 0.2, 0));
+const wideTarget = V(0.72, 1.02, 1.15);
+// 키: [시각, 바라보는 점, 카메라 방향(점→카메라), 거리]
+const KEYS = [
+  [0.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
+  [2.4, V(0.35, 1.02, 0.6), V(-0.03, 0.12, 1), 3.4],
+  [4.4, labelCenter.clone(), V(0.02, 0.06, 1), 0.62],
+  [5.9, barcodeWorld, V(0, 0.02, 1), 0.085],
+  [7.4, moduleWorld, V(0, 0, 1), 0.0105],
+  [9.4, barcodeWorld.clone().add(V(0, 0.001, 0)), V(0.01, 0, 1), 0.034],
+  [11.0, digitsWorld, V(0, 0.01, 1), 0.075],
+  [13.4, midWorld, V(0.9, 0.35, 0.6), 1.45],
+  [15.3, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
+  [18.0, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
+  [22.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
+];
+function cameraAt(t) {
+  let k = 0; while (k < KEYS.length - 2 && t >= KEYS[k + 1][0]) k++;
+  const [t0, p0, d0, r0] = KEYS[k], [t1, p1, d1, r1] = KEYS[k + 1];
+  const u = ease(Math.min(1, Math.max(0, (t - t0) / (t1 - t0))));
+  const logR = Math.log(r0) + (Math.log(r1) - Math.log(r0)) * u;
+  const r = Math.exp(logR);
+  // 줌이 깊어질수록 바라보는 점이 먼저 따라가게 (u 를 앞당김)
+  const uT = r1 < r0 ? Math.min(1, u * 1.25) : u;
+  const target = p0.clone().lerp(p1, uT);
+  const dir = d0.clone().normalize().lerp(d1.clone().normalize(), u).normalize();
+  return { target, pos: target.clone().add(dir.multiplyScalar(r)), r };
+}
+
+// ───────── 머리글·눈금자 (두 언어) ─────────
+const CH = [
+  { t: 0.0, ko: ['창고', '선반 하나에 상자 수십 개'], en: ['The warehouse', 'Dozens of boxes on one rack'] },
+  { t: 2.6, ko: ['선반', '1.2 m 안에 상자 다섯 개'], en: ['The shelf', 'Five boxes in 1.2 m'] },
+  { t: 4.6, ko: ['라벨', 'EAN-13, 숫자 13자리'], en: ['The label', 'EAN-13, thirteen digits'] },
+  { t: 6.1, ko: ['바코드', '막대와 빈칸, 모듈 95칸'], en: ['The barcode', 'Bars and spaces, 95 modules'] },
+  { t: 7.5, ko: ['모듈 하나', '폭 0.33 mm (100% 크기)'], en: ['One module', '0.33 mm wide at 100% size'] },
+  { t: 8.2, ko: ['스캔', '카메라가 막대 폭을 숫자로 읽어요'], en: ['The scan', 'The camera reads bar widths as digits'] },
+  { t: 10.2, ko: ['숫자', '8801234001014'], en: ['The digits', '8801234001014'] },
+  { t: 12.2, ko: ['전송', '코드와 시각만 보내요'], en: ['Sent', 'Only the code and the time'] },
+  { t: 15.4, ko: ['PC 화면', '찍으면 바로 표에 한 줄'], en: ['The PC', 'A new row as soon as you scan'] },
+  { t: 19.0, ko: ['다시 창고', 'scanview.app'], en: ['Back to the floor', 'scanview.app'] },
+];
+const out = document.getElementById('out');
+const octx = out.getContext('2d');
+function fmtLen(m) {
+  if (m >= 1) return `${m.toFixed(m >= 10 ? 0 : 1)} m`;
+  if (m >= 0.01) return `${(m * 100).toFixed(m >= 0.1 ? 0 : 1)} cm`;
+  return `${(m * 1000).toFixed(m >= 0.001 ? 1 : 2)} mm`;
+}
+function drawHud(g, t, lang, fieldW) {
+  let ch = CH[0]; for (const c of CH) if (t >= c.t) ch = c;
+  const fade = Math.min(1, (t - ch.t) / 0.5);
+  const [title, fact] = ch[lang];
+  g.save();
+  // 글자가 밝은 장면 위에서도 읽히도록 위·아래에 옅은 종이색 그러데이션
+  let gr = g.createLinearGradient(0, 0, 0, 300);
+  gr.addColorStop(0, 'rgba(244,244,245,.88)'); gr.addColorStop(1, 'rgba(244,244,245,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, W, 300);
+  gr = g.createLinearGradient(0, H - 200, 0, H);
+  gr.addColorStop(0, 'rgba(244,244,245,0)'); gr.addColorStop(1, 'rgba(244,244,245,.85)');
+  g.fillStyle = gr; g.fillRect(0, H - 200, W, 200);
+  g.globalAlpha = 0.9;
+  // 위 왼쪽: 장 번호·제목·사실
+  const idx = CH.indexOf(ch) + 1;
+  g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 22px "JetBrains Mono"'; g.fillText(`${String(idx).padStart(2, '0')} / ${String(CH.length).padStart(2, '0')}`, 64, 92);
+  g.globalAlpha = 0.9 * fade;
+  g.fillStyle = '#18181b'; g.font = `800 ${lang === 'ko' ? 52 : 50}px "Noto Sans KR"`; g.fillText(title, 64, 152);
+  g.fillStyle = '#52525b'; g.font = `500 ${lang === 'ko' ? 28 : 27}px "Noto Sans KR"`; g.fillText(fact, 64, 196);
+  g.globalAlpha = 0.85;
+  // 오른쪽: 로그 눈금자 10 m ~ 1 mm
+  const x = W - 70, yTop = 260, yBot = H - 260;
+  const lmax = Math.log10(10), lmin = Math.log10(0.001);
+  const Y = (m) => yTop + (lmax - Math.log10(m)) / (lmax - lmin) * (yBot - yTop);
+  g.strokeStyle = 'rgba(24,24,27,.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(x, yTop); g.lineTo(x, yBot); g.stroke();
+  g.font = '500 20px "JetBrains Mono"'; g.textAlign = 'right';
+  for (const [m, lab] of [[10, '10 m'], [1, '1 m'], [0.1, '10 cm'], [0.01, '1 cm'], [0.001, '1 mm']]) {
+    const y = Y(m); g.fillStyle = 'rgba(24,24,27,.5)'; g.fillRect(x - 14, y - 1, 14, 2); g.fillText(lab, x - 22, y + 7);
+  }
+  const ym = Y(Math.min(10, Math.max(0.001, fieldW)));
+  g.fillStyle = '#f2b230'; g.beginPath(); g.moveTo(x + 4, ym); g.lineTo(x + 18, ym - 9); g.lineTo(x + 18, ym + 9); g.closePath(); g.fill();
+  // 아래 왼쪽: 지금 화면 너비
+  g.textAlign = 'left'; g.globalAlpha = 0.9;
+  g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 20px "JetBrains Mono"'; g.fillText(lang === 'ko' ? '화면 너비' : 'FIELD OF VIEW', 64, H - 104);
+  g.fillStyle = '#18181b'; g.font = '700 40px "JetBrains Mono"'; g.fillText(fmtLen(fieldW), 64, H - 60);
+  g.textAlign = 'right'; g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 22px "JetBrains Mono"'; g.fillText('SCANVIEW', W - 64, H - 60);
+  g.restore();
+}
+
+// ───────── 한 장면 ─────────
+function setState(t) {
+  // 스캔 빛 7.8~9.6 s
+  const sb = (t - 7.9) / 1.7;
+  beamMat.opacity = sb > 0 && sb < 1 ? Math.sin(Math.PI * sb) : 0;
+  glowMat.opacity = beamMat.opacity * 0.6;
+  beam.position.x = glow.position.x = (-47.5 + 95 * Math.min(1, Math.max(0, sb))) * MOD;
+  // 숫자 켜짐 9.8~11.4 s, 21.0~ 에서 꺼짐 (반복을 위해)
+  const lit = t < 9.8 ? 0 : t < 21.0 ? Math.min(13, (t - 9.8) / 1.6 * 13) : 13 * (1 - Math.min(1, (t - 21.0) / 0.8));
+  drawDigits(lit);
+  // 빛: 11.6~14.6 s 앞쪽이 나가고, 14.6~16 s 뒤쪽이 따라간다
+  const a = Math.min(1, Math.max(0, (t - 14.6) / 1.4));
+  const b = Math.min(1, Math.max(0, (t - 11.6) / 3.0));
+  setRibbon(ease(a), ease(b));
+  // 모니터: 15.6 s 에 새 줄, 강조는 18 s 부터 사라짐. 20~21.5 s (멀리서) 원래 상태로 되돌림
+  const rowIn = t < 15.6 ? 0 : t < 20 ? Math.min(1, (t - 15.6) / 0.6) : t < 21.5 ? 1 : 0;
+  const hl = t < 15.6 ? 0 : t < 18 ? 1 : Math.max(0, 1 - (t - 18) / 1.5);
+  drawScreen(rowIn, hl, rowIn > 0 ? 129 : 128);
+  // 카메라
+  const cam = cameraAt(t);
+  camera.position.copy(cam.pos); camera.lookAt(cam.target);
+  camera.near = Math.max(0.00005, cam.r * 0.05); camera.far = Math.max(40, cam.r * 50); camera.updateProjectionMatrix();
+  const fieldW = 2 * cam.r * Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * (W / H);
+  return fieldW;
+}
+
+// 서브프레임 누적: 2D 캔버스에 평균 (180° 셔터 = 프레임 간격의 절반에 걸쳐)
+const acc = document.createElement('canvas'); acc.width = W; acc.height = H;
+const actx = acc.getContext('2d');
+function renderAt(t, sub = SUB) {
+  let fieldW = 0;
+  actx.globalCompositeOperation = 'source-over';
+  for (let s = 0; s < sub; s++) {
+    const ts = ((t + (s / sub) * (0.5 / FPS)) % DURATION + DURATION) % DURATION;
+    fieldW = setState(ts);
+    composer.render();
+    actx.globalAlpha = 1 / (s + 1);
+    actx.drawImage(renderer.domElement, 0, 0, W, H);
+  }
+  actx.globalAlpha = 1;
+  return fieldW;
+}
+function compose(t, lang, fieldW) {
+  octx.globalAlpha = 1; octx.drawImage(acc, 0, 0);
+  // 필름 그레인 (시드 고정)
+  drawHud(octx, t, lang, fieldW);
+}
+
+// 렌더러용: 프레임 i → 두 언어 JPEG
+window.renderFrame = (i) => {
+  const t = i / FPS;
+  const fieldW = renderAt(t);
+  compose(t, 'ko', fieldW); const ko = out.toDataURL('image/jpeg', 0.94);
+  compose(t, 'en', fieldW); const en = out.toDataURL('image/jpeg', 0.94);
+  return { ko, en };
+};
+window.FRAMES = DURATION * FPS;
+
+await document.fonts.load('800 52px "Noto Sans KR"'); await document.fonts.load('500 28px "Noto Sans KR"');
+await document.fonts.load('700 40px "JetBrains Mono"'); await document.fonts.load('500 20px "JetBrains Mono"');
+await document.fonts.ready;
+headTex.image.getContext('2d'); // 글꼴 로드 후 라벨 글자 다시 그림
+{ const g = headTex.image.getContext('2d'); g.clearRect(0, 0, 2048, 400); g.textAlign = 'left'; g.fillStyle = '#18181b'; g.font = '800 200px "Noto Sans KR"'; g.textBaseline = 'middle'; g.fillText('A-0312', 40, 200); g.font = '700 120px "JetBrains Mono"'; g.textAlign = 'right'; g.fillText('24 EA', 2008, 200); headTex.needsUpdate = true; }
+
+const q = new URLSearchParams(location.search);
+const lang = q.get('lang') || 'ko';
+if (q.has('t')) { const t = Number(q.get('t')); const f = renderAt(t, Number(q.get('sub') || SUB)); compose(t, lang, f); }
+window.READY = true;
+</script>
+</body>
+</html>

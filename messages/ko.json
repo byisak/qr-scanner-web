@@ -774,12 +774,7 @@
     "help": "이 도움말 열기"
   },
   "landing": {
-    "demoSession": "1층 입고 검수",
-    "demoNow": "지금",
-    "demoToday": "오늘 {count}건",
-    "demoCodes": "코드 {count}종",
-    "demoSaved": "저장됨",
-    "demoAlt": "폰으로 바코드를 찍으면 PC 브라우저의 세션 표에 바로 한 줄씩 추가되는 장면",
+    "demoAlt": "창고 선반의 상자 라벨에서 바코드 막대 하나까지 들어갔다가, 스캔한 숫자가 빛을 따라 PC로 가서 세션 표에 새 줄로 뜨는 영상",
     "typesTitle": "인식하는 바코드 종류"
   }
 }
