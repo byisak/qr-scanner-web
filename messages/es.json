@@ -28,7 +28,8 @@
     "logout": "Cerrar Sesión",
     "menu": "Menú",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "allFeatures": "Ver todas las funciones"
   },
   "home": {
     "heroTitle1": "Del escaneo masivo a tu PC",

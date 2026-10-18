@@ -27,12 +27,14 @@ const USE_CASES = [
 ] as const
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { data } = getFeaturesLocale(await getLocale())
+  const { data, locale } = getFeaturesLocale(await getLocale())
+  const image = `https://scanview.app/api/og/features?lang=${locale}`
   return {
     title: data.meta.title,
     description: data.meta.description,
     alternates: { canonical: 'https://scanview.app/features' },
-    openGraph: { title: data.meta.title, description: data.meta.description, url: 'https://scanview.app/features', type: 'website' },
+    openGraph: { title: data.meta.title, description: data.meta.description, url: 'https://scanview.app/features', type: 'website', images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: 'summary_large_image', title: data.meta.title, description: data.meta.description, images: [image] },
   }
 }
 
@@ -43,8 +45,21 @@ export default async function FeaturesPage() {
   const items = listFeatures(data)
   const highlights = items.filter((i) => i.content.highlight)
 
+  const appJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'QR Scanner Pro',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'iOS, Android',
+    url: 'https://scanview.app/features',
+    description: data.meta.description,
+    featureList: items.map((i) => i.content.title),
+    installUrl: [APP_STORE_URL, PLAY_STORE_URL],
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd).replace(/</g, '\\u003c') }} />
       <SiteHeader active="features" />
       <main id="main">
         {/* 첫 화면 */}

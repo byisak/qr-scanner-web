@@ -28,7 +28,8 @@
     "logout": "로그아웃",
     "menu": "메뉴",
     "openMenu": "메뉴 열기",
-    "closeMenu": "메뉴 닫기"
+    "closeMenu": "메뉴 닫기",
+    "allFeatures": "모든 기능 보기"
   },
   "home": {
     "heroTitle1": "대량 스캔부터 PC 전송까지",

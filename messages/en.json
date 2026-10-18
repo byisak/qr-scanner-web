@@ -28,7 +28,8 @@
     "logout": "Logout",
     "menu": "Menu",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "allFeatures": "See all features"
   },
   "home": {
     "heroTitle1": "From Bulk Scanning to Your PC",
@@ -724,7 +725,7 @@
     "last": "Last scan",
     "status": "Status",
     "duplicate": "Duplicate",
-    "rapid": "{count} quick rescans",
+    "rapid": "{count, plural, one {# quick rescan} other {# quick rescans}}",
     "lastAt": "Last {time}",
     "codesOf": "{codes} codes · {scans} scans",
     "exportScopeSummary": "Export: totals for {count} codes",

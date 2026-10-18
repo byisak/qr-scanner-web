@@ -28,7 +28,8 @@
     "logout": "ログアウト",
     "menu": "メニュー",
     "openMenu": "メニューを開く",
-    "closeMenu": "メニューを閉じる"
+    "closeMenu": "メニューを閉じる",
+    "allFeatures": "すべての機能を見る"
   },
   "home": {
     "heroTitle1": "大量スキャンからPC転送まで",
