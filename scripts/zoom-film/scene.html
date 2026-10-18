@@ -316,7 +316,7 @@ const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(desk.quaternion)
 const PREV = ['8801234003032', 'BOX-A0312-07', '8801234002028', '8801234001014', '8801234006064'];
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
 // 세션 화면 (사이트 세션 페이지를 단순화). rowIn: 0..1 새 줄이 들어오는 정도, hl: 강조 정도, after: 새 줄 포함 여부
-function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, hhmm = '09:41', live = 0 } = {}) {
+function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, hhmm = '09:41', live = 0, xl = 0 } = {}) {
   const g = canvas.getContext('2d'), w = 1600, h = 1000;
   g.fillStyle = '#f4f4f5'; g.fillRect(0, 0, w, h);
   // 창 틀
@@ -352,6 +352,45 @@ function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, 
     g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText(`${hhmm}:${String(14 - k * 3).padStart(2, '0')}`, w - 330, y + 54);
   });
   g.restore();
+  // 엑셀 내보내기 단추 (창 오른쪽 위) — 누르는 순간 금색 테두리
+  const XT = LANG === 'en' ? { btn: 'Export to Excel', saved: 'Saved', file: 'scan_A-0312.xlsx' } : { btn: '엑셀 내보내기', saved: '저장됨', file: 'scan_A-0312.xlsx' };
+  g.font = '700 30px "Noto Sans KR"'; const bw = g.measureText(XT.btn).width + 70, bx = w - 90 - bw, by = 160;
+  const press = xl > 0 && xl < 0.22;
+  g.fillStyle = press ? '#fff6dd' : '#ffffff'; rr(g, bx, by, bw, 58, 14); g.fill();
+  g.lineWidth = press ? 5 : 2; g.strokeStyle = press ? '#f2b230' : '#d4d4d8'; rr(g, bx, by, bw, 58, 14); g.stroke();
+  g.fillStyle = '#18181b'; g.textAlign = 'left'; g.fillText(XT.btn, bx + 50, by + 40);
+  g.strokeStyle = '#18181b'; g.lineWidth = 3; g.beginPath(); g.moveTo(bx + 30, by + 16); g.lineTo(bx + 30, by + 38); g.moveTo(bx + 21, by + 30); g.lineTo(bx + 30, by + 39); g.lineTo(bx + 39, by + 30); g.stroke();
+  if (xl > 0) {
+    const e = (u) => { u = Math.min(1, Math.max(0, u)); return u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+    // 표가 접혀 문서 아이콘이 된다 (0.15~0.55), 아래 받은 파일 칸으로 내려간다 (0.55~0.85)
+    const fold = e((xl - 0.15) / 0.4), drop = e((xl - 0.55) / 0.3);
+    g.fillStyle = `rgba(255,255,255,${0.88 * fold})`; g.fillRect(90, y0, w - 180, h - y0 - 60);
+    const iw = 150 * (0.4 + 0.6 * fold), ih = iw * 1.25, cx = w / 2, cy = y0 + 200 + drop * 90;
+    if (fold > 0.02) {
+      g.save(); g.globalAlpha = Math.min(1, fold * 2) * (1 - 0.4 * drop);
+      g.fillStyle = '#ffffff'; g.strokeStyle = '#18181b'; g.lineWidth = 4;
+      g.beginPath(); g.moveTo(cx - iw / 2, cy - ih / 2); g.lineTo(cx + iw / 2 - iw * 0.25, cy - ih / 2); g.lineTo(cx + iw / 2, cy - ih / 2 + iw * 0.25); g.lineTo(cx + iw / 2, cy + ih / 2); g.lineTo(cx - iw / 2, cy + ih / 2); g.closePath(); g.fill(); g.stroke();
+      g.lineWidth = 2; g.strokeStyle = '#a1a1aa';
+      for (let k = 1; k < 4; k++) { g.beginPath(); g.moveTo(cx - iw * 0.36, cy - ih * 0.12 + k * ih * 0.13); g.lineTo(cx + iw * 0.36, cy - ih * 0.12 + k * ih * 0.13); g.stroke(); }
+      g.beginPath(); g.moveTo(cx - iw * 0.05, cy - ih * 0.05); g.lineTo(cx - iw * 0.05, cy + ih * 0.38); g.stroke();
+      g.fillStyle = '#1d7a45'; rr(g, cx - iw * 0.42, cy - ih * 0.36, iw * 0.84, ih * 0.2, 6); g.fill();
+      g.fillStyle = '#ffffff'; g.font = `800 ${Math.round(iw * 0.17)}px "JetBrains Mono"`; g.textAlign = 'center'; g.fillText('XLSX', cx, cy - ih * 0.215);
+      g.restore();
+    }
+    // 받은 파일 칸 (창 아래)
+    const ca = Math.min(1, Math.max(0, (xl - 0.7) / 0.15));
+    if (ca > 0) {
+      g.save(); g.globalAlpha = ca; g.textAlign = 'left';
+      const cw = 760, cxl = w / 2 - cw / 2, cyl = h - 330;
+      g.fillStyle = '#18181b'; rr(g, cxl, cyl, cw, 92, 46); g.fill();
+      g.fillStyle = '#f2b230'; g.beginPath(); g.arc(cxl + 50, cyl + 46, 22, 0, 7); g.fill();
+      g.strokeStyle = '#18181b'; g.lineWidth = 6; g.beginPath(); g.moveTo(cxl + 39, cyl + 46); g.lineTo(cxl + 47, cyl + 55); g.lineTo(cxl + 62, cyl + 37); g.stroke();
+      g.fillStyle = '#fafafa'; g.font = '700 34px "JetBrains Mono"'; g.fillText(XT.file, cxl + 92, cyl + 58);
+      g.fillStyle = '#a1a1aa'; g.font = '700 30px "Noto Sans KR"'; g.textAlign = 'right'; g.fillText(XT.saved, cxl + cw - 40, cyl + 57);
+      g.restore();
+    }
+  }
+  g.textAlign = 'left';
   tex.needsUpdate = true;
 }
 
@@ -755,7 +794,7 @@ const GALT = (WIDE ? 6.2 : 4.3) * 1.2, GALT2 = (WIDE ? 5.8 : 4.0) * 1.2; // 가�
 const GKEYS = [
   [22.9, SEOUL, 1e-4], [23.6, SEOUL, 3e-4], [24.6, SEOUL, 0.05],
   [26.6, MID, GALT], [28.0, MID.clone().lerp(LA.clone().normalize(), 0.12).normalize(), GALT2], [29.7, LA, 0.0015],
-  [30.0, LA, 0.001], [33.6, LA, 0.001], [33.9, LA, 0.0015], [35.3, MID, GALT], [36.8, SEOUL, 0.0015], [37.2, SEOUL, 0.001],
+  [30.0, LA, 0.001], [34.2, LA, 0.001], [34.5, LA, 0.0015], [35.7, MID, GALT], [37.0, SEOUL, 0.0015], [37.3, SEOUL, 0.001],
 ];
 function camGAt(t) {
   let k = 0; while (k < GKEYS.length - 2 && t >= GKEYS[k + 1][0]) k++;
@@ -833,8 +872,11 @@ const downHead = new THREE.Mesh(new THREE.SphereGeometry(0.012, 24, 16), head3.m
 const OKEYS = [
   [29.4, V3(0, 0, 0.3), V3(0.02, 1, 0.05), 22],
   [31.0, screenCenterO.clone().add(V3(0, 0.1, 0)), V3(0.05, 0.04, 1), 1.6],
-  [33.0, screenCenterO.clone().add(V3(0, 0.1, 0)), V3(0.08, 0.05, 1), 1.48],
-  [34.2, V3(0, 0, 0.3), V3(0.02, 1, 0.05), 22],
+  [32.0, screenCenterO.clone().add(V3(0, 0.08, 0)), V3(0.07, 0.05, 1), 1.5],
+  // 엑셀 내보내기를 보도록 모니터 쪽으로 다가간다 (ZK 를 곱해도 가깝게)
+  [32.6, screenCenterO.clone().add(V3(0, -0.01, 0)), V3(0.06, 0.04, 1), (WIDE ? 1.02 : 1.3) / ZK],
+  [33.8, screenCenterO.clone().add(V3(0, -0.01, 0)), V3(0.08, 0.05, 1), (WIDE ? 0.98 : 1.25) / ZK],
+  [34.8, V3(0, 0, 0.3), V3(0.02, 1, 0.05), 22],
 ];
 for (const key of OKEYS) key[3] *= ZK;
 function setStateO(t) {
@@ -844,7 +886,7 @@ function setStateO(t) {
   downHead.visible = b > 0 && b < 1; downCurve.getPointAt(Math.min(0.999, ease(b)), downHead.position);
   downHead.scale.setScalar(1 + Math.max(0, downHead.position.y - 1) * 0.35);
   const rowIn = t < 30.9 ? 0 : Math.min(1, (t - 30.9) / 0.8);
-  drawScreen(rowIn, t < 32.6 ? 1 : Math.max(0, 1 - (t - 32.6) / 1.2), rowIn > 0 ? 131 : 128, { canvas: screenCanvasO, tex: screenTexO, hhmm: '17:41', live: t });
+  drawScreen(rowIn, t < 31.8 ? 1 : Math.max(0, 1 - (t - 31.8) / 0.6), rowIn > 0 ? 131 : 128, { canvas: screenCanvasO, tex: screenTexO, hhmm: '17:41', live: t, xl: Math.min(1, Math.max(0, (t - 32.0) / 1.6)) * (t < 35 ? 1 : 0) });
   const c = cameraAt(t, OKEYS); camO.position.copy(c.pos); camO.lookAt(c.target);
   camO.near = Math.max(0.005, c.r * 0.02); camO.updateProjectionMatrix();
 }
@@ -886,10 +928,10 @@ const KEYS = [
   [5.6, aim(heroCode), POV_DIR, POV_D],
   [9.9, aim(heroCode), POV_DIR, POV_D * 0.96],
   // 연속 스캔: 옆 상자로 훑고 지나가며 차례로 읽는다
-  [10.6, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 1.4],
+  [10.6, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 2.7], // 상자 사이 틈만 보이지 않게 크게 물러나 두 라벨이 함께 보이게
   [11.3, aim(SIDE[0].codeWorld), POV_DIR, POV_D],
   [12.8, aim(SIDE[0].codeWorld), POV_DIR, POV_D * 0.97],
-  [13.4, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 1.4],
+  [13.4, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 2.7],
   [14.0, aim(scanTarget), POV_DIR, povD],
   [XF0, aim(scanTarget), POV_DIR, povD * 0.98],
   // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
@@ -983,7 +1025,7 @@ function setState(t) {
 const acc = document.createElement('canvas'); acc.width = W; acc.height = H;
 const actx = acc.getContext('2d');
 // 장면 비중: 창고(S) · 지구(G) · LA 사무실(O). 바뀌는 구간에서는 두 장면을 겹친다
-const SG = [23.0, 23.6], GO = [29.4, 30.0], OG = [33.6, 34.2], GS = [36.6, 37.2];
+const SG = [23.0, 23.6], GO = [29.4, 30.0], OG = [34.2, 34.8], GS = [36.8, 37.3];
 const ramp = (t, [a, b]) => ease(Math.min(1, Math.max(0, (t - a) / (b - a))));
 function weights(t) {
   if (t < SG[1]) return { S: 1 - ramp(t, SG), G: ramp(t, SG) };
@@ -1062,7 +1104,7 @@ function drawGeo(g, t, lang) {
     }
   }
   const wO = W8.O || 0;
-  const ca = wO * Math.min(1, Math.max(0, (t - 30.8) / 0.4)) * Math.min(1, Math.max(0, (33.4 - t) / 0.4));
+  const ca = wO * Math.min(1, Math.max(0, (t - 30.8) / 0.4)) * Math.min(1, Math.max(0, (34.0 - t) / 0.4));
   if (ca > 0) {
     const F = lang === 'ko' ? '700 28px "Noto Sans KR"' : '700 28px "JetBrains Mono"';
     g.globalAlpha = ca; g.font = F; g.textAlign = 'left';
@@ -1119,7 +1161,7 @@ function drawPOV(g, t) {
 }
 
 // 렌더러용: 프레임 i → JPEG (언어는 ?lang=)
-const VIDEO = 34, WARP = [[0, 0], [3.4, 4.0], [19.6, 20.2], [20.8, 22.0], [VIDEO, DURATION]];
+const VIDEO = 35, WARP = [[0, 0], [3.4, 4.0], [19.6, 20.2], [20.8, 22.0], [VIDEO, DURATION]];
 const warp = (v) => { for (let k = 1; k < WARP.length; k++) if (v <= WARP[k][0]) { const [a0, b0] = WARP[k - 1], [a1, b1] = WARP[k]; return b0 + (b1 - b0) * (v - a0) / (a1 - a0); } return DURATION; };
 window.renderFrame = (i) => {
   const t = warp(i / FPS);
