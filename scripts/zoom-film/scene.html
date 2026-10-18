@@ -33,6 +33,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 
 // ───────── 형식 ─────────
 // ?fmt=wide: 첫 화면 배경용 가로 영상 (16:9). 왼쪽은 문구 자리라 피사체를 오른쪽(가로 66%)에 둔다
@@ -1113,7 +1115,7 @@ window.renderFrame = (i) => {
   const t = i / FPS;
   frameAt(t);
   compose(t, LANG, 0);
-  return out.toDataURL('image/jpeg', 0.94);
+  return out.toDataURL('image/jpeg', 0.97);
 };
 window.FRAMES = DURATION * FPS;
 
@@ -1123,7 +1125,8 @@ await document.fonts.load('700 40px "JetBrains Mono"'); await document.fonts.loa
 if (new URLSearchParams(location.search).get('style') === 'anatomy') {
   const g4 = new THREE.DataTexture(new Uint8Array([150, 182, 214, 250]), 4, 1, THREE.RedFormat);
   g4.minFilter = g4.magFilter = THREE.NearestFilter; g4.needsUpdate = true;
-  const WHITE = new THREE.Color(0xffffff), INK = new THREE.LineBasicMaterial({ color: 0x3a3a40, transparent: true, opacity: 0.85 });
+  // 윤곽선은 픽셀 굵기를 정할 수 있는 선(LineSegments2)으로: WebGL 기본 선은 1px 고정이라 줄이면 흐려진다
+  const INK = new LineMaterial({ color: 0x3a3a40, linewidth: 1.25 * SS, worldUnits: false }); INK.resolution.set(W * SS, H * SS);
   const toon = new Map();
   const toPaper = (c) => { const hsl = {}; c.getHSL(hsl); const l = 0.8 + hsl.l * 0.18; return new THREE.Color().setHSL(hsl.h, hsl.s * 0.18, Math.min(0.97, l)); };
   for (const sc of [scene, sceneO]) {
@@ -1133,7 +1136,7 @@ if (new URLSearchParams(location.search).get('style') === 'anatomy') {
       if (!toon.has(key)) toon.set(key, new THREE.MeshToonMaterial({ color: toPaper(o.material.color), gradientMap: g4, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
       o.material = toon.get(key);
       o.castShadow = o.receiveShadow = false;
-      if (o.geometry && o.geometry.attributes.position.count < 20000) o.add(new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28), INK));
+      if (o.geometry && o.geometry.attributes.position.count < 20000) o.add(new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(new THREE.EdgesGeometry(o.geometry, 28)), INK));
     });
   }
   renderer.shadowMap.enabled = false;
