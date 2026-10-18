@@ -596,6 +596,13 @@
   },
   "landing": {
     "demoAlt": "从仓库货架上的箱子标签放大到条码中的一根条，扫描到的数字化作光线传到电脑，在会话表格中出现新的一行",
-    "typesTitle": "支持识别的条码类型"
+    "typesTitle": "支持识别的条码类型",
+    "eyebrow": "从扫描到电脑",
+    "meta": "iOS · Android · 网页会话",
+    "specScan": "单个 · 多个 · 连续",
+    "specReceive": "只需浏览器",
+    "bentoBulkAlt": "标签上的条码被解读为数字",
+    "bentoRealtimeAlt": "从首尔连到洛杉矶的金色线条",
+    "bentoExportAlt": "会话表格保存为 Excel 文件"
   }
 }

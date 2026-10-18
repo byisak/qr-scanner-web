@@ -775,6 +775,13 @@
   },
   "landing": {
     "demoAlt": "A zoom from a warehouse shelf into one bar of a barcode label; the scanned number travels as light to a PC and appears as a new row in the session table",
-    "typesTitle": "Supported barcode types"
+    "typesTitle": "Supported barcode types",
+    "eyebrow": "From scan to PC",
+    "meta": "iOS · Android · Web session",
+    "specScan": "Single · Multiple · Continuous",
+    "specReceive": "Any web browser",
+    "bentoBulkAlt": "Bars on a label being decoded into digits",
+    "bentoRealtimeAlt": "A gold line from Seoul to Los Angeles",
+    "bentoExportAlt": "A session table saved as an Excel file"
   }
 }

@@ -365,10 +365,30 @@
   width: max-content;
   gap: 12px;
 }
+/* 랜딩 '도면' 스타일: 옅은 격자 바탕, 먹선 칸, 모서리 맞춤 표시, 금색 강조 (영상과 같은 그림체) */
+:root { --bp-grid: rgba(24, 24, 27, 0.05); --bp-paper: #fbfbfa; --bp-gold: #8f6205; --bp-gold-bg: #fff4d6; }
+.dark { --bp-grid: rgba(255, 255, 255, 0.045); --bp-paper: #18181b; --bp-gold: #f2b230; --bp-gold-bg: #2a2110; }
+.blueprint {
+  background-color: var(--background);
+  background-image: linear-gradient(var(--bp-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bp-grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.bp-cell { position: relative; background: var(--bp-paper); border: 1px solid var(--border); }
+.bp-tick { position: absolute; width: 9px; height: 9px; border-color: var(--foreground); pointer-events: none; }
+.bp-tick[data-c="tl"] { top: -5px; left: -5px; border-left: 1px solid; border-top: 1px solid; }
+.bp-tick[data-c="tr"] { top: -5px; right: -5px; border-right: 1px solid; border-top: 1px solid; }
+.bp-tick[data-c="bl"] { bottom: -5px; left: -5px; border-left: 1px solid; border-bottom: 1px solid; }
+.bp-tick[data-c="br"] { bottom: -5px; right: -5px; border-right: 1px solid; border-bottom: 1px solid; }
+.bp-label { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; letter-spacing: 0.04em; color: var(--muted-foreground); }
+.bp-gold { color: var(--bp-gold); }
+.bp-faq > summary { list-style: none; cursor: pointer; }
+.bp-faq > summary::-webkit-details-marker { display: none; }
+.bp-faq[open] .bp-faq-plus { transform: rotate(45deg); }
+.bp-faq-plus { transition: transform .2s ease; }
+
 /* 첫 화면 영상에서 그 종류가 읽히는 순간 (zoomfilm:scan) */
 .marquee-track > li { transition: color .35s ease, background-color .35s ease, border-color .35s ease; }
-.marquee-track > li[data-hit] { color: #8a5d00; background: #fff4d6; border-color: #f2b230; }
-.dark .marquee-track > li[data-hit] { color: #f2b230; background: #2a2110; border-color: #f2b230; }
+.marquee-track > li[data-hit] { color: var(--bp-gold); background: var(--bp-gold-bg); border-color: #f2b230; }
 @media (prefers-reduced-motion: no-preference) {
   .marquee-track {
     animation: kk-marquee 40s linear infinite;
