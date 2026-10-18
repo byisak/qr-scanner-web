@@ -593,7 +593,7 @@ function drawScanUI(g, w, h, t, { pov = false, flying = null } = {}) {
   g.fillStyle = '#fff'; g.fillText(PUI.group, w / 2, py + 34 * S);
   // 조준 모서리: 읽히는 순간 금색
   const cx = w / 2, cy = pov ? h * 0.46 : h * 0.4, fw = (pov ? Math.max(0.3, 0.56 / ZK) : 0.66) * w, fh = fw * 0.66, L = 80 * S;
-  const hit = SCANS.some((sc) => t >= sc.at - 0.05 && t < sc.at + 0.35);
+  const hit = SCANS.some((sc) => t >= sc.sweep[0] - 0.35 && t < sc.at + 0.35); // 코드를 잡으면 금색 테두리 → 그다음 스캔 선
   g.strokeStyle = hit ? '#f2b230' : '#fff'; g.lineWidth = 10 * S; g.lineCap = 'round';
   for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     const x = cx + sx * fw / 2, y = cy + sy * fh / 2;
@@ -631,6 +631,9 @@ function drawScanUI(g, w, h, t, { pov = false, flying = null } = {}) {
     g.textAlign = 'right'; g.fillStyle = '#a1a1aa'; g.font = `700 ${20 * S}px "JetBrains Mono"`; g.fillText(sc.kind, cx + bw / 2 - 30 * S, yy + chipH / 2 + 1);
     g.textAlign = 'center'; g.globalAlpha = 1;
   });
+  // 읽힌 순간: 화면 가장자리가 금색으로 한 번 번쩍 (소리 없는 '삑')
+  const fl = Math.max(0, ...SCANS.map((sc) => (t >= sc.at && t < sc.at + 0.45 ? 1 - (t - sc.at) / 0.45 : 0)));
+  if (fl > 0) { g.save(); g.globalAlpha = fl; g.strokeStyle = '#f2b230'; g.lineWidth = 16 * S; g.shadowColor = 'rgba(242,178,48,.9)'; g.shadowBlur = 40 * S; g.strokeRect(8 * S, 8 * S, w - 16 * S, h - 16 * S); g.restore(); }
   // 모드 버튼 (연속 선택)
   const mw = (pov ? 0.56 : 0.8) * w, my = pov ? h * 0.875 : h * 0.86, seg = (mw - 12 * S) / 3;
   g.fillStyle = 'rgba(17,17,19,.6)'; rr(g, cx - mw / 2, my - 40 * S, mw, 80 * S, 40 * S); g.fill();
@@ -719,6 +722,8 @@ const dots = new THREE.InstancedMesh(dotGeo, new THREE.MeshBasicMaterial({ color
 }
 // 낮은 고도에서는 점을 작게 (가까이서 커다란 원이 화면을 덮지 않게)
 const dotScale = { value: 1 };
+const DARK = new URLSearchParams(location.search).get('theme') === 'dark';
+let GPAPER = PAPER, GSPACE = SPACE;
 let ANAT_GLOBE = false;
 dots.material.onBeforeCompile = (sh) => {
   sh.uniforms.uScale = dotScale;
@@ -815,7 +820,7 @@ function setStateG(t) {
   camG.position.copy(dir).multiplyScalar(1 + alt);
   camG.up.set(0, 1, 0); camG.lookAt(0, 0, 0);
   camG.near = Math.max(1e-8, alt * 0.2); camG.far = 1 + alt + 2; camG.updateProjectionMatrix();
-  sceneG.background.set(alt < 0.004 ? PAPER : SPACE);
+  sceneG.background.set(alt < 0.004 ? GPAPER : GSPACE);
   dots.visible = !ANAT_GLOBE && alt > 0.0015;
   // 도로망: 가까운 길은 고도 2 km 아래, 간선은 6~200 km 사이에서 보인다 (로그 고도로 겹쳐 넘긴다)
   const L = Math.log10(alt), band = (lo0, lo1, hi0, hi1) => Math.min(1, Math.max(0, (L - lo0) / (lo1 - lo0))) * Math.min(1, Math.max(0, (hi1 - L) / (hi1 - hi0)));
@@ -987,7 +992,8 @@ function drawHud(g, t, lang, fieldW) {
   g.save();
   // 아래쪽 옅은 종이색 그러데이션 + 워드마크 (장 제목은 쓰지 않는다)
   const gr = g.createLinearGradient(0, H - 200, 0, H);
-  gr.addColorStop(0, 'rgba(244,244,245,0)'); gr.addColorStop(1, 'rgba(244,244,245,.85)');
+  const pc = DARK ? '17,17,19' : '244,244,245';
+  gr.addColorStop(0, `rgba(${pc},0)`); gr.addColorStop(1, `rgba(${pc},.85)`);
   g.fillStyle = gr; g.fillRect(0, H - 200, W, 200);
   g.globalAlpha = 0.9;
   g.textAlign = 'right'; g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 22px "JetBrains Mono"'; g.fillText('SCANVIEW', W - 64, H - 60);
@@ -1111,8 +1117,8 @@ function drawGeo(g, t, lang) {
       const p = pt.clone().project(camG), x = (p.x + 1) / 2 * W, y = (1 - p.y) / 2 * H;
       g.globalAlpha = a; g.font = '700 30px "Noto Sans KR"'; g.textAlign = 'left';
       const tw = g.measureText(name).width, lx = x + 18 + tw + 28 > W - 40 ? x - 18 - tw - 28 : x + 18;
-      g.fillStyle = 'rgba(244,244,245,.92)'; rr(g, lx, y - 22, tw + 28, 44, 22); g.fill();
-      g.fillStyle = '#18181b'; g.fillText(name, lx + 14, y + 1);
+      g.fillStyle = DARK ? 'rgba(32,32,36,.94)' : 'rgba(244,244,245,.92)'; rr(g, lx, y - 22, tw + 28, 44, 22); g.fill();
+      g.fillStyle = DARK ? '#f4f4f5' : '#18181b'; g.fillText(name, lx + 14, y + 1);
     }
   }
   const wO = W8.O || 0;
@@ -1190,9 +1196,9 @@ if (new URLSearchParams(location.search).get('style') === 'anatomy') {
   const g4 = new THREE.DataTexture(new Uint8Array([150, 182, 214, 250]), 4, 1, THREE.RedFormat);
   g4.minFilter = g4.magFilter = THREE.NearestFilter; g4.needsUpdate = true;
   // 윤곽선은 픽셀 굵기를 정할 수 있는 선(LineSegments2)으로: WebGL 기본 선은 1px 고정이라 줄이면 흐려진다
-  const INK = new LineMaterial({ color: 0x3a3a40, linewidth: 1.25 * SS, worldUnits: false }); INK.resolution.set(W * SS, H * SS);
+  const INK = new LineMaterial({ color: DARK ? 0xc9c9ce : 0x3a3a40, linewidth: 1.25 * SS, worldUnits: false }); INK.resolution.set(W * SS, H * SS);
   const toon = new Map();
-  const toPaper = (c) => { const hsl = {}; c.getHSL(hsl); const l = 0.8 + hsl.l * 0.18; return new THREE.Color().setHSL(hsl.h, hsl.s * 0.18, Math.min(0.97, l)); };
+  const toPaper = (c) => { const hsl = {}; c.getHSL(hsl); const l = DARK ? 0.05 + hsl.l * 0.05 : 0.8 + hsl.l * 0.18; return new THREE.Color().setHSL(hsl.h, hsl.s * 0.18, Math.min(0.97, l)); };
   for (const sc of [scene, sceneO]) {
     sc.traverse((o) => {
       if (!o.isMesh || !o.material || !o.material.isMeshStandardMaterial || o.material.map || o.material.transparent) return;
@@ -1207,9 +1213,10 @@ if (new URLSearchParams(location.search).get('style') === 'anatomy') {
   sceneO.traverse((o) => { if (o.isLight) o.color.set(0xffffff); });
   // 지구본: 점 대륙 대신 해안선과 위도·경도선을 먹선으로
   ANAT_GLOBE = true; dots.visible = false;
-  earth.material.uniforms.c.value.set(0xf6f5f1); earth.material.uniforms.e.value.set(0xd9d7d0);
-  const GL = new LineMaterial({ color: 0x3a3a40, linewidth: 1.1 * SS, worldUnits: false }); GL.resolution.set(W * SS, H * SS);
-  const GF = new LineMaterial({ color: 0xa9a7a0, linewidth: 0.8 * SS, worldUnits: false }); GF.resolution.set(W * SS, H * SS);
+  earth.material.uniforms.c.value.set(DARK ? 0x1b1b1f : 0xf6f5f1); earth.material.uniforms.e.value.set(DARK ? 0x34343a : 0xd9d7d0);
+  if (DARK) { GPAPER = 0x1b1b1f; GSPACE = 0x111113; }
+  const GL = new LineMaterial({ color: DARK ? 0xd2d2d6 : 0x3a3a40, linewidth: 1.1 * SS, worldUnits: false }); GL.resolution.set(W * SS, H * SS);
+  const GF = new LineMaterial({ color: DARK ? 0x4c4c53 : 0xa9a7a0, linewidth: 0.8 * SS, worldUnits: false }); GF.resolution.set(W * SS, H * SS);
   const segs = (lines, r, mat) => { const pos = []; for (const l of lines) for (let k = 0; k + 3 < l.length; k += 2) { const a = ll(l[k] / 10, l[k + 1] / 10, r), b = ll(l[k + 2] / 10, l[k + 3] / 10, r); pos.push(a.x, a.y, a.z, b.x, b.y, b.z); } const g = new LineSegmentsGeometry(); g.setPositions(pos); sceneG.add(new LineSegments2(g, mat)); };
   segs(window.COAST, 1.0008, GL);
   const grat = [];
@@ -1218,9 +1225,11 @@ if (new URLSearchParams(location.search).get('style') === 'anatomy') {
   segs(grat, 1.0004, GF);
   // LA 창밖: 색 대신 먹 농담으로 (강조색은 금색 하나)
   { const c = winTex.image, g = c.getContext('2d'), cp = document.createElement('canvas'); cp.width = c.width; cp.height = c.height;
-    const h = cp.getContext('2d'); h.filter = 'grayscale(1) contrast(0.8) brightness(1.12)'; h.drawImage(c, 0, 0); g.clearRect(0, 0, c.width, c.height); g.drawImage(cp, 0, 0); winTex.needsUpdate = true; }
+    const h = cp.getContext('2d'); h.filter = DARK ? 'grayscale(1) contrast(0.8) brightness(0.42)' : 'grayscale(1) contrast(0.8) brightness(1.12)'; h.drawImage(c, 0, 0); g.clearRect(0, 0, c.width, c.height); g.drawImage(cp, 0, 0); winTex.needsUpdate = true; }
   renderer.toneMapping = THREE.NoToneMapping;
-  scene.background = new THREE.Color(0xf4f4f2); scene.fog.color = new THREE.Color(0xf4f4f2);
+  const BG = DARK ? 0x141416 : 0xf4f4f2;
+  scene.background = new THREE.Color(BG); scene.fog.color = new THREE.Color(BG);
+  if (DARK) { sceneO.background = new THREE.Color(0x141416); sceneO.fog.color = new THREE.Color(0x141416); }
 }
 await document.fonts.ready;
 headTex.image.getContext('2d'); // 글꼴 로드 후 라벨 글자 다시 그림
