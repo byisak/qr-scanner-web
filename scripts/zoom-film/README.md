@@ -48,3 +48,7 @@ LA 화면에서 32.0~33.6 s(장면 시각)에 '엑셀 내보내기' 단추가 �
 ## 다크 판 · 인식 순서 · 페이지 연동
 `THEME=dark` 를 함께 주면 먹색 바탕에 밝은 윤곽선 판(`*-dark.*`)을 렌더한다. 페이지는 `<html class="dark">` 일 때 이 판을 쓴다.
 인식 순서는 금색 조준 모서리(스캔 선 0.35초 전) → 가로 스캔 선 → 결과 + 화면 가장자리 금색 번쩍. 결과가 뜨는 영상 시각(8.6 · 11.4 · 14.1 s)은 `components/landing/zoom-film.tsx` 의 `SCAN_MARKS` 와 맞춰야 바코드 종류 띠가 같은 순간에 빛난다.
+
+## 인코딩 (현재)
+mp4(H.264)만 쓴다. 1080p VP9 webm 은 PC 크롬에서 `PIPELINE_ERROR_DECODE` 로 재생이 안 되는 일이 있어 뺐다.
+가로판 `-crf 22`(약 9~10 MB), 세로판 `-crf 25`(약 6 MB), 둘 다 `-preset slow -profile:v high -tune animation -pix_fmt yuv420p -vf scale=out_range=tv -movflags +faststart -frames:v 1050`.

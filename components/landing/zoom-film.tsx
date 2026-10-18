@@ -7,7 +7,7 @@ import * as React from "react"
  * 지구 건너 LA PC(엑셀 내보내기) → 다시 창고.
  * scripts/zoom-film (?style=anatomy) 로 렌더한 영상. 소리 없음, 화면에 보일 때만 재생, '움직임 줄이기'면 정지 이미지.
  * portrait: 4:5 카드 (좁은 화면) / wide: 16:9, 피사체가 오른쪽이라 부모를 꽉 채우는 배경용 (넓은 화면)
- * 사이트가 다크 테마면 먹색 바탕 판(-dark)을 쓴다. 라벨이 읽히는 순간 'zoomfilm:scan' 이벤트로 바코드 종류를 알린다.
+ * mp4(H.264)만 쓴다: 1080p VP9 webm 은 PC 크롬에서 디코딩 오류가 나는 일이 있었다. 사이트가 다크 테마면 먹색 바탕 판(-dark)을 쓴다. 라벨이 읽히는 순간 'zoomfilm:scan' 이벤트로 바코드 종류를 알린다.
  */
 
 // 영상 속 라벨이 읽히는 시각(초)과 바코드 종류 — scripts/zoom-film 의 SCANS.at 을 영상 시각으로 옮긴 값
@@ -116,7 +116,6 @@ export function ZoomFilm({
             preload="metadata"
             aria-label={label}
           >
-            <source src={`/landing/${name}.webm`} type="video/webm" />
             <source src={`/landing/${name}.mp4`} type="video/mp4" />
           </video>
         )}
@@ -142,7 +141,6 @@ export function ZoomFilm({
             preload="metadata"
             aria-label={label}
           >
-            <source src={`/landing/${name}.webm`} type="video/webm" />
             <source src={`/landing/${name}.mp4`} type="video/mp4" />
           </video>
         )}
