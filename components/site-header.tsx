@@ -5,10 +5,11 @@ import { ScanLine } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SiteMobileMenu } from "@/components/site-mobile-menu"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 /**
  * 공개 페이지(랜딩·블로그) 머리글 — 꿀앱 site-header 모양.
- * 넓은 화면: 로고 + 메뉴 + 언어 + 웹앱 열기 / 좁은 화면(<768): 로고 + 언어 + 메뉴 버튼(오른쪽 시트)
+ * 넓은 화면: 로고 + 메뉴 + 테마 + 언어 + 웹앱 열기 / 좁은 화면(<768): 로고 + 테마 + 언어 + 메뉴 버튼(오른쪽 시트)
  */
 export async function SiteHeader({ active }: { active?: "home" | "blog" | "features" }) {
   const t = await getTranslations("nav")
@@ -44,6 +45,7 @@ export async function SiteHeader({ active }: { active?: "home" | "blog" | "featu
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeSwitcher />
           <LanguageSwitcher compact />
           <Button asChild className="max-md:hidden">
             <Link href="/dashboard">{t("openWebApp")}</Link>
