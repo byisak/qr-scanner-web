@@ -32,7 +32,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 // ───────── 형식 ─────────
 const W = 1080, H = 1350;          // 결과 프레임 (4:5)
 const SS = 1.5;                    // 슈퍼샘플 배율
-const DURATION = 24;               // 끊김 없는 반복 길이 (초)
+const DURATION = 28;               // 끊김 없는 반복 길이 (초)
 const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ko'; // 머리글·폰 화면 언어
 const FPS = 30;
 const SUB = 4;                     // 프레임당 서브프레임 (180° 셔터)
@@ -516,11 +516,11 @@ const PUI = {
 }[LANG];
 // 스캔 결과 (읽힌 순서): 1) 주인공 EAN-13 은 막대가 숫자로 풀리며, 2·3) 옆 라벨은 연속 모드로 바로
 const SCANS = [
-  { code: CODE, kind: 'EAN-13', sweep: [5.9, 6.5], at: 7.75 },
-  { code: SIDE[0].code, kind: 'QR', sweep: [9.2, 9.5], at: 9.55 },
-  { code: SIDE[1].code, kind: 'CODE 128', sweep: [10.7, 11.0], at: 11.05 },
+  { code: CODE, kind: 'EAN-13', sweep: [6.2, 7.0], at: 9.2 },
+  { code: SIDE[0].code, kind: 'QR', sweep: [11.5, 11.95], at: 12.0 },
+  { code: SIDE[1].code, kind: 'CODE 128', sweep: [14.2, 14.65], at: 14.7 },
 ];
-const DEC0 = 6.5, DEC_STEP = 0.07, DEC_FLY = 0.55; // 해독: 자리마다 막대 묶음이 빛나고 숫자가 결과로 날아간다
+const DEC0 = 7.0, DEC_STEP = 0.11, DEC_FLY = 0.8; // 해독: 자리마다 막대 묶음이 빛나고 숫자가 결과로 날아간다
 // 앱 스캔 화면. w×h 캔버스에 상대 위치로 그린다 (폰 화면 540×1180, 화면 시점 1080×1350 공용)
 function drawScanUI(g, w, h, t, { pov = false, flying = null } = {}) {
   const S = w / 1080 * (pov ? 1 : 1.55);
@@ -636,7 +636,7 @@ const midWorld = phoneTopWorld.clone().lerp(screenCenter, 0.5).add(V(0, 0.2, 0))
 const wideTarget = V(0.72, 1.02, 1.15);
 // 키: [시각, 바라보는 점, 카메라 방향(점→카메라), 거리]
 // 폰 화면 시점 → 폰 앞 전환: XF0~XF1 동안 두 장면을 겹친다
-const XF0 = 11.6, XF1 = 12.15, XJ = 11.75;
+const XF0 = 15.4, XF1 = 16.0, XJ = 15.55;
 let camT = (ts) => ts, povW = 1;
 const heroCode = new THREE.Vector3(); labelGroup.localToWorld(heroCode.copy(barcodeCenter));
 const povD = POV_D - 0.004; // 마지막 화면 시점은 폰 몸체 안쪽 (폰은 숨긴다)
@@ -648,22 +648,22 @@ const KEYS = [
   [2.4, V(0.35, 1.02, 0.6), V(-0.03, 0.12, 1), 3.4],
   [4.0, labelCenter.clone(), V(0.02, 0.06, 1), 0.62],
   // 폰 화면 시점: 첫 라벨 (해독)
-  [5.3, heroCode.clone(), POV_DIR, POV_D],
-  [8.2, heroCode.clone(), POV_DIR, POV_D * 0.97],
+  [5.6, heroCode.clone(), POV_DIR, POV_D],
+  [9.9, heroCode.clone(), POV_DIR, POV_D * 0.96],
   // 연속 스캔: 옆 상자로 훑고 지나가며 차례로 읽는다
-  [8.65, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 1.5],
-  [9.1, SIDE[0].codeWorld.clone(), POV_DIR, POV_D],
-  [9.7, SIDE[0].codeWorld.clone(), POV_DIR, POV_D * 0.98],
-  [10.15, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 1.5],
-  [10.6, scanTarget.clone(), POV_DIR, povD],
+  [10.6, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 1.4],
+  [11.3, SIDE[0].codeWorld.clone(), POV_DIR, POV_D],
+  [12.8, SIDE[0].codeWorld.clone(), POV_DIR, POV_D * 0.97],
+  [13.4, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 1.4],
+  [14.0, scanTarget.clone(), POV_DIR, povD],
   [XF0, scanTarget.clone(), POV_DIR, povD * 0.98],
   // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
   [XJ, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.06, 0.03, 0)), 0.17],
-  [13.0, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.32],
-  [14.6, midWorld, V(0.9, 0.35, 0.6), 1.4],
-  [16.4, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
-  [19.4, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
-  [24.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
+  [16.8, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.32],
+  [18.4, midWorld, V(0.9, 0.35, 0.6), 1.4],
+  [20.2, screenCenter.clone(), screenNormal.clone().add(V(0, 0.06, 0)), 1.3],
+  [23.0, screenCenter.clone().add(V(0, 0.01, 0)), screenNormal.clone().add(V(0.03, 0.07, 0)), 1.18],
+  [28.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
 ];
 function cameraAt(t) {
   let k = 0; while (k < KEYS.length - 2 && t >= KEYS[k + 1][0]) k++;
@@ -683,11 +683,11 @@ const CH = [
   { t: 0.0, ko: ['창고', '선반 하나에 상자 수십 개'], en: ['The warehouse', 'Dozens of boxes on one rack'] },
   { t: 2.4, ko: ['선반', '상자마다 라벨 하나'], en: ['The shelf', 'One label on every box'] },
   { t: 4.0, ko: ['라벨', 'EAN-13, 숫자 13자리'], en: ['The label', 'EAN-13, thirteen digits'] },
-  { t: 5.4, ko: ['스캔', '막대를 읽어 숫자로'], en: ['The scan', 'Bars turn into digits'] },
-  { t: 8.3, ko: ['연속 스캔', 'QR·Code 128도 이어서 바로'], en: ['Keep scanning', 'QR, Code 128 and more, one after another'] },
-  { t: 12.4, ko: ['전송', '세 건이 바로 PC로'], en: ['Sent', 'All three go straight to the PC'] },
-  { t: 16.0, ko: ['PC 화면', '찍은 순서대로 표에'], en: ['The PC', 'Rows in the order you scanned'] },
-  { t: 20.5, ko: ['다시 창고', 'scanview.app'], en: ['Back to the floor', 'scanview.app'] },
+  { t: 5.6, ko: ['스캔', '막대를 읽어 숫자로'], en: ['The scan', 'Bars turn into digits'] },
+  { t: 9.9, ko: ['연속 스캔', 'QR·Code 128도 이어서 바로'], en: ['Keep scanning', 'QR, Code 128 and more, one after another'] },
+  { t: 16.2, ko: ['전송', '세 건이 바로 PC로'], en: ['Sent', 'All three go straight to the PC'] },
+  { t: 19.8, ko: ['PC 화면', '찍은 순서대로 표에'], en: ['The PC', 'Rows in the order you scanned'] },
+  { t: 24.5, ko: ['다시 창고', 'scanview.app'], en: ['Back to the floor', 'scanview.app'] },
 ];
 const out = document.getElementById('out');
 const octx = out.getContext('2d');
@@ -723,20 +723,20 @@ function drawHud(g, t, lang, fieldW) {
 // ───────── 한 장면 ─────────
 function setState(t) {
   // 라벨 숫자: 해독되는 순간 한 자리씩 강조색, 22.5 s 부터 원래대로 (반복)
-  drawDigits(t < DEC0 ? 0 : t < 22.5 ? Math.min(13, (t - DEC0) / DEC_STEP) : 13 * (1 - Math.min(1, (t - 22.5) / 0.8)));
-  // 빛: 12.5~14.9 s 폰에서 나가고, 15.0~16.4 s 꼬리가 따라간다
-  const a = Math.min(1, Math.max(0, (t - 15.0) / 1.4));
-  const b = Math.min(1, Math.max(0, (t - 12.5) / 2.4));
+  drawDigits(t < DEC0 ? 0 : t < 26.5 ? Math.min(13, (t - DEC0) / DEC_STEP) : 13 * (1 - Math.min(1, (t - 26.5) / 0.8)));
+  // 빛: 16.3~18.7 s 폰에서 나가고, 18.8~20.2 s 꼬리가 따라간다
+  const a = Math.min(1, Math.max(0, (t - 18.8) / 1.4));
+  const b = Math.min(1, Math.max(0, (t - 16.3) / 2.4));
   setRibbon(ease(a), ease(b));
-  // 모니터: 16.2 s 세 줄, 19 s 부터 강조가 사라지고, 22~23.4 s (멀리서) 원래 상태로
-  const rowIn = t < 16.2 ? 0 : t < 22 ? Math.min(1, (t - 16.2) / 0.8) : t < 23.4 ? 1 : 0;
-  const hl = t < 16.2 ? 0 : t < 19 ? 1 : Math.max(0, 1 - (t - 19) / 1.5);
+  // 모니터: 20.0 s 세 줄, 22.8 s 부터 강조가 사라지고, 26~27.4 s (멀리서) 원래 상태로
+  const rowIn = t < 20.0 ? 0 : t < 26 ? Math.min(1, (t - 20.0) / 0.8) : t < 27.4 ? 1 : 0;
+  const hl = t < 20.0 ? 0 : t < 22.8 ? 1 : Math.max(0, 1 - (t - 22.8) / 1.5);
   drawScreen(rowIn, hl, rowIn > 0 ? 131 : 128);
   // 카메라
   const cam = cameraAt(camT(t));
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   // 폰은 드러나는 순간부터 빛이 떠날 때까지만 (손 없이 떠 있는 폰이 창고 장면에 보이지 않게), 끝에서는 작아지며 사라진다
-  const shrink = 1 - ease(Math.min(1, Math.max(0, (t - 14.4) / 0.7)));
+  const shrink = 1 - ease(Math.min(1, Math.max(0, (t - 18.2) / 0.7)));
   phone.visible = screenGap(cam.pos) > 0.012 && t >= XF0 && shrink > 0.01;
   phone.scale.setScalar(Math.max(0.01, shrink));
   if (phone.visible) {
@@ -793,7 +793,7 @@ function digitSpan(k) { // 자리 k(1~12)의 모듈 범위, 0번 자리는 왼�
   return [s0, s0 + 7];
 }
 function drawPOV(g, t) {
-  const A = t < XF0 ? Math.min(1, Math.max(0, (t - 4.9) / 0.4)) : t < XF1 ? povW : 0;
+  const A = t < XF0 ? Math.min(1, Math.max(0, (t - 5.2) / 0.4)) : t < XF1 ? povW : 0;
   if (A <= 0) return;
   const pg = povCanvas.getContext('2d'); pg.clearRect(0, 0, W, H);
   const slot = drawScanUI(pg, W, H, t, { pov: true, flying: true });
