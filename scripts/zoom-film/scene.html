@@ -228,7 +228,7 @@ SIDE.forEach((d, k) => {
   d.tex = tex;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.064), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }));
   m.position.set(b.x + 0.105, b.y + 0.04, b.front + 0.0016); rack.add(m);
-  d.codeWorld = m.position.clone().add(new THREE.Vector3(0, -0.006, 0));
+  d.codeWorld = m.position.clone().add(new THREE.Vector3(0, -0.0095, 0)); // 코드 그림(QR·막대+글자)의 가운데
 });
 
 // 바코드 막대: 실제 기하 (모듈 0.33 mm, 막대 높이 22.85 mm 의 80%)
@@ -529,7 +529,7 @@ function drawScanUI(g, w, h, t, { pov = false, flying = null } = {}) {
   else { g.fillStyle = 'rgba(255,255,255,.95)'; g.font = `700 ${26 * S / 1.55 * 1.0}px "Noto Sans KR"`; g.textAlign = 'left'; g.fillText('9:41', w * 0.085, h * 0.034); g.textAlign = 'center'; }
   // 그룹 선택
   g.font = `700 ${30 * S}px "Noto Sans KR"`;
-  const pw = g.measureText(PUI.group).width + 72 * S, py = pov ? h * 0.185 : h * 0.07;
+  const pw = g.measureText(PUI.group).width + 72 * S, py = pov ? h * 0.07 : h * 0.07;
   g.fillStyle = 'rgba(17,17,19,.55)'; rr(g, w / 2 - pw / 2, py, pw, 66 * S, 33 * S); g.fill();
   g.fillStyle = '#fff'; g.fillText(PUI.group, w / 2, py + 34 * S);
   // 조준 모서리: 읽히는 순간 금색
@@ -638,7 +638,10 @@ const wideTarget = V(0.72, 1.02, 1.15);
 // 폰 화면 시점 → 폰 앞 전환: XF0~XF1 동안 두 장면을 겹친다
 const XF0 = 15.4, XF1 = 16.0, XJ = 15.55;
 let camT = (ts) => ts, povW = 1;
-const heroCode = new THREE.Vector3(); labelGroup.localToWorld(heroCode.copy(barcodeCenter));
+const heroCode = new THREE.Vector3(); labelGroup.localToWorld(heroCode.copy(barcodeCenter).add(V(0, -0.0016, 0))); // 막대+숫자 묶음의 가운데
+// 화면 시점의 조준 영역 가운데(화면 높이 46%)에 코드가 오도록 시선을 그만큼 아래로
+const AIM = V(0, -2 * POV_D * Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * 0.04, 0);
+const aim = (p) => p.clone().add(AIM);
 const povD = POV_D - 0.004; // 마지막 화면 시점은 폰 몸체 안쪽 (폰은 숨긴다)
 // 화면 평면에서 카메라까지 거리 (폰 법선 방향, 음수면 폰 뒤)
 const screenGap = (p) => p.clone().sub(phonePos).dot(phoneNormal);
@@ -648,15 +651,15 @@ const KEYS = [
   [2.4, V(0.35, 1.02, 0.6), V(-0.03, 0.12, 1), 3.4],
   [4.0, labelCenter.clone(), V(0.02, 0.06, 1), 0.62],
   // 폰 화면 시점: 첫 라벨 (해독)
-  [5.6, heroCode.clone(), POV_DIR, POV_D],
-  [9.9, heroCode.clone(), POV_DIR, POV_D * 0.96],
+  [5.6, aim(heroCode), POV_DIR, POV_D],
+  [9.9, aim(heroCode), POV_DIR, POV_D * 0.96],
   // 연속 스캔: 옆 상자로 훑고 지나가며 차례로 읽는다
   [10.6, between(heroCode, SIDE[0].codeWorld), POV_DIR, POV_D * 1.4],
-  [11.3, SIDE[0].codeWorld.clone(), POV_DIR, POV_D],
-  [12.8, SIDE[0].codeWorld.clone(), POV_DIR, POV_D * 0.97],
+  [11.3, aim(SIDE[0].codeWorld), POV_DIR, POV_D],
+  [12.8, aim(SIDE[0].codeWorld), POV_DIR, POV_D * 0.97],
   [13.4, between(SIDE[0].codeWorld, SIDE[1].codeWorld), POV_DIR, POV_D * 1.4],
-  [14.0, scanTarget.clone(), POV_DIR, povD],
-  [XF0, scanTarget.clone(), POV_DIR, povD * 0.98],
+  [14.0, aim(scanTarget), POV_DIR, povD],
+  [XF0, aim(scanTarget), POV_DIR, povD * 0.98],
   // 폰 앞(화면이 화면을 얼추 채우는 거리)으로 옮겨 겹쳐 전환한 뒤, 뒤로 빠지며 폰이 드러난다
   [XJ, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.06, 0.03, 0)), 0.17],
   [16.8, phoneScreenWorld.clone(), phoneNormal.clone().add(V(-0.1, 0.06, 0)), 0.32],
@@ -701,20 +704,10 @@ function drawHud(g, t, lang, fieldW) {
   const fade = Math.min(1, (t - ch.t) / 0.5);
   const [title, fact] = ch[lang];
   g.save();
-  // 글자가 밝은 장면 위에서도 읽히도록 위·아래에 옅은 종이색 그러데이션
-  let gr = g.createLinearGradient(0, 0, 0, 300);
-  gr.addColorStop(0, 'rgba(244,244,245,.88)'); gr.addColorStop(1, 'rgba(244,244,245,0)');
-  g.fillStyle = gr; g.fillRect(0, 0, W, 300);
-  gr = g.createLinearGradient(0, H - 200, 0, H);
+  // 아래쪽 옅은 종이색 그러데이션 + 워드마크 (장 제목은 쓰지 않는다)
+  const gr = g.createLinearGradient(0, H - 200, 0, H);
   gr.addColorStop(0, 'rgba(244,244,245,0)'); gr.addColorStop(1, 'rgba(244,244,245,.85)');
   g.fillStyle = gr; g.fillRect(0, H - 200, W, 200);
-  g.globalAlpha = 0.9;
-  // 위 왼쪽: 장 번호·제목·사실
-  const idx = CH.indexOf(ch) + 1;
-  g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 22px "JetBrains Mono"'; g.fillText(`${String(idx).padStart(2, '0')} / ${String(CH.length).padStart(2, '0')}`, 64, 92);
-  g.globalAlpha = 0.9 * fade;
-  g.fillStyle = '#18181b'; g.font = `800 ${lang === 'ko' ? 52 : 50}px "Noto Sans KR"`; g.fillText(title, 64, 152);
-  g.fillStyle = '#52525b'; g.font = `500 ${lang === 'ko' ? 28 : 27}px "Noto Sans KR"`; g.fillText(fact, 64, 196);
   g.globalAlpha = 0.9;
   g.textAlign = 'right'; g.fillStyle = 'rgba(24,24,27,.55)'; g.font = '700 22px "JetBrains Mono"'; g.fillText('SCANVIEW', W - 64, H - 60);
   g.restore();
