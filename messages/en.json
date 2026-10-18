@@ -774,12 +774,7 @@
     "help": "Open this help"
   },
   "landing": {
-    "demoSession": "Floor 1 inbound",
-    "demoNow": "now",
-    "demoToday": "{count} today",
-    "demoCodes": "{count} codes",
-    "demoSaved": "Saved",
-    "demoAlt": "Scanning a barcode with a phone adds a row to the session table in a PC browser right away",
+    "demoAlt": "A zoom from a warehouse shelf into one bar of a barcode label; the scanned number travels as light to a PC and appears as a new row in the session table",
     "typesTitle": "Supported barcode types"
   }
 }

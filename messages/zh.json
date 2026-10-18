@@ -595,12 +595,7 @@
     "help": "打开此帮助"
   },
   "landing": {
-    "demoSession": "1楼 入库验收",
-    "demoNow": "刚刚",
-    "demoToday": "今天 {count} 条",
-    "demoCodes": "{count} 种码",
-    "demoSaved": "已保存",
-    "demoAlt": "用手机扫描条码后，电脑浏览器的会话表格会立即新增一行",
+    "demoAlt": "从仓库货架上的箱子标签放大到条码中的一根条，扫描到的数字化作光线传到电脑，在会话表格中出现新的一行",
     "typesTitle": "支持识别的条码类型"
   }
 }
