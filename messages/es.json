@@ -596,6 +596,13 @@
   },
   "landing": {
     "demoAlt": "Un zoom desde una estantería del almacén hasta una barra del código de barras de una etiqueta; el número escaneado viaja como luz hasta el PC y aparece como una fila nueva en la tabla de la sesión",
-    "typesTitle": "Tipos de código compatibles"
+    "typesTitle": "Tipos de código compatibles",
+    "eyebrow": "Del escaneo al PC",
+    "meta": "iOS · Android · Sesión web",
+    "specScan": "Uno · Varios · Continuo",
+    "specReceive": "Solo un navegador",
+    "bentoBulkAlt": "Las barras de una etiqueta se decodifican en dígitos",
+    "bentoRealtimeAlt": "Una línea dorada de Seúl a Los Ángeles",
+    "bentoExportAlt": "Una tabla de sesión guardada como archivo de Excel"
   }
 }

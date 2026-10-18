@@ -775,6 +775,13 @@
   },
   "landing": {
     "demoAlt": "창고 선반의 상자 라벨에서 바코드 막대 하나까지 들어갔다가, 스캔한 숫자가 빛을 따라 PC로 가서 세션 표에 새 줄로 뜨는 영상",
-    "typesTitle": "인식하는 바코드 종류"
+    "typesTitle": "인식하는 바코드 종류",
+    "eyebrow": "스캔에서 PC까지",
+    "meta": "iOS · Android · 웹 세션",
+    "specScan": "한 개 · 여러 개 · 연속",
+    "specReceive": "브라우저만 있으면",
+    "bentoBulkAlt": "라벨의 막대가 숫자로 풀리며 읽히는 장면",
+    "bentoRealtimeAlt": "서울에서 LA로 이어지는 금색 선",
+    "bentoExportAlt": "세션 표가 엑셀 파일로 저장되는 장면"
   }
 }

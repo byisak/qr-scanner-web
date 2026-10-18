@@ -596,6 +596,13 @@
   },
   "landing": {
     "demoAlt": "倉庫の棚の箱のラベルからバーコードの1本のバーまで近づき、スキャンした数字が光となってPCへ届き、セッション表に新しい行として表示される映像",
-    "typesTitle": "読み取れるバーコードの種類"
+    "typesTitle": "読み取れるバーコードの種類",
+    "eyebrow": "スキャンからPCまで",
+    "meta": "iOS · Android · Webセッション",
+    "specScan": "単発 · 複数 · 連続",
+    "specReceive": "ブラウザだけで",
+    "bentoBulkAlt": "ラベルのバーが数字に読み取られる様子",
+    "bentoRealtimeAlt": "ソウルからロサンゼルスへ伸びる金色の線",
+    "bentoExportAlt": "セッションの表がExcelファイルに保存される様子"
   }
 }
