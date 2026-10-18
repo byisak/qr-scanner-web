@@ -514,7 +514,7 @@
       "activate": "Activate",
       "deactivate": "Deactivate",
       "resetPassword": "Reset Password",
-      "export": "Export",
+      "export": "Export all",
       "bulkDelete": "Bulk Delete",
       "selectedCount": "{count} selected",
       "showingCount": "{from}-{to} of {total}",
@@ -566,7 +566,9 @@
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
       "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
-      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm",
+      "exportDone": "Exported all {count} users to CSV",
+      "exportError": "Couldn't export. Please try again in a moment"
     },
     "stats": {
       "totalUsers": "Total Users",
@@ -618,7 +620,17 @@
       "publicUrls": "Public URLs",
       "urlHint": "Change language with lang parameter (ko, en, ja, zh, es)",
       "loadError": "Couldn't load the documents. Please try again in a moment",
-      "language": "Document language"
+      "language": "Document language",
+      "statusTitle": "Status by language",
+      "document": "Document",
+      "status_published": "Published",
+      "status_draft": "Draft",
+      "status_missing": "Missing",
+      "status_stale": "Older than Korean",
+      "unsavedTitle": "You have unsaved changes",
+      "unsavedDesc": "If you switch documents, your edits will be lost.",
+      "discard": "Discard and switch",
+      "unsavedHint": "Unsaved changes"
     },
     "editor": {
       "toolbar": "Formatting",
@@ -667,7 +679,8 @@
         "delete_user": "Member deleted",
         "permanent_delete_user": "Member permanently deleted",
         "restore_user": "Member restored",
-        "send_password_reset": "Reset email sent"
+        "send_password_reset": "Reset email sent",
+        "export_users": "Member list exported"
       }
     },
     "health": {

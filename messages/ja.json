@@ -434,11 +434,24 @@
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
       "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
-      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm",
+      "exportDone": "{count}人全員をCSVで書き出しました",
+      "exportError": "書き出せませんでした。しばらくしてからもう一度お試しください",
+      "export": "すべて書き出し"
     },
     "legal": {
       "loadError": "Couldn't load the documents. Please try again in a moment",
-      "language": "Document language"
+      "language": "Document language",
+      "statusTitle": "言語別の状態",
+      "document": "文書",
+      "status_published": "公開",
+      "status_draft": "下書き",
+      "status_missing": "なし",
+      "status_stale": "韓国語版より古い",
+      "unsavedTitle": "保存していない変更があります",
+      "unsavedDesc": "別の文書に移ると、今の編集内容は失われます。",
+      "discard": "破棄して移動",
+      "unsavedHint": "未保存の変更あり"
     },
     "editor": {
       "toolbar": "Formatting",
@@ -487,7 +500,8 @@
         "delete_user": "会員の削除",
         "permanent_delete_user": "会員の完全削除",
         "restore_user": "会員の復元",
-        "send_password_reset": "再設定メール送信"
+        "send_password_reset": "再設定メール送信",
+        "export_users": "会員一覧の書き出し"
       }
     },
     "health": {

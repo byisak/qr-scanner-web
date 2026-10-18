@@ -62,7 +62,18 @@ interface UserManagementTableProps {
   onManageAdRecords: (user: AdminUser) => void
   onBulkDelete: (users: AdminUser[]) => void
   onExport: () => void
+  // 서버 정렬: 열 id 를 서버 정렬 키로 바꿔 알린다
+  onSortChange?: (by: string, order: "asc" | "desc") => void
   isSuperAdmin: boolean
+}
+
+// 표 열 id → 서버 정렬 키
+const SORT_KEYS: Record<string, string> = {
+  name: "name",
+  sessionCount: "session_count",
+  scanCount: "scan_count",
+  createdAt: "created_at",
+  lastLoginAt: "last_login_at",
 }
 
 export function UserManagementTable({
@@ -84,6 +95,7 @@ export function UserManagementTable({
   onManageAdRecords,
   onBulkDelete,
   onExport,
+  onSortChange,
   isSuperAdmin,
 }: UserManagementTableProps) {
   const t = useTranslations()
@@ -127,7 +139,15 @@ export function UserManagementTable({
   const table = useReactTable({
     data: users,
     columns,
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater
+      setSorting(next)
+      const first = next[0]
+      const key = first ? SORT_KEYS[first.id] : undefined
+      // 서버가 아는 열이면 서버에 맡기고, 정렬을 풀면 기본(가입일 최신순)
+      onSortChange?.(key ?? "created_at", first ? (first.desc ? "desc" : "asc") : "desc")
+    },
+    manualSorting: !!onSortChange,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

@@ -64,6 +64,13 @@ export default function AdminUsersPage() {
     }
   }, [authLoading, isAuthenticated, isAdmin, router]);
 
+  // 정렬은 서버에서 (전체 사용자 기준). 기본: 가입일 최신순
+  const [sort, setSort] = useState<{ by: string; order: 'asc' | 'desc' }>({ by: 'created_at', order: 'desc' });
+  const handleSortChange = useCallback((by: string, order: 'asc' | 'desc') => {
+    setSort({ by, order });
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, []);
+
   // 사용자 목록 조회
   const fetchUsers = useCallback(async () => {
     if (!accessToken) return;
@@ -79,6 +86,8 @@ export default function AdminUsersPage() {
       if (providerFilter) params.set('provider', providerFilter);
       if (roleFilter) params.set('role', roleFilter);
       if (statusFilter) params.set('status', statusFilter);
+      params.set('sortBy', sort.by);
+      params.set('sortOrder', sort.order);
 
       const res = await fetch(`/api/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -96,7 +105,7 @@ export default function AdminUsersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, pagination.page, pagination.limit, search, providerFilter, roleFilter, statusFilter, t]);
+  }, [accessToken, pagination.page, pagination.limit, search, providerFilter, roleFilter, statusFilter, sort, t]);
 
   useEffect(() => {
     if (isAdmin && accessToken) {
@@ -258,29 +267,29 @@ export default function AdminUsersPage() {
     fetchUsers();
   };
 
-  const handleExport = () => {
-    const csvContent = [
-      ['ID', t('admin.users.email'), t('admin.users.name'), t('admin.users.role'), t('admin.users.provider'), t('admin.users.status'), t('admin.users.createdAt'), t('admin.users.lastLogin')].join(','),
-      ...users.map((user) =>
-        [
-          user.id,
-          `"${user.email}"`,
-          `"${user.name}"`,
-          user.role,
-          user.provider,
-          user.isActive ? t('admin.users.active') : t('admin.users.inactive'),
-          user.createdAt,
-          user.lastLoginAt || '',
-        ].join(',')
-      ),
-    ].join('\n');
-
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+  // 전체 내보내기: 지금 필터·정렬에 맞는 모든 사용자 (서버가 감사 로그에 남긴다)
+  const handleExport = async () => {
+    if (!accessToken) return;
+    const params = new URLSearchParams({ format: 'csv', sortBy: sort.by, sortOrder: sort.order });
+    if (search) params.set('search', search);
+    if (providerFilter) params.set('provider', providerFilter);
+    if (roleFilter) params.set('role', roleFilter);
+    if (statusFilter) params.set('status', statusFilter);
+    try {
+      const res = await fetch(`/api/admin/users?${params}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      notify.success(t('admin.users.exportDone', { count: pagination.total }));
+    } catch {
+      notify.error(t('admin.users.exportError'));
+    }
   };
 
   if (authLoading || !isAdmin) {
@@ -340,6 +349,7 @@ export default function AdminUsersPage() {
                 onManageAdRecords={handleManageAdRecords}
                 onBulkDelete={handleBulkDelete}
                 onExport={handleExport}
+                onSortChange={handleSortChange}
                 isSuperAdmin={isSuperAdmin}
               />
           </div>

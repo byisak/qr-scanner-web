@@ -434,11 +434,24 @@
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
       "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
-      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm",
+      "exportDone": "Se exportaron los {count} usuarios a CSV",
+      "exportError": "No se pudo exportar. Inténtalo de nuevo en un momento",
+      "export": "Exportar todo"
     },
     "legal": {
       "loadError": "Couldn't load the documents. Please try again in a moment",
-      "language": "Document language"
+      "language": "Document language",
+      "statusTitle": "Estado por idioma",
+      "document": "Documento",
+      "status_published": "Publicado",
+      "status_draft": "Borrador",
+      "status_missing": "Falta",
+      "status_stale": "Más antiguo que el coreano",
+      "unsavedTitle": "Tienes cambios sin guardar",
+      "unsavedDesc": "Si cambias de documento, perderás lo que editaste.",
+      "discard": "Descartar y cambiar",
+      "unsavedHint": "Cambios sin guardar"
     },
     "editor": {
       "toolbar": "Formatting",
@@ -487,7 +500,8 @@
         "delete_user": "Miembro eliminado",
         "permanent_delete_user": "Miembro eliminado definitivamente",
         "restore_user": "Miembro restaurado",
-        "send_password_reset": "Correo de restablecimiento enviado"
+        "send_password_reset": "Correo de restablecimiento enviado",
+        "export_users": "Lista de miembros exportada"
       }
     },
     "health": {

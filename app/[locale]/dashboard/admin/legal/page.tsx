@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AppSidebar } from '@/components/app-sidebar';
@@ -37,6 +37,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { notify } from '@/lib/notify';
 import { Copy, ExternalLink, Save, Eye, CircleCheck, CircleDashed } from 'lucide-react';
 import { WysiwygEditor } from '@/components/admin/wysiwyg-editor';
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -94,6 +95,7 @@ export default function AdminLegalPage() {
   const [version, setVersion] = useState('1.0');
   const [isPublished, setIsPublished] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   // 권한 체크
   useEffect(() => {
@@ -213,6 +215,60 @@ export default function AdminLegalPage() {
     doc => doc.type === activeTab && doc.locale === selectedLocale
   );
 
+  // 저장 안 한 변경이 있는지: 불러온 문서(없으면 기본값)와 비교.
+  // 편집기가 HTML 모양을 다듬어 저장하므로 본문은 태그·공백을 뺀 글자로 비교한다
+  const isDirty = useMemo(() => {
+    const plain = (h: string) => h.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const base = currentDoc ?? {
+      title: getDefaultLegalTitle(activeTab, selectedLocale),
+      content: '',
+      version: '1.0',
+      isPublished: false,
+    };
+    return (
+      title !== base.title ||
+      version !== base.version ||
+      isPublished !== base.isPublished ||
+      plain(content) !== plain(base.content)
+    );
+  }, [currentDoc, activeTab, selectedLocale, title, content, version, isPublished]);
+
+  // 다른 문서·언어로 옮기기 전에 저장 안 한 변경을 확인
+  const switchTo = async (type: LegalDocumentType, locale: string) => {
+    if (type === activeTab && locale === selectedLocale) return;
+    if (isDirty) {
+      const ok = await confirm({
+        title: t('admin.legal.unsavedTitle'),
+        description: t('admin.legal.unsavedDesc'),
+        confirmText: t('admin.legal.discard'),
+        variant: 'destructive',
+      });
+      if (!ok) return;
+    }
+    setActiveTab(type);
+    setSelectedLocale(locale);
+  };
+
+  // 창을 닫거나 새로고침할 때도 경고
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
+
+  // 문서 × 언어 상태: 발행 / 초안 / 없음 / 한국어판보다 오래됨
+  const statusOf = (type: LegalDocumentType, locale: string): 'published' | 'draft' | 'missing' | 'stale' => {
+    const doc = documents.find(d => d.type === type && d.locale === locale);
+    if (!doc) return 'missing';
+    if (!doc.isPublished) return 'draft';
+    const ko = documents.find(d => d.type === type && d.locale === 'ko');
+    if (locale !== 'ko' && ko && new Date(ko.updatedAt).getTime() > new Date(doc.updatedAt).getTime()) return 'stale';
+    return 'published';
+  };
+
   if (authLoading || !isAdmin) {
     return null;
   }
@@ -249,9 +305,57 @@ export default function AdminLegalPage() {
             <p className="mt-2 type-lead">{t('admin.legal.description')}</p>
           </div>
 
+          {/* 문서 × 언어 상태표: 칸을 누르면 그 문서를 편집 */}
+          {!isLoading && (
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle>{t('admin.legal.statusTitle')}</CardTitle>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <table className="w-full min-w-[520px] border-separate border-spacing-1 text-13">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="sr-only">{t('admin.legal.document')}</th>
+                      {SUPPORTED_LOCALES.map(l => (
+                        <th key={l.code} scope="col" className="px-2 py-1 text-left font-semibold text-muted-foreground">{l.name}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {LEGAL_DOCUMENT_TYPES.map(docType => (
+                      <tr key={docType}>
+                        <th scope="row" className="whitespace-nowrap px-2 py-1 text-left font-semibold">{t(TAB_LABEL_KEYS[docType])}</th>
+                        {SUPPORTED_LOCALES.map(l => {
+                          const st = statusOf(docType, l.code);
+                          const selected = docType === activeTab && l.code === selectedLocale;
+                          return (
+                            <td key={l.code}>
+                              <button
+                                type="button"
+                                onClick={() => switchTo(docType, l.code)}
+                                aria-current={selected ? 'true' : undefined}
+                                className={
+                                  'w-full rounded-field border px-2 py-1.5 text-left font-semibold transition-colors hover:bg-secondary ' +
+                                  (selected ? 'border-primary bg-secondary ' : '') +
+                                  (st === 'missing' || st === 'stale' ? 'text-destructive' : st === 'draft' ? 'text-muted-foreground' : '')
+                                }
+                              >
+                                {t(`admin.legal.status_${st}`)}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="min-w-0">
             <CardContent className="pt-5 sm:pt-6">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LegalDocumentType)}>
+              <Tabs value={activeTab} onValueChange={(v) => switchTo(v as LegalDocumentType, selectedLocale)}>
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <TabsList className="w-full overflow-x-auto sm:w-auto">
                     {LEGAL_DOCUMENT_TYPES.map(docType => (
@@ -259,7 +363,7 @@ export default function AdminLegalPage() {
                     ))}
                   </TabsList>
 
-                  <Select value={selectedLocale} onValueChange={setSelectedLocale}>
+                  <Select value={selectedLocale} onValueChange={(v) => switchTo(activeTab, v)}>
                     <SelectTrigger className="w-full sm:ml-auto sm:w-[200px]" aria-label={t('admin.legal.language')}>
                       <SelectValue />
                     </SelectTrigger>
@@ -338,7 +442,10 @@ export default function AdminLegalPage() {
                         </Button>
                       </div>
 
-                      <div className="flex gap-2 lg:ml-auto">
+                      <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+                        {isDirty && (
+                          <span role="status" className="w-full text-13 font-semibold text-muted-foreground lg:w-auto">{t('admin.legal.unsavedHint')}</span>
+                        )}
                         <Button
                           variant="outline"
                           className="flex-1 lg:flex-none"
@@ -404,6 +511,7 @@ export default function AdminLegalPage() {
           </DialogContent>
         </Dialog>
       </SidebarInset>
+      {ConfirmDialog}
     </SidebarProvider>
   );
 }

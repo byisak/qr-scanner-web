@@ -514,7 +514,7 @@
       "activate": "활성화",
       "deactivate": "비활성화",
       "resetPassword": "비밀번호 초기화",
-      "export": "내보내기",
+      "export": "전체 내보내기",
       "bulkDelete": "일괄 삭제",
       "selectedCount": "{count}명 선택",
       "showingCount": "{from}-{to} / 총 {total}명",
@@ -566,7 +566,9 @@
       "noUsersDesc": "검색어나 필터를 바꿔 보세요",
       "adRecordsLabel": "{name} 광고 기록: 시청 {watched}회, 해제 {unlocked}개",
       "resetPasswordErrorDesc": "재설정 메일을 보내지 못했어요. 잠시 뒤 다시 해주세요",
-      "typeBulkCount": "확인을 위해 선택한 사용자 수({count})를 입력해 주세요"
+      "typeBulkCount": "확인을 위해 선택한 사용자 수({count})를 입력해 주세요",
+      "exportDone": "전체 {count}명을 CSV로 내보냈어요",
+      "exportError": "내보내지 못했어요. 잠시 뒤 다시 해주세요"
     },
     "stats": {
       "totalUsers": "총 사용자",
@@ -618,7 +620,17 @@
       "publicUrls": "공개 URL",
       "urlHint": "주소 끝의 lang 값으로 언어를 바꿀 수 있어요 (ko, en, ja, zh, es)",
       "loadError": "약관 문서를 불러오지 못했어요. 잠시 뒤 다시 해주세요",
-      "language": "문서 언어"
+      "language": "문서 언어",
+      "statusTitle": "언어별 상태",
+      "document": "문서",
+      "status_published": "발행",
+      "status_draft": "초안",
+      "status_missing": "없음",
+      "status_stale": "한국어보다 오래됨",
+      "unsavedTitle": "저장하지 않은 변경이 있어요",
+      "unsavedDesc": "다른 문서로 옮기면 지금 고친 내용이 사라져요.",
+      "discard": "버리고 이동",
+      "unsavedHint": "저장하지 않은 변경 있음"
     },
     "editor": {
       "toolbar": "서식 도구",
@@ -667,7 +679,8 @@
         "delete_user": "회원 삭제",
         "permanent_delete_user": "회원 영구 삭제",
         "restore_user": "회원 복구",
-        "send_password_reset": "재설정 메일 발송"
+        "send_password_reset": "재설정 메일 발송",
+        "export_users": "회원 목록 내보내기"
       }
     },
     "health": {

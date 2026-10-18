@@ -434,11 +434,24 @@
       "noUsersDesc": "Try a different search or filter",
       "adRecordsLabel": "{name} ad records: {watched} watched, {unlocked} unlocked",
       "resetPasswordErrorDesc": "Couldn't send the reset email. Please try again in a moment",
-      "typeBulkCount": "Type the number of selected users ({count}) to confirm"
+      "typeBulkCount": "Type the number of selected users ({count}) to confirm",
+      "exportDone": "已将全部 {count} 位用户导出为 CSV",
+      "exportError": "无法导出，请稍后再试",
+      "export": "全部导出"
     },
     "legal": {
       "loadError": "Couldn't load the documents. Please try again in a moment",
-      "language": "Document language"
+      "language": "Document language",
+      "statusTitle": "各语言状态",
+      "document": "文档",
+      "status_published": "已发布",
+      "status_draft": "草稿",
+      "status_missing": "缺失",
+      "status_stale": "比韩语版旧",
+      "unsavedTitle": "有未保存的更改",
+      "unsavedDesc": "切换到其他文档后，当前编辑的内容会丢失。",
+      "discard": "放弃并切换",
+      "unsavedHint": "有未保存的更改"
     },
     "editor": {
       "toolbar": "Formatting",
@@ -487,7 +500,8 @@
         "delete_user": "删除会员",
         "permanent_delete_user": "永久删除会员",
         "restore_user": "恢复会员",
-        "send_password_reset": "发送重置邮件"
+        "send_password_reset": "发送重置邮件",
+        "export_users": "导出会员列表"
       }
     },
     "health": {
