@@ -6,6 +6,7 @@ import { Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { ThemeSegment } from "@/components/theme-switcher"
 
 const noop = () => () => {}
 
@@ -57,6 +58,9 @@ export function SiteMobileMenu({
             </Link>
           ))}
         </nav>
+        <div className="mt-6 border-t pt-6">
+          <ThemeSegment />
+        </div>
       </SheetContent>
     </Sheet>
   )
