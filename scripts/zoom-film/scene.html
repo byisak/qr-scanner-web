@@ -1116,6 +1116,31 @@ window.FRAMES = DURATION * FPS;
 
 await document.fonts.load('800 52px "Noto Sans KR"'); await document.fonts.load('500 28px "Noto Sans KR"');
 await document.fonts.load('700 40px "JetBrains Mono"'); await document.fonts.load('500 20px "JetBrains Mono"');
+// ?style=anatomy: Anatomy 그림처럼 — 종이색 면, 4단 음영(툰), 모서리 윤곽선, 금색만 강조색
+if (new URLSearchParams(location.search).get('style') === 'anatomy') {
+  const g4 = new THREE.DataTexture(new Uint8Array([150, 182, 214, 250]), 4, 1, THREE.RedFormat);
+  g4.minFilter = g4.magFilter = THREE.NearestFilter; g4.needsUpdate = true;
+  const WHITE = new THREE.Color(0xffffff), INK = new THREE.LineBasicMaterial({ color: 0x3a3a40, transparent: true, opacity: 0.85 });
+  const toon = new Map();
+  const toPaper = (c) => { const hsl = {}; c.getHSL(hsl); const l = 0.8 + hsl.l * 0.18; return new THREE.Color().setHSL(hsl.h, hsl.s * 0.18, Math.min(0.97, l)); };
+  for (const sc of [scene, sceneO]) {
+    sc.traverse((o) => {
+      if (!o.isMesh || !o.material || !o.material.isMeshStandardMaterial || o.material.map || o.material.transparent) return;
+      const key = o.material.uuid;
+      if (!toon.has(key)) toon.set(key, new THREE.MeshToonMaterial({ color: toPaper(o.material.color), gradientMap: g4, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+      o.material = toon.get(key);
+      o.castShadow = o.receiveShadow = false;
+      if (o.geometry && o.geometry.attributes.position.count < 20000) o.add(new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28), INK));
+    });
+  }
+  renderer.shadowMap.enabled = false;
+  sceneO.traverse((o) => { if (o.isLight) o.color.set(0xffffff); });
+  // LA 창밖: 색 대신 먹 농담으로 (강조색은 금색 하나)
+  { const c = winTex.image, g = c.getContext('2d'), cp = document.createElement('canvas'); cp.width = c.width; cp.height = c.height;
+    const h = cp.getContext('2d'); h.filter = 'grayscale(1) contrast(0.8) brightness(1.12)'; h.drawImage(c, 0, 0); g.clearRect(0, 0, c.width, c.height); g.drawImage(cp, 0, 0); winTex.needsUpdate = true; }
+  renderer.toneMapping = THREE.NoToneMapping;
+  scene.background = new THREE.Color(0xf4f4f2); scene.fog.color = new THREE.Color(0xf4f4f2);
+}
 await document.fonts.ready;
 headTex.image.getContext('2d'); // 글꼴 로드 후 라벨 글자 다시 그림
 { const g = headTex.image.getContext('2d'); g.clearRect(0, 0, 2048, 400); g.textAlign = 'left'; g.fillStyle = '#18181b'; g.font = '800 200px "Noto Sans KR"'; g.textBaseline = 'middle'; g.fillText('A-0312', 40, 200); g.font = '700 120px "JetBrains Mono"'; g.textAlign = 'right'; g.fillText('24 EA', 2008, 200); headTex.needsUpdate = true; }

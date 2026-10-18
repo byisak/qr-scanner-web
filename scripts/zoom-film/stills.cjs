@@ -9,7 +9,7 @@ fs.mkdirSync(outDir, { recursive: true });
   const p = await b.newPage({ viewport: { width: 600, height: 720 } });
   p.on('console', (m) => { if (m.type() === 'error') console.log('console', m.text().slice(0, 200)); });
   p.on('pageerror', (e) => console.log('pageerror', e.message));
-  await p.goto('file://' + path.join(__dirname, 'scene.html') + '?lang=' + (process.env.LANG_HUD || 'ko') + '&hand=' + (process.env.HAND || 'none') + (process.env.FMT ? '&fmt=' + process.env.FMT : ''));
+  await p.goto('file://' + path.join(__dirname, 'scene.html') + '?lang=' + (process.env.LANG_HUD || 'ko') + '&hand=' + (process.env.HAND || 'none') + (process.env.FMT ? '&fmt=' + process.env.FMT : '') + (process.env.STYLE ? '&style=' + process.env.STYLE : ''));
   await p.waitForFunction(() => window.READY === true, null, { timeout: 60000 });
   for (const t of ts) {
     const t0 = Date.now();
