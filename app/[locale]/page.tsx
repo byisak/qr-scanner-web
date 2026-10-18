@@ -16,6 +16,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { SiteHeader, SiteFooter } from '@/components/site-header'
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
 
 // SEO 메타데이터 - 매우 중요!
 export const metadata: Metadata = {
@@ -64,8 +65,6 @@ export const metadata: Metadata = {
   },
 }
 
-const APP_STORE_URL = 'https://apps.apple.com/app/qr-scanner-pro'
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.scanview.qrscanner'
 
 const FEATURES = [
   { key: 'bulkScan', icon: Zap },

@@ -9,11 +9,11 @@ import { SiteMobileMenu } from "@/components/site-mobile-menu"
  * 공개 페이지(랜딩·블로그) 머리글 — 꿀앱 site-header 모양.
  * 넓은 화면: 로고 + 메뉴 + 웹앱 열기 / 좁은 화면(<768): 로고 + 메뉴 버튼(오른쪽 시트)
  */
-export async function SiteHeader({ active }: { active?: "home" | "blog" }) {
+export async function SiteHeader({ active }: { active?: "home" | "blog" | "features" }) {
   const t = await getTranslations("nav")
 
   const links = [
-    { href: "/#features", label: t("features") },
+    { href: "/features", label: t("features"), current: active === "features" },
     { href: "/#usecases", label: t("useCases") },
     { href: "/blog", label: t("blog"), current: active === "blog" },
     { href: "/#faq", label: t("faq") },
@@ -86,7 +86,7 @@ export async function SiteFooter() {
           <p className="mt-3 text-15 text-muted-foreground">{t("footer.description")}</p>
         </div>
         {col(t("footer.product"), [
-          { href: "/#features", label: t("nav.features") },
+          { href: "/features", label: t("nav.features") },
           { href: "/#usecases", label: t("nav.useCases") },
           { href: "/dashboard", label: t("footer.webApp") },
         ])}
