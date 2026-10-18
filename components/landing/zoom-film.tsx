@@ -13,11 +13,14 @@ export function ZoomFilm({
   label,
   variant = "portrait",
   className,
+  bleed = false,
 }: {
   lang: "ko" | "en"
   label: string
   variant?: "portrait" | "wide"
   className?: string
+  /** portrait 를 화면 폭 전체로 (둥근 모서리·테두리 없이) */
+  bleed?: boolean
 }) {
   const ref = React.useRef<HTMLVideoElement>(null)
   const [reduced, setReduced] = React.useState(false)
@@ -74,8 +77,8 @@ export function ZoomFilm({
   }
 
   return (
-    <figure className={className ?? "mx-auto w-full max-w-[460px]"}>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-card border bg-card shadow-[var(--shadow-soft)]">
+    <figure className={className ?? (bleed ? "w-full" : "mx-auto w-full max-w-[460px]")}>
+      <div className={bleed ? "relative aspect-[4/5] max-h-[80svh] w-full overflow-hidden bg-background" : "relative aspect-[4/5] overflow-hidden rounded-card border bg-card shadow-[var(--shadow-soft)]"}>
         {reduced ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={poster} alt={label} width={720} height={900} className="h-full w-full object-cover" />

@@ -144,10 +144,10 @@ export default async function HomePage() {
       <SiteHeader active="home" />
 
       <main id="main" className="min-h-screen">
-        {/* 첫 화면: 넓은 화면은 카드 전체에 가로 영상(피사체는 오른쪽), 왼쪽 빈 자리에 문구.
-            좁은 화면은 문구 아래에 세로 영상 카드 */}
-        <section className="page pb-12 pt-4 sm:pb-16 sm:pt-6">
-          <div className="relative overflow-hidden rounded-[28px] border bg-card lg:min-h-[min(780px,calc(100svh-120px))]">
+        {/* 첫 화면: 넓은 화면은 화면 폭 전체에 가로 영상(피사체는 오른쪽), 왼쪽 빈 자리에 문구.
+            좁은 화면은 문구 아래에 세로 영상 (역시 양쪽 여백 없이) */}
+        <section className="pb-12 sm:pb-16">
+          <div className="relative overflow-hidden border-b bg-background lg:min-h-[min(56.25vw,calc(100svh-68px))]">
             <ZoomFilm
               variant="wide"
               lang={locale === 'ko' ? 'ko' : 'en'}
@@ -157,9 +157,10 @@ export default async function HomePage() {
             {/* 문구가 영상 위에서도 읽히도록 왼쪽만 바탕색으로 덮는다 */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-card from-22% via-card/85 via-42% to-transparent to-58% lg:block"
+              className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,var(--background)_0,var(--background)_calc(50%-200px),color-mix(in_oklab,var(--background)_80%,transparent)_calc(50%+60px),transparent_calc(50%+260px))] lg:block"
             />
-            <div className="relative flex flex-col justify-center p-6 sm:p-10 lg:min-h-[min(780px,calc(100svh-120px))] lg:max-w-[620px] lg:p-14">
+            <div className="page relative flex flex-col justify-center py-10 sm:py-14 lg:min-h-[min(56.25vw,calc(100svh-68px))]">
+              <div className="lg:max-w-[620px]">
               <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
                 {t('home.heroTitle1')}
                 <br />
@@ -182,9 +183,10 @@ export default async function HomePage() {
                   </a>
                 </Button>
               </div>
+              </div>
             </div>
-            <div className="enter px-4 pb-4 sm:px-10 sm:pb-10 lg:hidden" style={{ '--i': 3 } as React.CSSProperties}>
-              <ZoomFilm lang={locale === 'ko' ? 'ko' : 'en'} label={t('landing.demoAlt')} />
+            <div className="enter lg:hidden" style={{ '--i': 3 } as React.CSSProperties}>
+              <ZoomFilm lang={locale === 'ko' ? 'ko' : 'en'} label={t('landing.demoAlt')} bleed />
             </div>
           </div>
         </section>
