@@ -1,4 +1,4 @@
-// 사용: node render.cjs <출력폴더>  → <출력폴더>/{ko,en}/0000.jpg ... (24 s × 30 fps = 720장씩)
+// 사용: node render.cjs <출력폴더>  → <출력폴더>/{ko,en}/0000.jpg ... (28 s × 30 fps = 840장씩)
 const { chromium } = require('/Users/biteubag/control-tower/node_modules/playwright-core');
 const path = require('path');
 const fs = require('fs');
