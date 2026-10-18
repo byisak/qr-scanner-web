@@ -32,7 +32,8 @@ done
 `land-dots.js` 는 Natural Earth 1:50m 육지(공개 영역)를 world-atlas(ISC) + d3-geo 로 0.8° 간격 점으로 바꾼 것이다. 다시 만들 때는 d3-geo·topojson-client·world-atlas@2 를 설치한 폴더에서 위도 -58~82°, 경도 간격 0.8°/cos(위도)로 `geoContains` 를 돌려 `window.LAND_DOTS = [위도×10, 경도×10, ...]` 로 저장한다.
 ## 가로판 (첫 화면 배경)
 `FMT=wide node render.cjs <폴더>` 로 16:9 판을 렌더한다. 피사체를 가로 66% 지점에 두고(왼쪽은 페이지 문구 자리), 장 머리글·워드마크는 그리지 않는다.
-웹용은 1280×720 으로 `public/landing/zoom-wide-{ko,en}.{mp4,webm}` + `zoom-wide-poster-*.webp`. 페이지에서는 `object-position: 66% 50%` 로 카드 비율이 달라도 피사체가 같은 자리에 오게 한다.
+웹용은 1920×1080 그대로(crf 34, -tune animation)  `public/landing/zoom-wide-{ko,en}.{mp4,webm}` + `zoom-wide-poster-*.webp`. 페이지에서는 `object-position: 66% 50%` 로 카드 비율이 달라도 피사체가 같은 자리에 오게 한다.
 
 ## Anatomy 화풍 (첫 화면에 쓰는 판)
 `STYLE=anatomy node render.cjs <폴더>` (가로판은 `FMT=wide` 도 함께). 창고·LA 사무실의 면을 종이색 4단 툰 음영으로 바꾸고 모서리마다 윤곽선(EdgesGeometry 28°)을 긋는다. 그림자·톤매핑은 끄고, 강조색은 금색 하나만 남긴다(LA 창밖도 흑백).
+윤곽선은 `LineSegments2`(굵기 1.25 × SS px)로 그린다. WebGL 기본 선은 1px 고정이라 줄이거나 늘려 보이면 흐려진다. 선이 많아 1080p 인코딩은 crf 34 · VP9 crf 52 로 맞춘다(언어별 약 3~3.7 MB).
