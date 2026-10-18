@@ -15,6 +15,7 @@
   #out { display: block; width: 540px; height: 675px; }
 </style>
 <script src="land-dots.js"></script>
+<script src="coast.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -143,7 +144,9 @@ let hero = boxes.filter(b => b.li === 1).reduce((a, b) => Math.abs(b.x - 0.1) < 
 hero.w = 0.46; hero.h = 0.38; hero.d = 0.44; hero.y = levels[1] + 0.02 + hero.h / 2;
 // 연속 스캔으로 이어서 찍을 옆 상자 둘 (주인공 오른쪽, PC 쪽으로)
 const row1 = boxes.filter((b) => b.li === 1 && b !== hero).sort((a, b) => a.x - b.x);
-const SIDE_BOXES = [...row1.filter((b) => b.x > hero.x), ...row1.filter((b) => b.x < hero.x).reverse()].slice(0, 2);
+const RIGHT = row1.filter((b) => b.x > hero.x), LEFT = row1.filter((b) => b.x < hero.x).reverse();
+// 연속 스캔은 한 방향으로만 (되돌아가며 첫 라벨을 다시 지나치지 않게): 이웃이 둘 있는 쪽을 고른다
+const SIDE_BOXES = (RIGHT.length >= 2 ? RIGHT : LEFT).slice(0, 2);
 const kraft = std(C.kraft, 0.95);
 for (const b of boxes) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), kraft);
@@ -239,7 +242,7 @@ SIDE.forEach((d, k) => {
   const b = SIDE_BOXES[k];
   const tex = textCanvas(1000, 640, (g, w, h) => drawSideLabel(g, w, h, d));
   d.tex = tex;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.064), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.064), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
   m.position.set(b.x + 0.105, b.y + 0.04, b.front + 0.0016); rack.add(m);
   d.codeWorld = m.position.clone().add(new THREE.Vector3(0, -0.0095, 0)); // 코드 그림(QR·막대+글자)의 가운데
 });
@@ -313,7 +316,7 @@ const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(desk.quaternion)
 const PREV = ['8801234003032', 'BOX-A0312-07', '8801234002028', '8801234001014', '8801234006064'];
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
 // 세션 화면 (사이트 세션 페이지를 단순화). rowIn: 0..1 새 줄이 들어오는 정도, hl: 강조 정도, after: 새 줄 포함 여부
-function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, hhmm = '09:41' } = {}) {
+function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, hhmm = '09:41', live = 0 } = {}) {
   const g = canvas.getContext('2d'), w = 1600, h = 1000;
   g.fillStyle = '#f4f4f5'; g.fillRect(0, 0, w, h);
   // 창 틀
@@ -321,6 +324,10 @@ function drawScreen(rowIn, hl, count, { canvas = screenCanvas, tex = screenTex, 
   g.fillStyle = '#e4e4e7'; g.fillRect(40, 110, w - 80, 2);
   for (let k = 0; k < 3; k++) { g.fillStyle = '#e4e4e7'; g.beginPath(); g.arc(90 + k * 34, 76, 11, 0, 7); g.fill(); }
   g.fillStyle = '#71717a'; g.font = '500 30px "JetBrains Mono"'; g.fillText('scanview.app/session/A3F9K2', 210, 87);
+  // 실시간 표시: 같은 세션에 붙어 있다는 금색 점 (깜빡임)
+  { const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.cos(live * Math.PI * 2 * 0.9)), lx = w - 120;
+    g.save(); g.globalAlpha = a; g.fillStyle = '#f2b230'; g.beginPath(); g.arc(lx - 26, 76, 11, 0, 7); g.fill(); g.restore();
+    g.fillStyle = '#b07a0c'; g.font = '700 28px "Noto Sans KR"'; g.textAlign = 'left'; g.fillText(LANG === 'en' ? 'LIVE' : '실시간', lx - 6, 86); }
   g.fillStyle = '#18181b'; g.font = '800 46px "Noto Sans KR"'; g.fillText('A-0312', 90, 190);
   // 마지막 스캔 카드
   g.fillStyle = '#eaeaec'; rr(g, 90, 230, w - 180, 210, 26); g.fill();
@@ -673,6 +680,7 @@ const dots = new THREE.InstancedMesh(dotGeo, new THREE.MeshBasicMaterial({ color
 }
 // 낮은 고도에서는 점을 작게 (가까이서 커다란 원이 화면을 덮지 않게)
 const dotScale = { value: 1 };
+let ANAT_GLOBE = false;
 dots.material.onBeforeCompile = (sh) => {
   sh.uniforms.uScale = dotScale;
   sh.vertexShader = 'uniform float uScale;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed *= uScale;');
@@ -725,7 +733,7 @@ for (const [pt, city] of [[SEOUL, 'seoul'], [LA, 'la']]) for (const far of [fals
   const size = far ? 0.012 : 0.0008;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
   m.position.copy(pt.clone().multiplyScalar(far ? 1 + 2e-7 : 1 + 4e-7)); m.lookAt(pt.clone().multiplyScalar(2)); sceneG.add(m);
-  roadPatches.push({ m, far });
+  roadPatches.push({ m, far }); m.visible = false; // 도로망은 쓰지 않는다 (줌아웃에 불필요)
 }
 
 // 서울 → LA 금색 호 (대권, 가운데가 높다). 화면 굵기가 일정한 선
@@ -769,10 +777,10 @@ function setStateG(t) {
   camG.up.set(0, 1, 0); camG.lookAt(0, 0, 0);
   camG.near = Math.max(1e-8, alt * 0.2); camG.far = 1 + alt + 2; camG.updateProjectionMatrix();
   sceneG.background.set(alt < 0.004 ? PAPER : SPACE);
-  dots.visible = alt > 0.0015;
+  dots.visible = !ANAT_GLOBE && alt > 0.0015;
   // 도로망: 가까운 길은 고도 2 km 아래, 간선은 6~200 km 사이에서 보인다 (로그 고도로 겹쳐 넘긴다)
   const L = Math.log10(alt), band = (lo0, lo1, hi0, hi1) => Math.min(1, Math.max(0, (L - lo0) / (lo1 - lo0))) * Math.min(1, Math.max(0, (hi1 - L) / (hi1 - hi0)));
-  for (const p of roadPatches) p.m.material.opacity = p.far ? band(-3.2, -2.6, -1.6, -1.1) : band(-9, -8, -2.9, -2.4);
+  for (const p of roadPatches) p.m.visible = false, p.m.material.opacity = p.far ? band(-3.2, -2.6, -1.6, -1.1) : band(-9, -8, -2.9, -2.4);
   dotScale.value = Math.min(1, Math.max(0.001, alt / 0.8));
   // 호: 24.2~28.2 s 에 그려지고, 되돌아올 때는 옅게 남는다
   const b = Math.min(1, Math.max(0, (t - 24.2) / 4.0));
@@ -836,7 +844,7 @@ function setStateO(t) {
   downHead.visible = b > 0 && b < 1; downCurve.getPointAt(Math.min(0.999, ease(b)), downHead.position);
   downHead.scale.setScalar(1 + Math.max(0, downHead.position.y - 1) * 0.35);
   const rowIn = t < 30.9 ? 0 : Math.min(1, (t - 30.9) / 0.8);
-  drawScreen(rowIn, t < 32.6 ? 1 : Math.max(0, 1 - (t - 32.6) / 1.2), rowIn > 0 ? 131 : 128, { canvas: screenCanvasO, tex: screenTexO, hhmm: '17:41' });
+  drawScreen(rowIn, t < 32.6 ? 1 : Math.max(0, 1 - (t - 32.6) / 1.2), rowIn > 0 ? 131 : 128, { canvas: screenCanvasO, tex: screenTexO, hhmm: '17:41', live: t });
   const c = cameraAt(t, OKEYS); camO.position.copy(c.pos); camO.lookAt(c.target);
   camO.near = Math.max(0.005, c.r * 0.02); camO.updateProjectionMatrix();
 }
@@ -872,8 +880,8 @@ const screenGap = (p) => p.clone().sub(phonePos).dot(phoneNormal);
 const between = (a, b) => a.clone().lerp(b, 0.5).add(V(0, 0.01, 0));
 const KEYS = [
   [0.0, wideTarget, V(-0.04, 0.18, 1), 5.6],
-  [2.4, V(0.35, 1.02, 0.6), V(-0.03, 0.12, 1), 3.4],
-  [4.0, labelCenter.clone(), V(0.02, 0.06, 1), 0.62],
+  [2.4, V(0.35, 1.02, 0.6), V(0.1, 0.03, 1), 3.4],
+  [4.0, aim(heroCode), POV_DIR.clone(), 0.62],
   // 폰 화면 시점: 첫 라벨 (해독)
   [5.6, aim(heroCode), POV_DIR, POV_D],
   [9.9, aim(heroCode), POV_DIR, POV_D * 0.96],
@@ -903,7 +911,7 @@ function cameraAt(t, keys = KEYS) {
   const logR = Math.log(r0) + (Math.log(r1) - Math.log(r0)) * u;
   const r = Math.exp(logR);
   // 줌이 깊어질수록 바라보는 점이 먼저 따라가게 (u 를 앞당김)
-  const uT = r1 < r0 ? Math.min(1, u * 1.25) : u;
+  const uT = u; // 바라보는 점과 거리를 같이 움직인다 (먼저 꺾이면 흔들려 보인다)
   const target = p0.clone().lerp(p1, uT);
   const dir = d0.clone().normalize().lerp(d1.clone().normalize(), u).normalize();
   return { target, pos: target.clone().add(dir.multiplyScalar(r)), r };
@@ -955,7 +963,7 @@ function setState(t) {
   // 모니터: 20.0 s 세 줄, 21.8 s 부터 강조가 사라지고, 36 s (창고로 돌아오기 전) 원래 상태로
   const rowIn = t < 20.0 ? 0 : t < 36 ? Math.min(1, (t - 20.0) / 0.8) : 0;
   const hl = t < 20.0 ? 0 : t < 21.8 ? 1 : Math.max(0, 1 - (t - 21.8) / 1.5);
-  drawScreen(rowIn, hl, rowIn > 0 ? 131 : 128);
+  drawScreen(rowIn, hl, rowIn > 0 ? 131 : 128, { live: t });
   // 카메라
   const cam = cameraAt(camT(t));
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
@@ -1111,13 +1119,15 @@ function drawPOV(g, t) {
 }
 
 // 렌더러용: 프레임 i → JPEG (언어는 ?lang=)
+const VIDEO = 34, WARP = [[0, 0], [3.4, 4.0], [19.6, 20.2], [20.8, 22.0], [VIDEO, DURATION]];
+const warp = (v) => { for (let k = 1; k < WARP.length; k++) if (v <= WARP[k][0]) { const [a0, b0] = WARP[k - 1], [a1, b1] = WARP[k]; return b0 + (b1 - b0) * (v - a0) / (a1 - a0); } return DURATION; };
 window.renderFrame = (i) => {
-  const t = i / FPS;
+  const t = warp(i / FPS);
   frameAt(t);
   compose(t, LANG, 0);
   return out.toDataURL('image/jpeg', 0.97);
 };
-window.FRAMES = DURATION * FPS;
+window.FRAMES = VIDEO * FPS;
 
 await document.fonts.load('800 52px "Noto Sans KR"'); await document.fonts.load('500 28px "Noto Sans KR"');
 await document.fonts.load('700 40px "JetBrains Mono"'); await document.fonts.load('500 20px "JetBrains Mono"');
@@ -1141,6 +1151,17 @@ if (new URLSearchParams(location.search).get('style') === 'anatomy') {
   }
   renderer.shadowMap.enabled = false;
   sceneO.traverse((o) => { if (o.isLight) o.color.set(0xffffff); });
+  // 지구본: 점 대륙 대신 해안선과 위도·경도선을 먹선으로
+  ANAT_GLOBE = true; dots.visible = false;
+  earth.material.uniforms.c.value.set(0xf6f5f1); earth.material.uniforms.e.value.set(0xd9d7d0);
+  const GL = new LineMaterial({ color: 0x3a3a40, linewidth: 1.1 * SS, worldUnits: false }); GL.resolution.set(W * SS, H * SS);
+  const GF = new LineMaterial({ color: 0xa9a7a0, linewidth: 0.8 * SS, worldUnits: false }); GF.resolution.set(W * SS, H * SS);
+  const segs = (lines, r, mat) => { const pos = []; for (const l of lines) for (let k = 0; k + 3 < l.length; k += 2) { const a = ll(l[k] / 10, l[k + 1] / 10, r), b = ll(l[k + 2] / 10, l[k + 3] / 10, r); pos.push(a.x, a.y, a.z, b.x, b.y, b.z); } const g = new LineSegmentsGeometry(); g.setPositions(pos); sceneG.add(new LineSegments2(g, mat)); };
+  segs(window.COAST, 1.0008, GL);
+  const grat = [];
+  for (let lat = -60; lat <= 60; lat += 30) { const l = []; for (let lon = -180; lon <= 180; lon += 3) l.push(lat * 10, lon * 10); grat.push(l); }
+  for (let lon = -180; lon < 180; lon += 30) { const l = []; for (let lat = -84; lat <= 84; lat += 3) l.push(lat * 10, lon * 10); grat.push(l); }
+  segs(grat, 1.0004, GF);
   // LA 창밖: 색 대신 먹 농담으로 (강조색은 금색 하나)
   { const c = winTex.image, g = c.getContext('2d'), cp = document.createElement('canvas'); cp.width = c.width; cp.height = c.height;
     const h = cp.getContext('2d'); h.filter = 'grayscale(1) contrast(0.8) brightness(1.12)'; h.drawImage(c, 0, 0); g.clearRect(0, 0, c.width, c.height); g.drawImage(cp, 0, 0); winTex.needsUpdate = true; }
