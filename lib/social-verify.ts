@@ -18,7 +18,8 @@ function parseList(value: string | undefined): string[] {
 }
 
 // iOS 앱 번들 ID (모바일 app.json의 ios.bundleIdentifier). 공개 값이므로 기본값으로 둔다.
-const DEFAULT_APPLE_AUDIENCES = ['com.cubion.qrscanner'];
+// iOS 앱 번들 ID 와 웹 로그인용 Services ID (Apple Developer, Return URL: https://scanview.app/api/auth/social/apple/callback)
+const DEFAULT_APPLE_AUDIENCES = ['com.cubion.qrscanner', 'com.cubion.qrscanner.web'];
 
 // 모바일 앱(app.json extra.google)에서 사용하는 OAuth 클라이언트 ID. 공개 값이므로 기본값으로 둔다.
 const DEFAULT_GOOGLE_CLIENT_IDS = [

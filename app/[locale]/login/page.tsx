@@ -101,7 +101,8 @@ export default function LoginPage() {
   // 환경 변수가 없으면 앱과 같은 웹용 OAuth 클라이언트 ID(공개 값, lib/social-verify.ts 의 기본값과 같음)
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "585698187056-3tqjnjbcdidddn9ddvp2opp0mgj7tgd4.apps.googleusercontent.com"
   // Apple Client ID (Service ID)
-  const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID
+  // 환경 변수가 없으면 Apple Developer 에 등록한 웹용 Services ID (공개 값, lib/social-verify.ts 기본값에도 있음)
+  const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "com.cubion.qrscanner.web"
 
   // 이미 로그인된 경우 대시보드로 리다이렉트
   React.useEffect(() => {
