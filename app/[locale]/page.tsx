@@ -182,10 +182,6 @@ export default async function HomePage() {
             />
             <div className="page relative flex flex-col justify-center py-10 sm:py-14 lg:min-h-[min(56.25vw,calc(100svh-68px))]">
               <div className="lg:max-w-[620px]">
-              <p className="enter bp-label mb-5 flex items-center gap-2.5" style={{ '--i': 0 } as React.CSSProperties}>
-                <span aria-hidden="true" className="inline-block size-2 bg-[#f2b230]" />
-                FIG.01 · {t('landing.eyebrow')}
-              </p>
               <h1 className="enter type-display" style={{ '--i': 0 } as React.CSSProperties}>
                 {t('home.heroTitle1')}
                 <br />
