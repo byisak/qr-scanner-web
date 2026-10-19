@@ -100,7 +100,8 @@
   --font-sans: var(--font-pretendard), "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
     "Apple SD Gothic Neo", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Noto Sans SC", "Noto Sans CJK KR",
     "Malgun Gothic", "Microsoft YaHei", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* 고정폭 글꼴에는 한글이 없어서, 한글은 Pretendard 로 이어 그린다 (기기 기본 글꼴로 바뀌지 않게) */
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, var(--font-pretendard), "Pretendard Variable", Pretendard, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -379,7 +380,7 @@
 .bp-tick[data-c="tr"] { top: -5px; right: -5px; border-right: 1px solid; border-top: 1px solid; }
 .bp-tick[data-c="bl"] { bottom: -5px; left: -5px; border-left: 1px solid; border-bottom: 1px solid; }
 .bp-tick[data-c="br"] { bottom: -5px; right: -5px; border-right: 1px solid; border-bottom: 1px solid; }
-.bp-label { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; letter-spacing: 0.04em; color: var(--muted-foreground); }
+.bp-label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--muted-foreground); }
 .bp-gold { color: var(--bp-gold); }
 .bp-faq > summary { list-style: none; cursor: pointer; }
 .bp-faq > summary::-webkit-details-marker { display: none; }
