@@ -634,12 +634,7 @@ function drawScanUI(g, w, h, t, { pov = false, flying = null } = {}) {
   // 읽힌 순간: 화면 가장자리가 금색으로 한 번 번쩍 (소리 없는 '삑')
   const fl = Math.max(0, ...SCANS.map((sc) => (t >= sc.at && t < sc.at + 0.45 ? 1 - (t - sc.at) / 0.45 : 0)));
   if (fl > 0) { g.save(); g.globalAlpha = fl; g.strokeStyle = '#f2b230'; g.lineWidth = 16 * S; g.shadowColor = 'rgba(242,178,48,.9)'; g.shadowBlur = 40 * S; g.strokeRect(8 * S, 8 * S, w - 16 * S, h - 16 * S); g.restore(); }
-  // 모드 버튼 (연속 선택)
-  const mw = (pov ? 0.56 : 0.8) * w, my = pov ? h * 0.875 : h * 0.86, seg = (mw - 12 * S) / 3;
-  g.fillStyle = 'rgba(17,17,19,.6)'; rr(g, cx - mw / 2, my - 40 * S, mw, 80 * S, 40 * S); g.fill();
-  g.fillStyle = '#fff'; rr(g, cx - mw / 2 + 6 * S + 2 * seg, my - 34 * S, seg, 68 * S, 34 * S); g.fill();
-  g.font = `700 ${28 * S}px "Noto Sans KR"`;
-  PUI.modes.forEach((m, i) => { g.fillStyle = i === 2 ? '#18181b' : 'rgba(255,255,255,.92)'; g.fillText(m, cx - mw / 2 + 6 * S + seg / 2 + i * seg, my + 1); });
+  // 모드 버튼(한 개·여러 개·연속)은 그리지 않는다: 첫 화면에서 화면 아래에 걸려 가려졌다
   if (!pov) { // 아래 탭
     g.fillStyle = '#ffffff'; g.fillRect(0, h * 0.9, w, h * 0.1);
     PUI.tabs.forEach((m, i) => { const x = w / 8 + i * w / 4;
