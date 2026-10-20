@@ -928,6 +928,30 @@
       "all": "전체"
     },
     "nothingHere": "해당하는 품목이 없어요",
-    "liveHint": "5초마다 새로 고쳐요."
+    "liveHint": "5초마다 새로 고쳐요.",
+    "labels": {
+      "open": "라벨 인쇄",
+      "title": "라벨 인쇄",
+      "desc": "지금 목록의 품목 {count}개를 A4 라벨지에 바코드 라벨로 인쇄해요. 인쇄 창에서 PDF로 저장할 수도 있어요.",
+      "sheet": "라벨지",
+      "templateOption": "{layout} ({count}칸)",
+      "templateDesc": "라벨 한 칸 {w}×{h}mm. 인쇄 배율은 100%(실제 크기), 여백은 없음으로 두세요.",
+      "symbol": "기호",
+      "modeAuto": "자동",
+      "modeBarcode": "바코드",
+      "modeDesc": {
+        "auto": "13자리 상품 바코드는 EAN-13, 영문·숫자는 Code 128, 한글이 있거나 너무 길면 QR로 만들어요.",
+        "barcode": "Code 128 바코드로 만들어요. 한글이 있거나 칸에 비해 너무 길면 QR로 바꿔요.",
+        "qr": "모든 라벨을 QR 코드로 만들어요. 작은 칸에도 긴 코드가 들어가요."
+      },
+      "copies": "품목당 장수",
+      "skip": "앞 칸 비우기",
+      "skipDesc": "쓰다 남은 라벨지면 이미 뗀 칸 수만큼 건너뛰어요.",
+      "showName": "품명",
+      "showMeta": "규격·위치",
+      "showMetaDesc": "큰 라벨(3×7, 2×5)만",
+      "summary": "라벨 {labels}장 · A4 {pages}쪽",
+      "print": "인쇄"
+    }
   }
 }

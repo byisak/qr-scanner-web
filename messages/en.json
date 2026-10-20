@@ -928,6 +928,30 @@
       "all": "All"
     },
     "nothingHere": "Nothing here",
-    "liveHint": "Refreshes every 5 seconds."
+    "liveHint": "Refreshes every 5 seconds.",
+    "labels": {
+      "open": "Print labels",
+      "title": "Print labels",
+      "desc": "Print barcode labels for the {count} items in the current list on A4 label sheets. You can also save as PDF from the print dialog.",
+      "sheet": "Label sheet",
+      "templateOption": "{layout} ({count})",
+      "templateDesc": "Each label {w}×{h} mm. Print at 100% (actual size) with no margins.",
+      "symbol": "Symbol",
+      "modeAuto": "Auto",
+      "modeBarcode": "Barcode",
+      "modeDesc": {
+        "auto": "13-digit product codes become EAN-13, letters and numbers Code 128, and codes with other characters or too long for the label become QR.",
+        "barcode": "Makes Code 128 barcodes. Codes with other characters or too long for the label become QR.",
+        "qr": "Makes every label a QR code. Long codes fit on small labels."
+      },
+      "copies": "Labels per item",
+      "skip": "Skip first labels",
+      "skipDesc": "On a partly used sheet, skip the labels already peeled off.",
+      "showName": "Item name",
+      "showMeta": "Spec · location",
+      "showMetaDesc": "large labels only (3×7, 2×5)",
+      "summary": "{labels} labels · {pages} A4 pages",
+      "print": "Print"
+    }
   }
 }

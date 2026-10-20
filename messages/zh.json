@@ -749,6 +749,30 @@
       "all": "全部"
     },
     "nothingHere": "没有相关商品",
-    "liveHint": "每 5 秒刷新一次。"
+    "liveHint": "每 5 秒刷新一次。",
+    "labels": {
+      "open": "打印标签",
+      "title": "打印标签",
+      "desc": "将当前列表中的 {count} 个商品打印成 A4 标签纸上的条码标签。也可以在打印窗口中保存为 PDF。",
+      "sheet": "标签纸",
+      "templateOption": "{layout}（{count}格）",
+      "templateDesc": "每个标签 {w}×{h} 毫米。请按 100%（实际大小）、无边距打印。",
+      "symbol": "码型",
+      "modeAuto": "自动",
+      "modeBarcode": "条码",
+      "modeDesc": {
+        "auto": "13 位商品码生成 EAN-13，字母和数字生成 Code 128，含其他字符或对标签来说太长的码生成 QR。",
+        "barcode": "生成 Code 128 条码。含其他字符或太长时改用 QR。",
+        "qr": "所有标签都生成 QR 码，小标签也能放下长编码。"
+      },
+      "copies": "每个商品张数",
+      "skip": "跳过前几格",
+      "skipDesc": "用过的标签纸可跳过已撕掉的格数。",
+      "showName": "商品名称",
+      "showMeta": "规格·位置",
+      "showMetaDesc": "仅大标签（3×7、2×5）",
+      "summary": "标签 {labels} 张 · A4 {pages} 页",
+      "print": "打印"
+    }
   }
 }

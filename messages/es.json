@@ -749,6 +749,30 @@
       "all": "Todos"
     },
     "nothingHere": "No hay nada aquí",
-    "liveHint": "Se actualiza cada 5 segundos."
+    "liveHint": "Se actualiza cada 5 segundos.",
+    "labels": {
+      "open": "Imprimir etiquetas",
+      "title": "Imprimir etiquetas",
+      "desc": "Imprime etiquetas con código de barras de los {count} artículos de la lista actual en hojas A4. También puedes guardar como PDF desde el diálogo de impresión.",
+      "sheet": "Hoja de etiquetas",
+      "templateOption": "{layout} ({count})",
+      "templateDesc": "Cada etiqueta de {w}×{h} mm. Imprime al 100 % (tamaño real) y sin márgenes.",
+      "symbol": "Código",
+      "modeAuto": "Auto",
+      "modeBarcode": "Barras",
+      "modeDesc": {
+        "auto": "Los códigos de producto de 13 dígitos van en EAN-13, letras y números en Code 128, y los códigos con otros caracteres o demasiado largos para la etiqueta en QR.",
+        "barcode": "Crea códigos Code 128. Si hay otros caracteres o el código es demasiado largo, usa QR.",
+        "qr": "Todas las etiquetas llevan código QR. Los códigos largos caben en etiquetas pequeñas."
+      },
+      "copies": "Etiquetas por artículo",
+      "skip": "Saltar etiquetas",
+      "skipDesc": "En una hoja ya usada, salta las etiquetas que ya despegaste.",
+      "showName": "Nombre",
+      "showMeta": "Especificación · ubicación",
+      "showMetaDesc": "solo etiquetas grandes (3×7, 2×5)",
+      "summary": "{labels} etiquetas · {pages} páginas A4",
+      "print": "Imprimir"
+    }
   }
 }

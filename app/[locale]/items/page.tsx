@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/contexts/auth-context';
 import { useConfirmDialog } from '@/components/confirm-dialog';
 import { notify } from '@/lib/notify';
+import { LabelPrintDialog } from '@/components/label-print-dialog';
 import { ITEM_FIELDS, type ItemField, type ItemRecord, type BuildResult, readItemRows, detectMapping, buildRecords, itemsToXlsx } from '@/lib/item-file';
 
 type Policy = 'overwrite' | 'fill' | 'skip';
@@ -165,6 +166,7 @@ export default function ItemsPage() {
         <div className="flex flex-wrap gap-2">
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv,.txt,.tsv" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} aria-label={t('upload')} />
           <Button onClick={() => fileRef.current?.click()}><Upload aria-hidden="true" />{t('upload')}</Button>
+          <LabelPrintDialog items={filtered} />
           <Button variant="outline" onClick={download} disabled={!items?.length}><Download aria-hidden="true" />{t('downloadXlsx')}</Button>
           <Button variant="ghost" onClick={clearAll} disabled={!items?.length}><Trash2 aria-hidden="true" />{t('clearAll')}</Button>
         </div>
