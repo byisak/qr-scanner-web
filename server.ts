@@ -22,6 +22,7 @@ import {
 import { broadcastNewScan, registerSocketServer } from './lib/realtime';
 import type { PoolClient } from 'pg';
 import type { Socket } from 'socket.io';
+import { deliverScanWebhook } from './lib/webhook';
 
 // ============================================
 // 소켓 인증/권한 헬퍼
@@ -342,6 +343,7 @@ app.prepare().then(() => {
 
         // Socket.IO 방 + (설정돼 있으면) Supabase Realtime 으로 브로드캐스트
         await broadcastNewScan(sessionId, session.realtime_key, scanRecord);
+        deliverScanWebhook(sessionId, scanRecord).catch(() => {}); // 외부 주소(구글 시트 등)로, 기다리지 않음
 
         socket.emit('scan-received', {
           success: true,

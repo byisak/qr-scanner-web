@@ -154,6 +154,11 @@ CREATE TABLE IF NOT EXISTS session_settings (
 
 CREATE INDEX IF NOT EXISTS idx_session_settings_session ON session_settings(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_settings_access_code ON session_settings(access_code);
+-- 외부 주소(구글 시트 등)로 스캔 보내기 (scripts/migrate-webhook-2026-10-21.sql)
+ALTER TABLE session_settings ADD COLUMN IF NOT EXISTS webhook_url TEXT;
+ALTER TABLE session_settings ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(64);
+ALTER TABLE session_settings ADD COLUMN IF NOT EXISTS webhook_last_status VARCHAR(120);
+ALTER TABLE session_settings ADD COLUMN IF NOT EXISTS webhook_last_at TIMESTAMP;
 CREATE INDEX IF NOT EXISTS idx_session_settings_public ON session_settings(is_public);
 
 -- ============================================
