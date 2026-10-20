@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { deliverScanWebhook } from '@/lib/webhook';
 import { getConnection } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { getRequestUser } from '@/lib/session-access';
@@ -65,6 +66,8 @@ export async function POST(
     client = null;
 
     await broadcastNewScan(sessionId, realtimeKey, scan);
+    // 외부 주소(구글 시트 등)로 보내기: 응답을 막지 않도록 응답 뒤에
+    after(() => deliverScanWebhook(sessionId, scan));
 
     return NextResponse.json({ success: true, scan }, { status: 201 });
   } catch (err) {

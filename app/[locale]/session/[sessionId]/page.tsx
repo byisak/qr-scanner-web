@@ -56,6 +56,7 @@ import { createColumns, createReadOnlyColumns } from '@/components/scan-table-co
 import { CodeSummaryTable, summarizeByCode } from '@/components/code-summary-table';
 import { Segmented } from '@/components/ui/segmented';
 import { SessionShareDialog } from '@/components/session-share-dialog';
+import { SessionSheetDialog } from '@/components/session-sheet-dialog';
 import { useLocale, useTranslations } from 'next-intl';
 
 // 스캔 알림 사운드 재생
@@ -640,6 +641,10 @@ export default function SessionPage() {
                       authHeaders={authHeaders}
                       onSaved={(next) => setSessionSettings((prev) => (prev ? { ...prev, ...next } : prev))}
                     />
+                  )}
+                  {/* 구글 시트로 보내기: 세션 주인(또는 관리자)만 */}
+                  {sessionSettings?.canManage && (
+                    <SessionSheetDialog sessionId={sessionId} authHeaders={authHeaders} />
                   )}
                   {/* 연결 상태: 색만이 아니라 글자로도 */}
                   <span
