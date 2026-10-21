@@ -20,6 +20,8 @@ import {
   FileText,
   BarChart3,
   ScrollText,
+  Package,
+  ClipboardCheck,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -316,6 +318,20 @@ export function NavMain({ currentSessionId }: NavMainProps) {
           >
             <LayoutDashboard className="size-4" />
             <span>{t('sidebar.dashboard')}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+
+        {/* 업무: 계정 품목 마스터, 함께 하는 재고 실사 */}
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip={t('work.items')} onClick={() => router.push('/items')}>
+            <Package className="size-4" />
+            <span>{t('work.items')}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip={t('work.stocktakes')} onClick={() => router.push('/stocktakes')}>
+            <ClipboardCheck className="size-4" />
+            <span>{t('work.stocktakes')}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
 

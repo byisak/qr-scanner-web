@@ -3,8 +3,12 @@ import type { FeatureContent, FeatureSlug, FeaturesLocale } from './types';
 import { FEATURE_SLUGS } from './types';
 import ko from './ko';
 import en from './en';
+import ja from './ja';
+import zh from './zh';
+import es from './es';
 
-const LOCALES: Record<string, FeaturesLocale | undefined> = { ko, en };
+// ja·zh·es 스크린샷은 따로 없어서 components/features/frames.tsx 의 resolveScreenshot 이 영어(en) 그림으로 대신 보여 준다.
+const LOCALES: Record<string, FeaturesLocale | undefined> = { ko, en, ja, zh, es };
 const FALLBACK_CHAIN = ['en', 'ko'];
 
 export function getFeaturesLocale(locale: string): { data: FeaturesLocale; locale: string; isFallback: boolean } {
